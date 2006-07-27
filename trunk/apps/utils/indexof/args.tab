@@ -1,0 +1,19 @@
+# argument descriptions - input to cgen
+# format:
+# name  type    required	short   long    exit_function   description
+#
+# type (flag|var)
+# required (0|1)
+# exit_function (usage|version)
+# short & long are the 1-char and string argument names
+# description goes straight into the usage statement
+#
+
+help	flag	0	h	help	usage	print this message and exit.
+version	flag	0	v	version	version	print version information and exit.
+verbose	flag	0	V	verbose		print verbose status messages to console
+file	var	0	f	file		specifies file to read (default = stdin)
+row	var	0	r	row		specifies line number to use as header (default = 1)
+label	var	1	l	label		specifies the header label to look for
+delim	var	1	d	delim		specifies the file delimiter
+string	var	0	s	string		allows the header line to be specified on the command-line

@@ -1,0 +1,74 @@
+# data relevant to the application as a whole
+%global = (
+	name => "grepfield",
+	description => "looks for patterns within a specific field of a flat-file",
+	version => "0.1",
+	trailing_opts => "<pattern> [file ...]",
+	usage_extra => "if no field is specified, the entire input line is scanned.",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2005
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string (default: 0xfe)'
+	},
+	{
+	  name => 'outfile',
+	  shortopt => 'o',
+	  longopt => 'outfile',
+	  type => 'var',
+	  required => 0,
+	  description => 'output file name (default: stdout)'
+	},
+	{
+	  name => 'field',
+	  shortopt => 'f',
+	  longopt => 'field',
+	  type => 'var',
+	  required => 0,
+	  description => 'number of field to scan (1-based)'
+	},
+	{
+	  name => 'invert',
+	  shortopt => 'v',
+	  longopt => 'invert',
+	  type => 'flag',
+	  required => 0,
+	  description => 'print only non-matching lines'
+	},
+	{
+	  name => 'ignore_case',
+	  shortopt => 'i',
+	  longopt => 'ignore-case',
+	  type => 'flag',
+	  required => 0,
+	  description => 'do case-insensitive matches'
+	}
+);

@@ -1,0 +1,74 @@
+# data relevant to the application as a whole
+%global = (
+	name => "pivot",
+	description => "pivots flat-file data from rows to columns",
+	version => "0.5",
+	trailing_opts => "[file ...]",
+	usage_extra => "-f, -p, and -v values are comma-separated numbers or ranges.  for example:\\n\\n1,2-5,7",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2006
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delimiter',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string'
+	},
+	{
+	  name => 'keep_header',
+	  shortopt => 'k',
+	  longopt => 'keep-header',
+	  type => 'flag',
+	  required => 0,
+	  description => 'indicates that the first line of input \n\t\t\t\tshould be treated as header info'
+	},
+	{
+	  name => 'keys',
+	  shortopt => 'f',
+	  longopt => 'output-fields',
+	  type => 'var',
+	  required => 0,
+	  description => 'fields to output'
+	},
+	{
+	  name => 'pivots',
+	  shortopt => 'p',
+	  longopt => 'pivot-fields',
+	  type => 'var',
+	  required => 1,
+	  description => 'fields to pivot on'
+	},
+	{
+	  name => 'values',
+	  shortopt => 'v',
+	  longopt => 'value-fields',
+	  type => 'var',
+	  required => 1,
+	  description => 'fields to put into the pivoted cells'
+	},
+);

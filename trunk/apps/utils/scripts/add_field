@@ -1,0 +1,93 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+my ($help, $header, $value, $location, $delim);
+
+$value = '';
+$delim = chr(0xfe);
+$location = 1;
+
+&GetOptions (	"help!"		=> \$help,
+		"label:s"	=> \$header,
+		"value:s"	=> \$value,
+		"field:n"	=> \$location,
+		"delim:s"	=> \$delim
+		);
+
+if ( $help ) {
+	usage();
+	exit(1);
+}
+
+
+my $expected_fields;
+while ( my $line = <> ) {
+	$line =~ s/[\r\n]//g;
+	if ( ! defined($expected_fields) ) {
+		$expected_fields = 1;
+		my $i = 0;
+		while ( ( $i = index($line, $delim, $i) ) > 0 ) {
+			$expected_fields++;
+			$i += length($delim);
+		}
+		if ( $location < 0 ) {
+			$location = $expected_fields + $location + 2;
+		}
+	}
+	if ( $header && $. == 1 ) {
+		print add_field($line, $header, $location, $delim), qq(\n);
+	} else {
+		print add_field($line, $value, $location, $delim), qq(\n);
+	}
+}
+
+exit(0);
+
+# (line, value, position, delimiter)
+sub add_field {
+	my ($l, $v, $p, $d) = @_;
+
+	# simple case: prepending the field
+	if ( $p == 1 || $p == 0 ) {
+		return $v . $d . $l;
+	}
+
+	# simple case: appending the field
+	if ( $expected_fields < $p ) {
+		return $l . $d . $v;
+	}
+
+	my @a = split(/\Q$d\E/, $l);
+
+	# make sure all of the elements are defined
+	for my $i ( 0 .. $expected_fields - 1 ) {
+		$a[$i] = '' unless(defined($a[$i]));
+	}
+
+	# put the field somewhere in the middle
+	return join($d, splice(@a, 0, $p - 1)) . $d .
+		$v . $d . join($d, @a);
+}
+
+sub usage {
+	print STDERR <<ENDUSAGE;
+
+adds a field to a flat-file.
+
+usage: $0 [hdflv] [file(s)]
+
+	-h, --help	print this message and exit
+	-d, --delim	the field delimiter string (default: 0xfe)
+	-f, --field	the 1-based index for the new field (default: 1)
+	-l, --label	the string to label the new field on the first line
+	-v, --value	the value to place in the new field (default: emtpy)
+
+ * if no "label" is provided, the "value" will be used.
+ * a field of either 0 or 1 may be used to indicate the first position.
+ * if a field value of -1 indicates that the field should be appended to
+   each line.
+
+ENDUSAGE
+}
