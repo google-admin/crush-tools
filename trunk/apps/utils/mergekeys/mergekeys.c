@@ -35,7 +35,7 @@ int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	}
 
 	if( (fd_tmp = open64(argv[optind+1], O_RDONLY)) < 0 ){
-		perror(argv[optind]);
+		perror(argv[optind+1]);
 		return EXIT_FILE_ERR;
 	}
 	if ( (b = fdopen(fd_tmp, "r")) == NULL ) {
