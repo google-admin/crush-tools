@@ -1,0 +1,113 @@
+#!/usr/bin/perl -w
+#-*-perl-*-
+use strict;
+use Getopt::Long;
+use DART::common;
+use DBI;
+use FileHandle;
+
+my ($dsn, $uid, $pwd);
+$dsn = $ENV{'DB_DSN'};
+$uid = $ENV{'DB_UID'};
+$pwd = $ENV{'DB_PWD'};
+
+
+# file or sql contain the query
+# input will be a stream of values for insert or update queries
+# d (delimiter) provided for spliting input lines or joining output
+
+my ($help, $sqlfile, $sql, $infile, $outfile, $d);
+$d = chr(0xfe);
+
+GetOptions(	'help'		=> \$help,
+		'file:s'	=> \$sqlfile,
+		'sql:s'		=> \$sql,
+		'input:s'	=> \$infile,
+		'output:s'	=> \$outfile,
+		'delimiter:s'	=> \$d,
+		'dsn:s'		=> \$dsn,
+		'uid:s'		=> \$uid,
+		'pwd:s'		=> \$pwd,
+	);
+
+
+if ($help) {
+	usage();
+	exit(1);
+}
+
+if( ! (defined($dsn) && defined($uid) && defined($pwd) ) ){
+	print STDERR "need db connect info in environment vars DB_[DSN|UID|PWD]\n";
+	exit(1);
+}
+
+my $query;
+if( defined($sql) ){
+	$query = $sql;
+}elsif( defined($sqlfile) ){
+	open(SFILE,$sqlfile) or die "$sqlfile: $!\n";
+	$query = join '', <SFILE>;
+	close(SFILE);
+} else {
+	usage();
+	print STDERR "-s or -f must be specified.";
+	exit(1);
+}
+
+my $dbh = DBI->connect($dsn, $uid, $pwd, {RaiseError => 1, AutoCommit => 1} );
+my $dbq = $dbh->prepare($query);
+
+if( $query =~ /^\(*\s*select/mi ){
+	my $fhout;
+	if( defined($outfile) ){
+		$fhout = new FileHandle ($outfile, "w");
+		die "$outfile: $!\n" unless $fhout;
+	} else {
+		$fhout = new FileHandle;
+		$fhout->fdopen("STDOUT", "w");
+		die "stdout: $!\n" unless $fhout;
+	}
+	$dbq->execute();
+	while(my $results = $dbq->fetchrow_arrayref()){
+		for ( my $ri = 0; $ri < scalar(@{ $results }); $ri++ ) {
+			if ( ! defined($results->[$ri]) ) {
+				$results->[$ri] = '';
+			}
+		}
+		print $fhout join($d, @{ $results }) , qq(\n);
+	}
+	$fhout->close;
+} elsif( $query =~ /^(insert|update)/i ){
+	my $fhin;
+	if( defined($infile) ){
+		$fhin = new FileHandle ($infile, "r");
+		die "$infile: $!\n" unless $fhin;
+	} else {
+		$fhin = new FileHandle;
+		$fhin->fdopen ( "STDIN", "r");
+		die "stdin: $!\n" unless $fhin;
+	}
+	while(<$fhin>){
+		chomp( my @vals = split(/\Q$d\E/) );
+		$dbq->execute(@vals);
+	}
+	$fhin->close;
+} else {
+	print STDERR "invalid query syntax\n";
+	exit(1);
+}
+
+$dbh->disconnect();
+
+exit(0);
+
+
+sub usage {
+	print STDERR <<"ENDUSAGE";
+
+runs a query.
+
+usage: $0 <-f <sql-file> | -s <query>> [-i <file> -o <file>]
+
+ENDUSAGE
+}
