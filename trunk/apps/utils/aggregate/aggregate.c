@@ -150,12 +150,12 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		while ( getline(&inbuf, &inbuf_sz, in) > 0 ) {
 			chomp(inbuf);
 			if ( inbuf_sz > outbuf_sz ) {
-				char *tmpbuf = realloc( outbuf, inbuf_sz + 32 );
-				if ( ! tmpbuf ) {
+				char *tmp_outbuf = realloc( outbuf, inbuf_sz + 32 );
+				if ( ! tmp_outbuf ) {
 					fprintf(stderr, "aggregate: out of memory.\n");
 					goto aggregate_cleanup;
 				}
-				outbuf = tmpbuf;
+				outbuf = tmp_outbuf;
 				outbuf_sz = inbuf_sz + 32;
 			}
 
