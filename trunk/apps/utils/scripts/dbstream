@@ -107,7 +107,22 @@ sub usage {
 
 runs a query.
 
-usage: $0 <-f <sql-file> | -s <query>> [-i <file> -o <file>]
+usage: $0 <-f <sql-file> | -s <query>> [options]
+
+options:
+
+	-h, --help		print this message and exit
+	-f, --file   <file>	take sql from specified file
+	-s, --sql    <query>	take sql on the commandline
+	-i, --input  <file>	input of placeholder values
+	-o, --output <file>	write to specified file instead of stdout
+	--delimiter  <delim>	use specified field separator
+	--dsn        <dsn>	use DBI-style data-source name
+	--uid        <username>	database username
+	--pwd        <password>	database password
+
+if --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN,
+DB_UID, and DB_PWD will be used for the unprovided values.
 
 ENDUSAGE
 }
