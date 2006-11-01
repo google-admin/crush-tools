@@ -1,4 +1,5 @@
 #include <ffutils.h>
+#include <fcntl.h>	/* open64() and O_* flags */
 
 #ifdef DONT_PUT_THIS_IN
 struct field_index findfields( char *header, const char *delim ){
@@ -155,11 +156,30 @@ void chomp(char *s) {
 /* get's the next file specified in the trailing commandline args */
 FILE * nextfile( int argc, char *argv[], int *optind, const char *mode ) {
 	FILE *fp = NULL;
+	int fd_flags = 0;	/* file open flags */
+	int fd_mode = 0775;	/* file permissions mode */
+	int fd;
+
+	if ( strchr(mode, '+') )
+		fd_flags |= O_RDWR;
+	else if ( strchr(mode, 'r') )
+		fd_flags |= O_RDONLY;
+	else if ( strchr(mode, 'w') )
+		fd_flags |= O_WRONLY | O_CREAT;
+	else  if ( strchr(mode, 'a') )
+		fd_flags |= O_WRONLY | O_CREAT | O_APPEND;
+
+	fd_flags |= O_LARGEFILE;
 
 	while ( *optind < argc ) {
-		if ( (fp = fopen( argv[ (*optind)++ ], mode )) != NULL )
+
+		if ( (fd = open64( argv[(*optind)++], fd_flags )) != -1 ) {
+			fp = fdopen( fd, mode );
 			break;
+		}
+
 		perror( argv[ *optind - 1 ] );
+
 	}
 
 	return fp;

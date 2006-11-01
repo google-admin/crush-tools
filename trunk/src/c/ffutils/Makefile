@@ -1,6 +1,6 @@
 CC	:= gcc
 
-CFLAGS	:= -I. -O2 -Wall
+CFLAGS	:= -I. -O2 -Wall -D_LARGEFILE64_SOURCE
 LDFLAGS :=
 AR      := ar -r
 
