@@ -1,4 +1,5 @@
-/** @file ffutils.c some utilities for working with flat files.
+/** @file ffutils.h
+  * @brief some utilities for working with flat files.
   * @author jeremy hinds
   */
 
@@ -12,27 +13,27 @@
 /* if using gnu libc, define this */
 #define HAVE_GETLINE
 
-/** string comparison - equals */
+/** @brief string comparison - equals */
 #define str_eq(a, b) \
 	( strcmp(a, b) == 0 )
 
-/** string comparison - less than */
+/** @brief string comparison - less than */
 #define str_lt(a, b) \
 	( strcmp(a, b) < 0 )
 
-/** string comparison - greater than */
+/** @brief string comparison - greater than */
 #define str_gt(a, b) \
 	( strcmp(a, b) > 0 )
 
-/** MM-DD-YYYY string date comparison - equals */
+/** @brief MM-DD-YYYY string date comparison - equals */
 #define date_eq(a, b) \
 	( mdyhms_datecmp(a, b) == 0 )
 
-/** MM-DD-YYYY string date comparison - less than */
+/** @brief MM-DD-YYYY string date comparison - less than */
 #define date_lt(a, b) \
 	( mdyhms_datecmp(a, b) < 0 )
 
-/** MM-DD-YYYY string date comparison - greater than */
+/** @brief MM-DD-YYYY string date comparison - greater than */
 #define date_gt(a, b) \
 	( mdyhms_datecmp(a, b) > 0 )
 
@@ -59,7 +60,7 @@
                 }                               \
         } while (0)
 
-/** @brief scans a data transfer file header for the location of some fields. 
+/* * @brief scans a data transfer file header for the location of some fields. 
   * 
   * @param header first line of the dt file
   * @param delim file delimiter
@@ -136,14 +137,14 @@ FILE * nextfile( int argc, char *argv[], int *optind, const char *mode );
   * the following are valid escape sequences and the ascii character
   * to which they expand:
   *
-  *  - \a - 0x07
-  *  - \b - 0x08
-  *  - \f - 0x0c
-  *  - \n - 0x0a
-  *  - \r - 0x0d
-  *  - \t - 0x09
-  *  - \v - 0x0b
-  *  - \\ - 0x5c
+  *  - \\a - 0x07
+  *  - \\b - 0x08
+  *  - \\f - 0x0c
+  *  - \\n - 0x0a
+  *  - \\r - 0x0d
+  *  - \\t - 0x09
+  *  - \\v - 0x0b
+  *  - \\\\ - 0x5c
   *
   * @param s string potentially containing escaped characters
   */
