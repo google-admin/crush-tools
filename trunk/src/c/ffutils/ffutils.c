@@ -63,6 +63,20 @@ size_t fields_in_line(const char *l, const char *d){
 	return f;
 }
 
+/** @brief extract a field from a delimited string.
+  *
+  * copies at most <i>n</i> characters from field <i>i</i> of
+  * <i>delim</i>-delimited string <i>ct</i> into <i>cs</i>.
+  * 
+  * @param cs destination buffer
+  * @param ct delimited string
+  * @param n max chars to copy into buffer
+  * @param i field to be copied (0-based)
+  * @param delim delimiter of ct
+  * 
+  * @return number of chars copied into buffer, or -1 if i is greater
+  * than the number of fields in ct
+  */
 int get_line_field(char *cs, const char *ct, const size_t n, const int i, const char *delim) {
 	int cti, cn;
 	char *fstart, *fend;

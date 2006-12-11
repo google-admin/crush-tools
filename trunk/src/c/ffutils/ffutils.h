@@ -86,7 +86,7 @@ size_t fields_in_line(const char *l, const char *d);
   * @param cs destination buffer
   * @param ct delimited string
   * @param n max chars to copy into buffer
-  * @param i field to be copied
+  * @param i field to be copied (0-based)
   * @param delim delimiter of ct
   * 
   * @return number of chars copied into buffer, or -1 if i is greater

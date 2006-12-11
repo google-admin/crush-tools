@@ -1,0 +1,7 @@
+/** @mainpage
+
+    ffutils is a collection of utility functions to make it easier to work with
+    flat-file data.  to use it, just #include <ffutils.h> and add -lffutils to
+    your gcc command.
+
+  */
