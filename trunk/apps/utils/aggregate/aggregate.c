@@ -89,6 +89,9 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	else
 		in = nextfile( argc, argv, &optind, "r" );
 
+	if ( in == NULL )
+		return EXIT_FILE_ERR;
+
 	inbuf = NULL;
 	inbuf_sz = 0;
 
