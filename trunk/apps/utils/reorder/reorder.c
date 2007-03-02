@@ -47,6 +47,8 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	size_t order_sz = 0;
 	size_t order_elems = 0;
 
+	char default_delim[] = { 0xfe, 0x00 };
+
 #ifdef DEBUG
 	int i;
 	for( i = 0; i < n_swap; i++ ) {
@@ -57,21 +59,17 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	}
 #endif
 
+	if ( ! args->delim ) {
+		args->delim = default_delim;
+	}
+
 	/* may add output option later */
 	fpout = stdout;
 
 	if ( optind == argc )
 		fp = stdin;
-	else {
-		do {
-			if( (fp = fopen(argv[optind], "r")) == NULL ) {
-				/* may add silent option later */
-				/* if ( errno == ENOENT && ! args->silent ) */
-					perror(argv[optind]);
-				optind++;
-			}
-		} while (fp == NULL && optind < argc);
-	}
+	else
+		fp = nextfile ( argc, argv, &optind, "r" );
 
 	if( fp == NULL )
 		return EXIT_FILE_ERR;
@@ -138,16 +136,11 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		if( optind >= argc )
 			break;
 
-		do {
-			if( (fp = fopen(argv[optind], "r")) == NULL ) {
-				/* may add silent option later */
-				/* if ( errno == ENOENT && ! args->silent ) */
-					perror(argv[optind]);
-				optind++;
-			}
-		} while (fp == NULL && optind < argc);
+		fp = nextfile ( argc, argv, &optind, "r" );
+
 		if (fp == NULL)
 			break;
+
 	} while ( optind <= argc );
 
 	fflush(fpout);
