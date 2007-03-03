@@ -131,11 +131,6 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		fclose(fp);
 		fp = NULL;
 
-		optind++;
-
-		if( optind >= argc )
-			break;
-
 		fp = nextfile ( argc, argv, &optind, "r" );
 
 		if (fp == NULL)
