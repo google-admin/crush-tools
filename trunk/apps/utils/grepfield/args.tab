@@ -70,5 +70,13 @@ END_COPYRIGHT
 	  type => 'flag',
 	  required => 0,
 	  description => 'do case-insensitive matches'
+	},
+	{
+	  name => 'preserve_header',
+	  shortopt => 'p',
+	  longopt => 'preserver_header',
+	  type => 'flag',
+	  required => 0,
+	  description => 'preserve the header line'
 	}
 );

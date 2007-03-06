@@ -88,6 +88,15 @@ int grepfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	while ( in != NULL ) {
 
+		// Should we preserve the header line?
+		if ( args->preserve_header ) {
+			// Yes => Do we have a line at all?
+			if ( getline(&buffer, &bufsz, in) > 0 ) {
+				// Yes => Just print this to the output file
+				fprintf(out, "%s", buffer);
+			}
+		}
+
 		while ( getline(&buffer, &bufsz, in) > 0 ) {
 			chomp(buffer);
 			if ( field_to_scan(&fieldval, &fldsz, buffer, args->delim, field_no) == NULL )
