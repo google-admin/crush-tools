@@ -1,19 +1,83 @@
-# argument descriptions - input to cgen
-# format:
-# name  type    required	short   long    exit_function   description
-#
-# type (flag|var)
-# required (0|1)
-# exit_function (usage|version)
-# short & long are the 1-char and string argument names
-# description goes straight into the usage statement
-#
+# data relevant to the application as a whole
+%global = (
+	name => "indexof",
+	description => "prints the column number matching a given header, or 0 if not found.",
+	version => "1.0",
+	trailing_opts => "",
+	usage_extra => "",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2005-2007, Doubleclick Inc.
+END_COPYRIGHT
+);
 
-help	flag	0	h	help	usage	print this message and exit.
-version	flag	0	v	version	version	print version information and exit.
-verbose	flag	0	V	verbose		print verbose status messages to console
-file	var	0	f	file		specifies file to read (default = stdin)
-row	var	0	r	row		specifies line number to use as header (default = 1)
-label	var	1	l	label		specifies the header label to look for
-delim	var	1	d	delim		specifies the file delimiter
-string	var	0	s	string		allows the header line to be specified on the command-line
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose messages during execution'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 1,
+	  description => 'field separator string (required)'
+	},
+	{
+	  name => 'label',
+	  shortopt => 'l',
+	  longopt => 'label',
+	  type => 'var',
+	  required => 1,
+	  description => 'the header label to look for (required)'
+	},
+	{
+ 	  name => 'file',
+ 	  shortopt => 'f',
+ 	  longopt => 'file',
+ 	  type => 'var',
+ 	  required => 0,
+ 	  description => 'specifies file to read (default = stdin)',
+	},
+	{
+	  name => 'string',
+	  shortopt => 's',
+	  longopt => 'string',
+	  type => 'var',
+	  required => 0,
+	  description => 'use <string> instead of a header from a file'
+	},
+	{
+	  name => 'row',
+	  shortopt => 'r',
+	  longopt => 'row',
+	  type => 'var',
+	  required => 0,
+	  description => 'header line number in file (default = 1)',
+	},
+);
