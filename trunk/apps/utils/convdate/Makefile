@@ -34,7 +34,6 @@ debug ::
 
 clean ::
 	rm -f *.o
-	rm -f *.d
 	rm -f $(GEN_FILES)
 
 dist : $(DISTFILE)

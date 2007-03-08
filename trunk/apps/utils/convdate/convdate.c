@@ -29,9 +29,11 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	char date[64] = "";
 
-        char *token = NULL;
-        int tok_no  = 0;
-        size_t size = 0;
+        size_t size  = 0;
+        int no_chars = 0;
+        int start    = 0;
+        int end      = 0;
+	int result   = 0;
 
 	// Set default value for the field if necessary.
 	if ( ! args->field ) {
@@ -64,16 +66,14 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		}
 
 		// Process each line
-		int no_chars = 0;
-		int start = 0;
-		int end = 0;
 		while ( getline(&buffer, &bufsz, in) > 0 ) {
 
 			// Remove new line
 			chomp(buffer);
 
 			// Find the field
-			if((no_chars = get_line_field(date, buffer, 64, field_no - 1, args->delim)) != -1) {
+			no_chars = get_line_field(date, buffer, 64, field_no - 1, args->delim);
+			if(no_chars != -1) {
 
 	                        // Yes => Convert input date into a time value. Success?
         	                if(strptime(date, args->input_format, &storage) != NULL) {
@@ -83,7 +83,7 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
         	                } else {
 
                 	                // No => Bail out
-                        	        fprintf(stderr, "could not convert date \"%s\"\n", token);
+                        	        fprintf(stderr, "could not convert date \"%s\"\n", date);
                                 	return EXIT_HELP;
                        		}
 			} else {
@@ -94,7 +94,8 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			} 
 
 			// Find start and end date of the field
-			if(get_line_pos(buffer, field_no - 1, args->delim, &start, &end)) {
+			result = get_line_pos(buffer, field_no - 1, args->delim, &start, &end);
+			if(result) {
 
 				// Cut off the first part before the field.
 				buffer[start] = '\0';
@@ -107,10 +108,6 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	if ( buffer ) {
 		free(buffer);
-	}
-
-	if ( token ) {
-		free(token);
 	}
 
 	return EXIT_OKAY;
