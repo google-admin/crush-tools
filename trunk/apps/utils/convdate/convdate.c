@@ -72,14 +72,20 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			chomp(buffer);
 
 			// Find the field
-			no_chars = get_line_field(date, buffer, 64, field_no - 1, args->delim);
-			if(no_chars != -1) {
+			result = get_line_pos(buffer, field_no - 1, args->delim, &start, &end);
+			if( result ) {
 
 	                        // Yes => Convert input date into a time value. Success?
-        	                if(strptime(date, args->input_format, &storage) != NULL) {
+        	                if(strptime(buffer + start, args->input_format, &storage) != NULL) {
 
                 	              	// Yes => Convert time value into a string
                         	        size = strftime(date, 64, args->output_format, &storage);
+
+                        	        // Cut off the first part before the field.
+                	                buffer[start] = '\0';
+
+        	                        // Now write the first part, the date itself and the remainder of the line
+	                                fprintf(out, "%s%s%s\n", buffer, date, buffer + end + 1);
         	                } else {
 
                 	                // No => Bail out
@@ -92,17 +98,6 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 				fprintf(stderr, "did not find the field at %i\n", field_no);
                                 return EXIT_HELP;
 			} 
-
-			// Find start and end date of the field
-			result = get_line_pos(buffer, field_no - 1, args->delim, &start, &end);
-			if(result) {
-
-				// Cut off the first part before the field.
-				buffer[start] = '\0';
-
-				// Now write the first part, the date itself and the remainder of the line
-				fprintf(out, "%s%s%s\n", buffer, date, buffer + end + 1);
-			}
 		}
 	}
 
