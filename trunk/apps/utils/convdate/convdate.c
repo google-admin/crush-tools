@@ -64,55 +64,44 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		}
 
 		// Process each line
+		int no_chars = 0;
+		int start = 0;
+		int end = 0;
 		while ( getline(&buffer, &bufsz, in) > 0 ) {
 
 			// Remove new line
 			chomp(buffer);
 
-			// Init tokenizer variables
-			tok_no = 1;
+			// Find the field
+			if((no_chars = get_line_field(date, buffer, 64, field_no - 1, args->delim)) != -1) {
 
-			// Get first token
-			token = strtok(buffer, args->delim);
-			while(token) {
+	                        // Yes => Convert input date into a time value. Success?
+        	                if(strptime(date, args->input_format, &storage) != NULL) {
 
-				// Is this the date field?
-				if(tok_no == field_no) {
+                	              	// Yes => Convert time value into a string
+                        	        size = strftime(date, 64, args->output_format, &storage);
+        	                } else {
 
-					// Yes => Convert input date into a time value. Success?
-					if(strptime(token, args->input_format, &storage) != NULL) {
+                	                // No => Bail out
+                        	        fprintf(stderr, "could not convert date \"%s\"\n", token);
+                                	return EXIT_HELP;
+                       		}
+			} else {
 
-						// Yes => Convert time value into a string
-						size = strftime(date, 64, args->output_format, &storage);
+				// Bail out as we have not found the field.
+				fprintf(stderr, "did not find the field at %i\n", field_no);
+                                return EXIT_HELP;
+			} 
 
-						// Print new date
-						fprintf(out, "%s", date);
-					} else {
+			// Find start and end date of the field
+			if(get_line_pos(buffer, field_no - 1, args->delim, &start, &end)) {
 
-						// No => Bail out
-						fprintf(stderr, "could not convert date \"%s\"\n", token);
-						return EXIT_HELP;
-					}
-				} else {
+				// Cut off the first part before the field.
+				buffer[start] = '\0';
 
-					// No => Just print out the token
-					fprintf(out, "%s", token);
-				}
-				
-				// Increase token number
-				tok_no++;
-
-				// Get next token
-				token = strtok(NULL, args->delim);
-
-				// Do we have to print the delimiter?
-				if(token) {
-					fprintf(out, "%s", args->delim);
-				}
+				// Now write the first part, the date itself and the remainder of the line
+				fprintf(out, "%s%s%s\n", buffer, date, buffer + end + 1);
 			}
-
-			// Print new line
-			fprintf(out, "\n");
 		}
 	}
 
