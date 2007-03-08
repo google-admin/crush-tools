@@ -51,8 +51,8 @@ END_COPYRIGHT
 	  shortopt => 'i',
 	  longopt => 'input_format',
 	  type => 'var',
-	  required => 1,
-	  description => 'date format in the input file - see strptime (required)'
+	  required => 0,
+	  description => 'date format in the input file - see strptime (default: %%m-%%d-%%Y-%%T)'
 	},
 	{
 	  name => 'output_format',

@@ -16,6 +16,7 @@
 int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	char default_delim[2] = { 0xfe, 0x00 };	/* default field separator*/
+	char default_input_format[] = "%m-%d-%Y-%T";
 
 	FILE *in  = stdin;
 	FILE *out = stdout;	/* input & output files */
@@ -30,7 +31,6 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	char date[64] = "";
 
         size_t size  = 0;
-        int no_chars = 0;
         int start    = 0;
         int end      = 0;
 	int result   = 0;
@@ -44,6 +44,11 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			fprintf(stderr, "%d: invalid field number.\n", field_no);
 			return EXIT_HELP;
 		}
+	}
+
+	// Set default input date format if necessary.
+	if ( ! args->input_format ) {
+		args->input_format = default_input_format;
 	}
 
 	// Set default delimiter if necessary.
