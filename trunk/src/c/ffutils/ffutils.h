@@ -169,6 +169,19 @@ void expand_chars(char *s);
   */
 ssize_t getline ( char **lineptr, size_t *n, FILE *stream );
 
+/**
+  * @brief determines the position of the first and the last character of the given field.
+  *
+  * @param *ct the line buffer
+  * @param i the field number (0-based)
+  * @param *d the field delimiter
+  * @param the position of the start character
+  * @param the position of the end character
+  *
+  * @return 1 on success, 0 otherwise
+  */
+int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
+
 #endif /* HAVE_GETLINE */
 
 #endif /* FFUTILS_H */
