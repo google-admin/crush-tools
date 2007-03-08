@@ -1,0 +1,73 @@
+# data relevant to the application as a whole
+%global = (
+	name => "convdate",
+	description => "converts a date within a field of a dt file into a different format.",
+	version => "0.1",
+	usage_extra => "the file is read from the stdin and written to stdout",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2005
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string (default: 0xfe)'
+	},
+	{
+	  name => 'field',
+	  shortopt => 'f',
+	  longopt => 'field',
+	  type => 'var',
+	  required => 0,
+	  description => '1-based number of field to convert (default: 1)'
+	},
+	{
+	  name => 'input_format',
+	  shortopt => 'i',
+	  longopt => 'input_format',
+	  type => 'var',
+	  required => 1,
+	  description => 'date format in the input file - see strptime (required)'
+	},
+	{
+	  name => 'output_format',
+	  shortopt => 'o',
+	  longopt => 'output_format',
+	  type => 'var',
+	  required => 1,
+	  description => 'date format in the output file - see strftime (required)'
+	},
+	{
+	  name => 'preserve_header',
+	  shortopt => 'p',
+	  longopt => 'preserver_header',
+	  type => 'flag',
+	  required => 0,
+	  description => 'preserve the header line (default: do not preserve the header)'
+	}
+);
