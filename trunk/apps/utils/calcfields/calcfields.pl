@@ -79,7 +79,7 @@ while($line = <STDIN>) {
 	$line = trim $line;
 
         # Split the line
-        @parts = split(/$opt_d/, $line);
+        @parts = split(/$opt_d/, $line, -1);
 
         # Pass through the first line which is assumed to be the header
         if($first) {
@@ -142,7 +142,7 @@ sub extended_eval {
 	if($@) {
 		$result = $fallback;
 	}
-
+	
 	return $result;
 }
 
