@@ -82,10 +82,13 @@ if(defined($opt_r)) {
 } elsif(defined($opt_p)) {
 	
 	# Yes => Read and extend the header
-	if($line = <STDIN>) {
+	if(defined($line = <STDIN>)) {
 
 		# Remove blanks/new lines at the end of the row
 		$line = trim $line;	
+
+		# Split into parts
+		@parts = split(/$opt_d/, $line);
 
 		# Build the new header from the original header and the column name for the calculated field.
         	print insert_field($line, \@parts, $opt_d, $opt_c, $opt_i) . "\n";
@@ -94,7 +97,7 @@ if(defined($opt_r)) {
 }
 
 # Read the lines from the standard input
-while($line = <STDIN>) {
+while(defined($line = <STDIN>)) {
 
 	# Remove blanks/new lines at the end of the row
 	$line = trim $line;
