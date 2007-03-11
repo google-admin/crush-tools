@@ -2,13 +2,13 @@
 
 use strict;
 use Getopt::Std;
-use vars qw($opt_h $opt_v $opt_d $opt_f $opt_i $opt_p $opt_b $opt_c);
+use vars qw($opt_h $opt_v $opt_d $opt_f $opt_i $opt_p $opt_b $opt_c $opt_r);
 use Date::Calc qw(Delta_DHMS);
 use DART::DateFormat;
 use Text::Trim;
 
 # Parse command line options
-getopts('hvpd:f:i:b:c:');
+getopts('hvprd:f:i:b:c:');
 
 # Define default delimiter
 my $delim = `tochar 0xfe`;
@@ -22,6 +22,7 @@ usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -f <formula> -b <fallback
  -h                       .. help
  -v                       .. verbose (for debugging purposes)
  -p			  .. preserve the header line (just passes the first line through to the output file)
+ -r 			  .. remove the header line (overrides -p)
  -d <delimiter>           .. the delimiter for the input file which is read from the standard input; defaults to $delim
  -i <index>               .. index for the new fields (1-based); if not given the new field will be appended
  -f <formula>             .. the formula to calculate from the given fields
@@ -34,7 +35,6 @@ HELP
 }
 
 # Evaluate event ids
-my $first = 1;
 my $line = "";
 my @parts = ();
 my $i = 0;
@@ -72,6 +72,27 @@ if(!defined($opt_c)) {
 	print "No column name given, using \"$opt_c\" as the column name.\n" if(defined($opt_v));
 }
 
+# Should we remove the header line?
+if(defined($opt_r)) {
+
+	# Yes => Just read the line and dump it
+	$line = <STDIN>;
+
+# Should we preserve the header line?
+} elsif(defined($opt_p)) {
+	
+	# Yes => Read and extend the header
+	if($line = <STDIN>) {
+
+		# Remove blanks/new lines at the end of the row
+		$line = trim $line;	
+
+		# Build the new header from the original header and the column name for the calculated field.
+        	print insert_field($line, \@parts, $opt_d, $opt_c, $opt_i) . "\n";
+	}
+
+}
+
 # Read the lines from the standard input
 while($line = <STDIN>) {
 
@@ -80,21 +101,6 @@ while($line = <STDIN>) {
 
         # Split the line
         @parts = split(/$opt_d/, $line, -1);
-
-        # Pass through the first line which is assumed to be the header
-        if($first) {
-                # Now we have processed the first row.
-                $first = 0;
-
-		# Should we preserve the header?
-		if(defined($opt_p)) {
-			# Build the new header from the original header and the column name for the calculated field.
-			print insert_field($line, \@parts, $opt_d, $opt_c, $opt_i) . "\n";
-		}
-
-		# Process the next line.
-		next;
-        }
 
 	# Calculate the result
 	$result = extended_eval($opt_f, \@parts, $opt_b);
