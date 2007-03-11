@@ -59,15 +59,18 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	// Process the input stream
 	if ( in != NULL ) {
 
-		// Should we preserve the header line?
-		if ( args->preserve_header ) {
+	        // Should we remove the header line?
+        	if ( args->remove_header ) {
+                	// Yes => Just read the first line and throw it away.
+	                getline(&buffer, &bufsz, in);
 
-			// Yes => Do we have a line at all?
-			if ( getline(&buffer, &bufsz, in) > 0 ) {
-
-				// Yes => Just print this to the output file
-				fprintf(out, "%s", buffer);
-			}
+        	// Should we preserve the header line?
+	        } else if ( args->preserve_header ) {
+        	        // Yes => Do we have a line at all?
+                	if ( getline(&buffer, &bufsz, in) > 0 ) {
+                        	// Yes => Just print this to the output file
+	                        fprintf(out, "%s", buffer);
+        	        }
 		}
 
 		// Process each line
