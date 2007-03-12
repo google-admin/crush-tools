@@ -19,6 +19,7 @@ int main ( int argc, char *argv[] ) {
 	test_nextfile();
 	test_expand_chars();
 	test_expand_nums();
+	test_cut_field();
 
 	return 0;
 }
@@ -214,13 +215,14 @@ void test_expand_nums ( void ) {
 	free(tmpstr);
 }
 
-/*
 void test_cut_field ( void ) {
 	int n_errors = 0;
 	char result[32];
 
 	char *TL0 = "a;b;c;d;e";
 	char *TE0 = "b;c;d;e";
+	char *TE1 = "b;c;d";
+	char *TE2 = "b;d";
 
 	strncpy(result, TL0, 31);
 	cut_field(result, 0, ";");
@@ -230,11 +232,24 @@ void test_cut_field ( void ) {
 			TL0, result, TE0);
 		n_errors++;
 	}
+        cut_field(result, 3, ";");
+        if ( ! str_eq( result, TE1 ) ) {
+                fprintf(stderr,
+                        "failure: cut_field( \"%s\", 3, \";\" ) returned %s instead of %s\n",
+                        TL0, result, TE1);
+                n_errors++;
+        }
+        cut_field(result, 1, ";");
+        if ( ! str_eq( result, TE2 ) ) {
+                fprintf(stderr,
+                        "failure: cut_field( \"%s\", 3, \";\" ) returned %s instead of %s\n",
+                        TL0, result, TE2);
+                n_errors++;
+        }
 
 	if ( n_errors == 0 ) {
-		printf("expand_nums(): ok\n");
+		printf("cut_field(): ok\n");
 	}
 
 }
-*/
 

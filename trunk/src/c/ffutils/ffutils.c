@@ -358,7 +358,12 @@ int get_line_pos( const char *ct, const int field_no, const char *d, int *start,
 
 	// Seach in the string
 	for( i = *start; *end == -1 && i < len; i++ ) {
-		
+	
+		// Did we hit the last character of the line?
+		if( i == len - 1 ) {
+			*end = i;
+		}	
+
 		// Did we find a delimiter?
 		if( strncmp(ct + i, d, len_d) == 0 ) {
 			*end = i - 1;
@@ -368,3 +373,34 @@ int get_line_pos( const char *ct, const int field_no, const char *d, int *start,
 	return *start != -1 && *end != -1 ? 1 : 0;
 }
 
+
+char * cut_field( char *ct, const int i, const char *d) {
+
+	int start, end;
+
+	if ( get_line_pos(ct, i, d, &start, &end) ) {
+
+		// Is this the first field?
+		if(start > 0) {
+			
+			// No => Adjust the start position to include the last delimiter
+			start -= strlen(d);
+		}
+		// Is this the last field?
+		else if ( end < strlen(ct) - 1 ) {
+
+			// No => Adjust the end position to include the next delimiter
+			end += strlen(d);
+	
+		}
+
+		// Split the line by inserting null bytes.
+		ct[start] = '\0';
+		ct[end]   = '\0';
+
+		// We are resuing the buffer
+		sprintf(ct, "%s%s", ct, ct + end + 1);
+	}
+
+	return ct;
+}

@@ -188,4 +188,15 @@ ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
   */
 int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
 
+/**
+  * @brief removes a field from a line.
+  *
+  * @param *ct the line buffer (buffer is changed!)
+  * @param i the field number (0-based)
+  * @param *d the field delimiter
+  *
+  * @return pointer to ct
+  */
+char * cut_field( char *ct, const int i, const char *d);
+
 #endif /* FFUTILS_H */
