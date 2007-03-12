@@ -2,13 +2,13 @@
 
 use strict;
 use Getopt::Std;
-use vars qw($opt_h $opt_v $opt_d $opt_f $opt_i $opt_p $opt_b $opt_c $opt_r);
+use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p $opt_b $opt_c $opt_r);
 use Date::Calc qw(Delta_DHMS);
 use DART::DateFormat;
 use Text::Trim;
 
 # Parse command line options
-getopts('hvprd:f:i:b:c:');
+getopts('hvprd:e:i:b:c:');
 
 # Define default delimiter
 my $delim = `tochar 0xfe`;
@@ -17,7 +17,7 @@ my $delim = `tochar 0xfe`;
 if ($opt_h) {
     print << "HELP";
 
-usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -f <formula> -b <fallback_result> [-c <column_name>]
+usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -e <expression> -b <fallback_result> [-c <column_name>]
 
  -h                       .. help
  -v                       .. verbose (for debugging purposes)
@@ -25,7 +25,7 @@ usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -f <formula> -b <fallback
  -r 			  .. remove the header line (overrides -p)
  -d <delimiter>           .. the delimiter for the input file which is read from the standard input; defaults to $delim
  -i <index>               .. index for the new fields (1-based); if not given the new field will be appended
- -f <formula>             .. the formula to calculate from the given fields
+ -e <expression>          .. the expression to calculate; the expression may contain references to fields, e.g. [1] + [2]
  -b <fallback_result>     .. if the formula is not properly evaluated use this result as the fallback
  -c <column_name>         .. the name of the column for the calculated field; only used with option -p
 
@@ -53,10 +53,10 @@ if(!defined($opt_i) || !$opt_i =~ m/[1-9][0-9]*/) {
 }
 
 # Check formula. Bail out if it is not given. If given, check the formulas validity.
-if(!defined($opt_f)) {
+if(!defined($opt_e)) {
         die "No formula given. Please use option -f to provide one.\n"; exit 1;
 } else {
-	print "Using formula \"" . $opt_f . "\".\n" if(defined($opt_v));
+	print "Using formula \"" . $opt_e . "\".\n" if(defined($opt_v));
 }
 
 # Check the fallback result. Bail out if it's not given.
@@ -106,7 +106,7 @@ while(defined($line = <STDIN>)) {
         @parts = split(/$opt_d/, $line, -1);
 
 	# Calculate the result
-	$result = extended_eval($opt_f, \@parts, $opt_b);
+	$result = extended_eval($opt_e, \@parts, $opt_b);
 
 	# Build new line with the calculated result
 	print insert_field($line, \@parts, $opt_d, $result, $opt_i) . "\n";
