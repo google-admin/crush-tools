@@ -4,12 +4,15 @@ CFLAGS	:= -I. -O2 -Wall -D_LARGEFILE64_SOURCE
 LDFLAGS :=
 AR      := ar -r
 
-INCDIR	:= /home/jhinds/include/
-LIBDIR	:= /home/jhinds/lib/
+INCDIR	:= $(HOME)/include/
+LIBDIR	:= $(HOME)/lib/
 
 default : libffutils.a
 
-test :
+test : libffutils.a
+	$(CC) -L. -o ffutils_test ffutils_test.c -lffutils
+	./ffutils_test
+	rm ffutils_test
 
 install : libffutils.a ffutils.h
 	cp libffutils.a $(LIBDIR)

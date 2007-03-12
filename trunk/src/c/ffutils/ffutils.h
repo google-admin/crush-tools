@@ -10,9 +10,6 @@
 #ifndef FFUTILS_H
 #define FFUTILS_H
 
-/* if using gnu libc, define this */
-#define HAVE_GETLINE
-
 /** @brief string comparison - equals */
 #define str_eq(a, b) \
 	( strcmp(a, b) == 0 )
@@ -59,6 +56,11 @@
                                 } while ( dd8_i-- > 0 ); \
                 }                               \
         } while (0)
+
+/** @brief the amount by which expand_nums() will increment the size of
+  * the target array when reallocating memory.
+  */
+#define FFUTILS_RESIZE_AMT 16
 
 /* * @brief scans a data transfer file header for the location of some fields. 
   * 
@@ -150,24 +152,28 @@ FILE * nextfile( int argc, char *argv[], int *optind, const char *mode );
   */
 void expand_chars(char *s);
 
-
-#ifndef HAVE_GETLINE
-# ifndef GETLINE_BUF_INC 
-# define GETLINE_BUF_INC 64
-# endif
-
-/** 
-  * @brief reads a line from a file and dynamically allocates enough storage to hold it.
-  * 
-  * this is a rewrite of the getline() from gnu's c library.
-  *
-  * @param **lineptr pointer to string which will hold the file line
-  * @param *n pointer to the amount of memory allocated to *lineptr
-  * @param stream file to read from
-  * 
-  * @return length of the file line on success, or -1 on memory allocation error
-  */
-ssize_t getline ( char **lineptr, size_t *n, FILE *stream );
+/*!	\brief splits a string of number lists/ranges into an array.
+ *
+ *	The "arg" string should be dynamically allocated, since strtok()
+ *	doesn't like const char[];
+ *
+ *	"array" should also be dynamically allocated, as it may be realloc()'d
+ *	to accomodate more elements.  If memory hasn't been allocated for array,
+ *	set the pointer to NULL and pass 0 as array_size.  Memory will be
+ *	allocated for you, but remember to call free() on array when finished
+ *	with it.
+ *
+ *	All of the parameters may be modified during execution.
+ *
+ *	\param arg string representation of numbers
+ *	\param array pointer to array of ints
+ *	\param array_size number of elements array can currently hold
+ *
+ *	\return on success, the number of items in populated array;
+ *	        -1 on memory allocation error;
+ *		-2 if arg has invalid syntax
+ */
+ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
 
 /**
   * @brief determines the position of the first and the last character of the given field.
@@ -181,7 +187,5 @@ ssize_t getline ( char **lineptr, size_t *n, FILE *stream );
   * @return 1 on success, 0 otherwise
   */
 int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
-
-#endif /* HAVE_GETLINE */
 
 #endif /* FFUTILS_H */

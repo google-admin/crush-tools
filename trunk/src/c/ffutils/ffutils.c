@@ -1,5 +1,6 @@
 #include <ffutils.h>
 #include <fcntl.h>	/* open64() and O_* flags */
+#include <ctype.h>	/* isdigit() */
 
 #ifdef DONT_PUT_THIS_IN
 struct field_index findfields( char *header, const char *delim ){
@@ -63,6 +64,7 @@ size_t fields_in_line(const char *l, const char *d){
 	return f;
 }
 
+
 /** @brief extract a field from a delimited string.
   *
   * copies at most <i>n</i> characters from field <i>i</i> of
@@ -109,6 +111,7 @@ int get_line_field(char *cs, const char *ct, const size_t n, const int i, const 
 	return cn;
 }
 
+
 char * field_start(const char *cs, size_t fn, const char *delim) {
 	char *p;
 	size_t dl;	/* delimiter length */
@@ -126,6 +129,7 @@ char * field_start(const char *cs, size_t fn, const char *delim) {
 	}
 	return p;
 }
+
 
 int mdyhms_datecmp(const char *a, const char *b){
 	int ay, am, ad, ah, ai, as;
@@ -161,17 +165,18 @@ int mdyhms_datecmp(const char *a, const char *b){
 	return 1;
 }
 
+
 void chomp(char *s) {
 	int l = strlen(s) - 1;
 	while( l >= 0 && (s[l] == '\n' || s[l] == '\r') )
 		s[l--] = '\0';
 }
 
+
 /* get's the next file specified in the trailing commandline args */
 FILE * nextfile( int argc, char *argv[], int *optind, const char *mode ) {
 	FILE *fp = NULL;
 	int fd_flags = 0;	/* file open flags */
-	int fd_mode = 0775;	/* file permissions mode */
 	int fd;
 
 	if ( strchr(mode, '+') )
@@ -236,32 +241,92 @@ void expand_chars(char *s){
 }
 
 
-#ifndef HAVE_GETLINE
-ssize_t getline ( char **lineptr, size_t *n, FILE *stream ){
-
-	/* initialize if it hasn't already been done -
-	   initial buffer size == 128 */
-	if( *n == 0 || *lineptr == NULL ){
-		if( ( *lineptr = malloc(sizeof(char) << 7) ) == NULL ){
-			return -1;
-		}
-		*n = sizeof(char) << 7;
-	}
-
-	if( fgets( *lineptr, *n, stream ) == NULL ){
+/* used in expand_nums() */
+static size_t arr_resize(	void **array,
+				const size_t dsize,
+				const size_t oldsize,
+				const size_t add
+){
+	if( realloc( *array, dsize * (oldsize + add) ) == NULL ){
 		return 0;
 	}
-	while( (*lineptr)[ strlen(*lineptr)-1 ] != '\n' ){
-		char buf[GETLINE_BUF_INC];
-		if( ( *lineptr = realloc( *lineptr, *n + GETLINE_BUF_INC ) ) == NULL )
-			return -1;
-		*n += GETLINE_BUF_INC;
-		fgets( buf, GETLINE_BUF_INC, stream );
-		strcat( *lineptr, buf );
-	}
-	return strlen(*lineptr);
+	return (oldsize + add);
 }
-#endif
+
+
+ssize_t expand_nums ( char *arg, int **array, size_t *array_size ) {
+	int i;
+	char *token;
+
+	if (arg == NULL || strlen(arg) == 0) {
+		return 0;
+	}
+
+	/* check the string syntax */
+	for ( i=0; arg[i] != '\0'; i++ ) {
+		if( (! isdigit(arg[i]))
+		    && arg[i] != ','
+		    && arg[i] != '-' ) {
+			return -2;
+		}
+	}
+	i = 0;
+
+	if (*array == NULL && *array_size == 0) {
+		*array = malloc( sizeof(int) * FFUTILS_RESIZE_AMT );
+		if ( *array == NULL ) {
+			return -1;
+		}
+		*array_size = FFUTILS_RESIZE_AMT;
+	}
+
+	if( strchr(arg,',') == NULL && strchr(arg,'-') == NULL ){
+		sscanf(arg,"%u",&((*array)[0]));
+		return 1;
+	}
+
+	token = strtok( arg, "," );
+
+	while( token != NULL ){
+
+		if ( i >= *array_size ){
+			if ( (*array_size = arr_resize((void**)array, sizeof(int),
+					*array_size, FFUTILS_RESIZE_AMT)) == 0){
+				return -1;
+			}
+		}
+
+		if ( strchr(token, '-') == NULL ) {
+			sscanf( token, "%u", &((*array)[i]) );
+			i++;
+		}
+		else {
+			unsigned int i0, i1, ii;
+			sscanf( token, "%u-%u", &i0, &i1 );
+
+			/* make sure the array is big enough to hold the range */
+			if ( *array_size < (i + i1 - i0) )  {
+
+				*array_size = arr_resize((void**)array,
+						sizeof(int), *array_size,
+						i1 - i0 );
+
+				if( *array_size == 0 ) {
+					return -1;
+				}
+			}
+
+			/* add all numbers in the range to the array */
+			for ( ii = i0; ii <= i1; ii++ ) {
+				(*array)[i++] = ii;
+			}
+		}
+
+		/* get the next token */
+		token = strtok(NULL, ",");
+	}
+	return i;
+}
 
 
 int get_line_pos( const char *ct, const int field_no, const char *d, int *start, int *end) {
