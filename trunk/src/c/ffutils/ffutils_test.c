@@ -218,34 +218,38 @@ void test_expand_nums ( void ) {
 void test_cut_field ( void ) {
 	int n_errors = 0;
 	char result[32];
+	char *new_field;
 
 	char *TL0 = "a;b;c;d;e";
 	char *TE0 = "b;c;d;e";
-	char *TE1 = "b;c;d";
-	char *TE2 = "b;d";
+	char *TE1 = "a;b;c;d";
+	char *TE2 = "a;b;d;e";
 
 	strncpy(result, TL0, 31);
-	cut_field(result, 0, ";");
-	if ( ! str_eq( result, TE0 ) ) {
+	new_field = cut_field(result, 0, ";");
+	if ( ! str_eq( new_field, TE0 ) ) {
 		fprintf(stderr,
 			"failure: cut_field( \"%s\", 0, \";\" ) returned %s instead of %s\n",
-			TL0, result, TE0);
+			TL0, new_field, TE0);
 		n_errors++;
 	}
-        cut_field(result, 3, ";");
-        if ( ! str_eq( result, TE1 ) ) {
+	free(new_field);
+        new_field = cut_field(result, 4, ";");
+        if ( ! str_eq( new_field, TE1 ) ) {
                 fprintf(stderr,
-                        "failure: cut_field( \"%s\", 3, \";\" ) returned %s instead of %s\n",
-                        TL0, result, TE1);
+                        "failure: cut_field( \"%s\", 4, \";\" ) returned %s instead of %s\n",
+                        TL0, new_field, TE1);
                 n_errors++;
         }
-        cut_field(result, 1, ";");
-        if ( ! str_eq( result, TE2 ) ) {
+	free(new_field);
+        new_field = cut_field(result, 2, ";");
+        if ( ! str_eq( new_field, TE2 ) ) {
                 fprintf(stderr,
-                        "failure: cut_field( \"%s\", 3, \";\" ) returned %s instead of %s\n",
-                        TL0, result, TE2);
+                        "failure: cut_field( \"%s\", 2, \";\" ) returned %s instead of %s\n",
+                        TL0, new_field, TE2);
                 n_errors++;
         }
+	free(new_field);
 
 	if ( n_errors == 0 ) {
 		printf("cut_field(): ok\n");

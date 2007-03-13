@@ -376,7 +376,8 @@ int get_line_pos( const char *ct, const int field_no, const char *d, int *start,
 
 char * cut_field( char *ct, const int i, const char *d) {
 
-	int start, end;
+	int start = 0, end = 0;
+	char *result = NULL;
 
 	if ( get_line_pos(ct, i, d, &start, &end) ) {
 
@@ -394,13 +395,15 @@ char * cut_field( char *ct, const int i, const char *d) {
 	
 		}
 
-		// Split the line by inserting null bytes.
-		ct[start] = '\0';
-		ct[end]   = '\0';
-
-		// We are resuing the buffer
-		sprintf(ct, "%s%s", ct, ct + end + 1);
+	     	// Copy the old to the new string
+		result = (char *) malloc(sizeof(char) * (strlen(ct) + 1));
+		if ( start > 0 ) {
+			strncpy(result, ct, start);
+		}
+		if ( end - strlen(ct) > 0 ) {
+			strncpy(result + start, ct + end + 1, strlen(ct) - end + 1);
+		}
 	}
 
-	return ct;
+	return result;
 }
