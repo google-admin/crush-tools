@@ -22,7 +22,7 @@ usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -e <expression> -b <fallb
  -h                       .. help
  -v                       .. verbose (for debugging purposes)
  -p			  .. preserve the header line (just passes the first line through to the output file)
- -r 			  .. remove the header line (overrides -p)
+ -r 			  .. replace the value at the given index (instead of adding a new column)
  -d <delimiter>           .. the delimiter for the input file which is read from the standard input; defaults to $delim
  -i <index>               .. index for the new fields (1-based); if not given the new field will be appended
  -e <expression>          .. the expression to calculate; the expression may contain references to fields, e.g. [1] + [2]
@@ -72,14 +72,8 @@ if(!defined($opt_c)) {
 	print "No column name given, using \"$opt_c\" as the column name.\n" if(defined($opt_v));
 }
 
-# Should we remove the header line?
-if(defined($opt_r)) {
-
-	# Yes => Just read the line and dump it
-	$line = <STDIN>;
-
 # Should we preserve the header line?
-} elsif(defined($opt_p)) {
+if(defined($opt_p)) {
 	
 	# Yes => Read and extend the header
 	if(defined($line = <STDIN>)) {
@@ -91,7 +85,7 @@ if(defined($opt_r)) {
 		@parts = split(/$opt_d/, $line);
 
 		# Build the new header from the original header and the column name for the calculated field.
-        	print insert_field($line, \@parts, $opt_d, $opt_c, $opt_i) . "\n";
+        	print put_field($line, \@parts, $opt_d, $opt_c, $opt_i, $opt_r) . "\n";
 	}
 
 }
@@ -109,28 +103,57 @@ while(defined($line = <STDIN>)) {
 	$result = extended_eval($opt_e, \@parts, $opt_b);
 
 	# Build new line with the calculated result
-	print insert_field($line, \@parts, $opt_d, $result, $opt_i) . "\n";
+	print put_field($line, \@parts, $opt_d, $result, $opt_i, $opt_r) . "\n";
 }
 
-sub insert_field {
-	my ($line, $parts, $delim, $value, $pos) = @_;
+sub put_field {
+	my ($line, $parts, $delim, $value, $pos, $repl) = @_;
 
         # Put the result into the right place. Should we put this at the beginning or end?
-        if($pos == -1 || $pos > scalar @{$parts}) {
+        if($pos == -1 || $pos > scalar @{$parts} || (defined($opt_r) && $pos == scalar @{$parts})) {
 
-                # Yes => Print the line and the given result at the end.
-                $line = $line . $delim . $value;
+                # Yes => Should we replace the value?
+		if(defined($repl)) {
+
+			# Yes => Remove the last value first
+			pop(@{$parts});
+			$line = join($delim, @{$parts}) . $delim . $value;
+		} else {
+
+			# No => Print the line and the given result at the end.
+                	$line = $line . $delim . $value;
+		}
         } elsif($pos == 1) {
 
-                # Yes => Print the result and the line
-                $line = $value . $delim . $line;
+		# Yes => Should we replace the value?
+		if(defined($repl)) {
+
+			# Yes => Remove the first and put the value instead
+			shift(@{$parts});
+			$line = $value . $delim . join($delim, @{$parts});
+		} else {
+
+	                # No => Print the result and the line
+        	        $line = $value . $delim . $line;
+		}
         } else {
 
-                # No => Put the result in the right place
-                my @result = split(/$delim/, $line, $pos);
-                my $suffix = pop(@result);
+                # Yes => Should we replace the value?
+                if(defined($repl)) {
 
-                $line = join($delim, @result) . $delim . $value . $delim . $suffix;
+                        # Yes => Cut out the current value
+			my @result = split(/$delim/, $line, $pos + 1);
+			my $suffix = pop(@result);
+			my $old    = pop(@result);
+
+			$line = join($delim, @result) . $delim . $value . $delim . $suffix;
+		} else {
+	                # No => Put the result in the right place
+        	        my @result = split(/$delim/, $line, $pos);
+                	my $suffix = pop(@result);
+
+                	$line = join($delim, @result) . $delim . $value . $delim . $suffix;
+		}
         }
 
 	return $line;
