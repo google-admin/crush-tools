@@ -53,7 +53,7 @@ END_COPYRIGHT
 	  longopt => 'field',
 	  type => 'var',
 	  required => 0,
-	  description => 'number of field to scan (1-based)'
+	  description => 'index of field to scan (1-based)'
 	},
 	{
 	  name => 'invert',
