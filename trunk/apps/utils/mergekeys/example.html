@@ -1,0 +1,32 @@
+
+# merges impressions and clicks from the db for a given site with the
+# conversion numbers from data transfer
+
+# file delimiter
+d=`<a href="tochar.html">tochar</a> 0xfe`
+
+# create headers for db results, using the dt-style header for Site-ID
+echo "Site-ID${d}Impressions${d}Clicks" &gt; $wdir/tmp/site_delivery.log
+
+DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
+	"select site_id, sum(metric_a), sum(metric_b) \
+	   from dfa_performance \
+	  where advertiser_id = 123456 \
+	    and event_date = '01-JAN-29' \
+	    and event_type_id = 1 \
+	  group by site_id \
+	  order by site_id" \
+	&gt;&gt; $wdir/tmp/site_delivery.log
+
+# assume Site-ID is field 8, Quantity is field 12 
+<a href="gzdog.html">gzdog</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
+	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
+
+<b>mergekeys</b> -o $wdir/tmp/imps_clicks_conversions.log $wdir/tmp/site_delivery.log $wdir/tmp/dt_conversions.log
+
+# $wdir/tmp/imps_clicks_conversions.log now contains fields
+# Site-ID
+# Impressions
+# Clicks
+# Quantity
+
