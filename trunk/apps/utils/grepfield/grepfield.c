@@ -88,13 +88,8 @@ int grepfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	while ( in != NULL ) {
 
-        	// Should we remove the header line?
-        	if ( args->remove_header ) {
-        	        // Yes => Just read the first line and throw it away.
-	                getline(&buffer, &bufsz, in);
-
 		// Should we preserve the header line?
-		} else if ( args->preserve_header ) {
+		if ( args->preserve_header ) {
 			// Yes => Do we have a line at all?
 			if ( getline(&buffer, &bufsz, in) > 0 ) {
 				// Yes => Just print this to the output file
