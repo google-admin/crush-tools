@@ -14,9 +14,9 @@ test : libffutils.a
 	./ffutils_test
 	rm ffutils_test
 
-install : libffutils.a ffutils.h
+install : libffutils.a ffutils.h data_transfer.h 
 	cp libffutils.a $(LIBDIR)
-	cp ffutils.h $(INCDIR)
+	cp ffutils.h data_transfer.h $(INCDIR)
 
 ffutils.o : ffutils.c ffutils.h
 	${CC} ${CFLAGS} -c -o ffutils.o ffutils.c
@@ -30,7 +30,7 @@ clean :
 cleanall :
 	rm *.o libffutils.a
 
-docs : ffutils.c ffutils.h ffutils.doxygen
+docs : ffutils.c ffutils.h data_transfer.h ffutils.doxygen
 	doxygen ffutils.doxygen
 
 docs-install : docs
