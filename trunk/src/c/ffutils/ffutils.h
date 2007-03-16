@@ -152,31 +152,30 @@ FILE * nextfile( int argc, char *argv[], int *optind, const char *mode );
   */
 void expand_chars(char *s);
 
-/*!	\brief splits a string of number lists/ranges into an array.
- *
- *	The "arg" string should be dynamically allocated, since strtok()
- *	doesn't like const char[];
- *
- *	"array" should also be dynamically allocated, as it may be realloc()'d
- *	to accomodate more elements.  If memory hasn't been allocated for array,
- *	set the pointer to NULL and pass 0 as array_size.  Memory will be
- *	allocated for you, but remember to call free() on array when finished
- *	with it.
- *
- *	All of the parameters may be modified during execution.
- *
- *	\param arg string representation of numbers
- *	\param array pointer to array of ints
- *	\param array_size number of elements array can currently hold
- *
- *	\return on success, the number of items in populated array;
- *	        -1 on memory allocation error;
- *		-2 if arg has invalid syntax
- */
+/** @brief splits a string of number lists/ranges into an array.
+  *
+  * The "arg" string should be dynamically allocated, since strtok()
+  * doesn't like const char[];
+  *
+  * "array" should also be dynamically allocated, as it may be realloc()'d
+  * to accomodate more elements.  If memory hasn't been allocated for array,
+  * set the pointer to NULL and pass 0 as array_size.  Memory will be
+  * allocated for you, but remember to call free() on array when finished
+  * with it.
+  *
+  * All of the parameters may be modified during execution.
+  *
+  * @param arg string representation of numbers
+  * @param array pointer to array of ints
+  * @param array_size number of elements array can currently hold
+  *
+  * @return on success, the number of items in populated array,
+  *     -1 on memory allocation error,
+  * 	-2 if arg has invalid syntax
+  */
 ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
 
-/**
-  * @brief determines the position of the first and the last character of the given field.
+/** @brief determines the position of the first and the last character of the given field.
   *
   * @param *ct the line buffer
   * @param i the field number (0-based)
@@ -188,8 +187,7 @@ ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
   */
 int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
 
-/**
-  * @brief removes a field from a line.
+/** @brief removes a field from a line.
   *
   * @param *ct the line buffer (buffer is changed!)
   * @param i the field number (0-based)
@@ -198,5 +196,17 @@ int get_line_pos( const char *ct, const int i, const char *d, int *start, int *e
   * @return pointer to ct
   */
 char * cut_field( char *ct, const int i, const char *d);
+
+/** @brief locates the index of the first field in a delimited string
+  * having a specific value.
+  * 
+  * @param value the string to be located
+  * @param line  delimited string
+  * @param delim line's field separator
+  * 
+  * @return 0-based index of the first field having the specified value,
+  * -1 if not found, or -2 on error.
+  */
+ssize_t field_str( const char *value, const char *line, const char *delim);
 
 #endif /* FFUTILS_H */

@@ -407,3 +407,64 @@ char * cut_field( char *ct, const int i, const char *d) {
 
 	return result;
 }
+
+
+ssize_t field_str( const char *value, const char *line, const char *delim){
+
+	char *curfield;		/* to hold fields from line */
+	int   max_field_chars;	/* size of curfield buffer */
+	int   curfield_len;	/* return value of get_line_field() */
+
+	int   i;		/* the index of the field being inspected */
+	int   found;		/* whether the value was found in line */
+
+
+	/* no value to look for?  don't waste our time.
+	   but looking for an empty string may be valid. */
+	if ( value == NULL )
+		return -2;
+
+	/* undefined or empty line?  then it can't contain the value. */
+	if ( line == NULL || line[0] == '\0' )
+		return -1;
+
+	/* no delimiter? then treat the line like a single field. */
+	if ( delim == NULL || delim[0] == '\0' ) {
+		if ( str_eq(value, line) )
+			return 0;
+		return -1;
+	}
+
+	/* this only needs to be just long enough to see if the
+	   field matches value (1 char longer), but making it a little
+	   bigger, just for fun.  and allocating max+1 so there's room for
+	   the null terminator. */
+	max_field_chars = strlen(value) + 3;
+	curfield = malloc( max_field_chars + 1 );
+	if ( curfield == NULL )
+		return -2;
+
+	i = 0;
+	curfield_len = 0;
+	found = 0;
+
+	while ( (curfield_len = get_line_field(	curfield, line,
+						max_field_chars, i, delim)
+		) > -1 )
+	{
+		if ( str_eq(curfield, value) ) {
+			found = 1;
+			break;
+		}
+
+		i++;
+	}
+
+	free(curfield);
+
+	if ( found )
+		return i;
+
+	return -1;
+}
+

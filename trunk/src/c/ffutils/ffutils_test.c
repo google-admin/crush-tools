@@ -9,6 +9,7 @@ void test_nextfile(void);
 void test_expand_chars(void);
 void test_expand_nums(void);
 void test_cut_field(void);
+void test_field_str(void);
 
 int main ( int argc, char *argv[] ) {
 	test_fields_in_line();
@@ -20,6 +21,7 @@ int main ( int argc, char *argv[] ) {
 	test_expand_chars();
 	test_expand_nums();
 	test_cut_field();
+	test_field_str();
 
 	return 0;
 }
@@ -257,3 +259,150 @@ void test_cut_field ( void ) {
 
 }
 
+void test_field_str () {
+	int n_errors = 0;
+	int n;
+
+	/* test case: empty line - considered a no-match */
+	char  *TL0 = "";
+	char  *TV0 = "hello";
+	char  *TD0 = "|";
+	int    TE0 = -1;
+
+	/* test case: null search value - considered an error */
+	char  *TL1 = "hello|world";
+	char  *TV1 = NULL;
+	char  *TD1 = "|";
+	int    TE1 = -2;
+
+	/* test case: null delimiter, no-match */
+	char  *TL2 = "hello world";
+	char  *TV2 = "hello";
+	char  *TD2 = NULL;
+	int    TE2 = -1;
+
+	/* test case: null delimiter, match */
+	char  *TL3 = "hello";
+	char  *TV3 = "hello";
+	char  *TD3 = NULL;
+	int    TE3 = 0;
+
+	/* test case (x 3): field exists, single-char delimiter*/
+	char  *TL4 = "hello there world";
+	char  *TV4 = "hello";
+	char  *TD4 = " ";
+	int    TE4 = 0;
+
+	char  *TL5 = "hello there world";
+	char  *TV5 = "there";
+	char  *TD5 = " ";
+	int    TE5 = 1;
+
+	char  *TL6 = "hello there world";
+	char  *TV6 = "world";
+	char  *TD6 = " ";
+	int    TE6 = 2;
+
+	/* test case: field exists, multi-char delimiter */
+	char  *TL7 = "hello||dev||prac";
+	char  *TV7 = "prac";
+	char  *TD7 = "||";
+	int    TE7 = 2;
+
+	/* test case: field exists, multi-char delimiter, empty value */
+	char  *TL8 = "hello||dev||||prac";
+	char  *TV8 = "";
+	char  *TD8 = "||";
+	int    TE8 = 2;
+
+	/* test case: field doesn't exist */
+	char  *TL9 = "hello there world";
+	char  *TV9 = "weee";
+	char  *TD9 = " ";
+	int    TE9 = -1;
+
+	/* test case: field exists, multi-char delimiter */
+	n = field_str( TV0, TL0, TD0 );
+	if ( n != TE0 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV0, TL0, TD0, n, TE0 );
+		n_errors++;
+	}
+
+	n = field_str( TV1, TL1, TD1 );
+	if ( n != TE1 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV1, TL1, TD1, n, TE1 );
+		n_errors++;
+	}
+
+	n = field_str( TV2, TL2, TD2 );
+	if ( n != TE2 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV2, TL2, TD2, n, TE2 );
+		n_errors++;
+	}
+
+	n = field_str( TV3, TL3, TD3 );
+	if ( n != TE3 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV3, TL3, TD3, n, TE3 );
+		n_errors++;
+	}
+
+	n = field_str( TV4, TL4, TD4 );
+	if ( n != TE4 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV4, TL4, TD4, n, TE4 );
+		n_errors++;
+	}
+
+	n = field_str( TV5, TL5, TD5 );
+	if ( n != TE5 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV5, TL5, TD5, n, TE5 );
+		n_errors++;
+	}
+
+	n = field_str( TV6, TL6, TD6 );
+	if ( n != TE6 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV6, TL6, TD6, n, TE6 );
+		n_errors++;
+	}
+
+	n = field_str( TV7, TL7, TD7 );
+	if ( n != TE7 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV7, TL7, TD7, n, TE7 );
+		n_errors++;
+	}
+
+	n = field_str( TV8, TL8, TD8 );
+	if ( n != TE8 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV8, TL8, TD8, n, TE8 );
+		n_errors++;
+	}
+
+	n = field_str( TV9, TL9, TD9 );
+	if ( n != TE9 ) {
+		fprintf(stderr,
+			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
+			TV9, TL9, TD9, n, TE9 );
+		n_errors++;
+	}
+
+	if ( n_errors == 0 ) {
+		printf("field_str(): ok\n");
+	}
+}

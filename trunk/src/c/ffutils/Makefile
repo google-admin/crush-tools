@@ -10,7 +10,7 @@ LIBDIR	:= $(HOME)/lib/
 default : libffutils.a
 
 test : libffutils.a
-	$(CC) -L. -o ffutils_test ffutils_test.c -lffutils
+	$(CC) -g -L. -o ffutils_test ffutils_test.c -lffutils
 	./ffutils_test
 	rm ffutils_test
 
