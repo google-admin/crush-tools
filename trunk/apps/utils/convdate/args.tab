@@ -69,14 +69,6 @@ END_COPYRIGHT
 	  type => 'flag',
 	  required => 0,
 	  description => 'preserve the header line (default: do not preserve the header)'
-	},
-        {
-          name => 'remove_header',
-          shortopt => 'r',
-          longopt => 'remove_header',
-          type => 'flag',
-          required => 0,
-          description => 'remove the header line'
         }
 
 );
