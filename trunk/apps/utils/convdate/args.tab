@@ -59,8 +59,8 @@ END_COPYRIGHT
 	  shortopt => 'o',
 	  longopt => 'output_format',
 	  type => 'var',
-	  required => 1,
-	  description => 'date format in the output file - see strftime (required)'
+	  required => 0,
+	  description => 'date format in the output file - see strftime (default: %%Y-%%m-%%d-%%T)'
 	},
 	{
 	  name => 'preserve_header',

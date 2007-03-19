@@ -17,6 +17,7 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	char default_delim[2] = { 0xfe, 0x00 };	/* default field separator*/
 	char default_input_format[] = "%m-%d-%Y-%T";
+	char default_output_format[] = "%Y-%m-%d-%T";
 
 	FILE *in  = stdin;
 	FILE *out = stdout;	/* input & output files */
@@ -49,6 +50,9 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	// Set default input date format if necessary.
 	if ( ! args->input_format ) {
 		args->input_format = default_input_format;
+	}
+	if ( ! args->output_format ) {
+		args->output_format = default_output_format;
 	}
 
 	// Set default delimiter if necessary.
