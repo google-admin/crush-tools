@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<application>
+	<name>add_field</name>
+	<category>Shell Utilities</category>
+	<description>adds a field to a flat-file</description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="1" required="0" default="0xfe">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>the field delimiter string</description>
+		</option>
+		<option has_argument="1" required="1" default="1">
+			<name>field</name>
+			<short>f</short>
+			<long>field</long>
+			<description>the 1-based index for the new field</description>
+		</option>
+		<option has_argument="0" required="1" default="">
+			<name>label</name>
+			<short>l</short>
+			<long>label</long>
+			<description>the string to label the new field on the first line</description>
+		</option>
+		<option has_argument="0" required="0" default="">
+			<name>value</name>
+			<short>v</short>
+			<long>value</long>
+			<description>the value to place in the new field</description>
+		</option>
+	</options>
+	<details>
+		<item>if no "label" is provided, the "value" (if provided) will be used.</item>
+		<item>a field of either 0 or 1 may be used to indicate the first position.</item>
+		<item>if a field value of -1 indicates that the field should be appended to each line.</item>
+	</details>
+	<example><![CDATA[
+
+# add a Network-ID field at the beginning of each linei in a dt file
+
+net_id=1234
+output=$wdir/tmp/$$_`basename $file | sed s/.gz$//`
+
+<a href="gzdog.html">gzdog</a> $file | add_field -l "Network-ID" -v $net_id -f 1 -d "$delim" \
+	&gt; $output
+
+	]]></example>
+</application>
