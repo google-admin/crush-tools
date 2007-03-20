@@ -41,14 +41,11 @@
 		<item>if a field value of -1 indicates that the field should be appended to each line.</item>
 	</details>
 	<example><![CDATA[
-
 # add a Network-ID field at the beginning of each linei in a dt file
 
 net_id=1234
 output=$wdir/tmp/$$_`basename $file | sed s/.gz$//`
 
 <a href="gzdog.html">gzdog</a> $file | add_field -l "Network-ID" -v $net_id -f 1 -d "$delim" \
-	&gt; $output
-
-	]]></example>
+	&gt; $output]]></example>
 </application>
