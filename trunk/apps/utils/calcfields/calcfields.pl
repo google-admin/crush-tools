@@ -26,6 +26,7 @@ usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -e <expression> -b <fallb
  -d <delimiter>           .. the delimiter for the input file which is read from the standard input; defaults to $delim
  -i <index>               .. index for the new fields (1-based); if not given the new field will be appended
  -e <expression>          .. the expression to calculate; the expression may contain references to fields, e.g. [1] + [2]
+                          .. if the -p option is active, you may also use the field names, e. g. [Clicks] + [Impressions]
  -b <fallback_result>     .. if the formula is not properly evaluated use this result as the fallback
  -c <column_name>         .. the name of the column for the calculated field; only used with option -p
 
@@ -39,6 +40,7 @@ my $line = "";
 my @parts = ();
 my $i = 0;
 my $result = 0;
+my @header = ();
 
 # Check delimiter option. Set default if not provided.
 if(!defined($opt_d) || $opt_d eq "") {
@@ -83,6 +85,9 @@ if(defined($opt_p)) {
 
 		# Split into parts
 		@parts = split(/$opt_d/, $line);
+		
+		# Keep header parts (we'll need in during the eval).
+		@header = @parts;		
 
 		# Build the new header from the original header and the column name for the calculated field.
         	print put_field($line, \@parts, $opt_d, $opt_c, $opt_i, $opt_r) . "\n";
@@ -166,9 +171,17 @@ sub extended_eval {
 
 	$formula = "\$result = " . $formula;
 	for($i = 1; $i <= scalar @{$parts}; $i++) {
+		
+		# Look up indices.
 		$formula =~ s/\[$i\]/$parts->[$i - 1]/g;
+		
+		# Look up field names.			
+		if ($i <= scalar @header)
+		{
+			$formula =~ s/\[$header[$i-1]\]/$parts->[$i - 1]/g;
+		}
 	}
-
+	
 	eval($formula);
 
 	if($@) {
