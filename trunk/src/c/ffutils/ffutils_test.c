@@ -1,4 +1,9 @@
+
+#include <stdio.h>
+#include <linklist.h>
+
 #include "ffutils.h"
+#include "data_transfer.h"
 
 void test_fields_in_line(void);
 void test_get_line_field(void);
@@ -11,6 +16,8 @@ void test_expand_nums(void);
 void test_cut_field(void);
 void test_field_str(void);
 
+void test_get_spot_tag_attributes(void);
+
 int main ( int argc, char *argv[] ) {
 	test_fields_in_line();
 	test_get_line_field();
@@ -22,7 +29,7 @@ int main ( int argc, char *argv[] ) {
 	test_expand_nums();
 	test_cut_field();
 	test_field_str();
-
+	test_get_spot_tag_attributes();
 	return 0;
 }
 
@@ -84,47 +91,50 @@ void test_fields_in_line () {
 }
 
 void test_get_line_field ( void ) {
-	int n_errors = 0;
+	/* int n_errors = 0; */
 	printf("get_line_field(): test not implemented\n");
 }
 
 void test_field_start ( void ) {
-	int n_errors = 0;
+	/* int n_errors = 0; */
 	printf("field_start(): test not implemented\n");
 }
 
 void test_mdyhms_datecmp ( void ) {
-	int n_errors = 0;
+	/* int n_errors = 0; */
 	printf("mdyhms_datecmp(): test not implemented\n");
 }
 
 void test_chomp ( void ) {
-	int n_errors = 0;
+	/* int n_errors = 0; */
 	printf("chomp(): test not implemented\n");
 }
 
 void test_nextfile ( void ) {
-	int n_errors = 0;
+	/* int n_errors = 0; */
 	printf("nextfile(): test not implemented\n");
 }
 
 void test_expand_chars ( void ) {
 	int n_errors = 0;
 
-	char *TL0  = "\t";
-	char TE0[] = {0x09, 0x00};
+	char *TL0       = "\t";
+	char *TL0_orig  = "\t";
+	char TE0[]      = {0x09, 0x00};
 
-	char *TL1 = "no special chars";
-	char *TE1 = "no special chars";
+	char *TL1      = "no special chars";
+	char *TL1_orig = "no special chars";
+	char *TE1      = "no special chars";
 
-	char TL2[] = {0x5c, 0x5c, 0x00}; /* \\ */
-	char TE2[] = {0x5c, 0x00};
+	char TL2[]      = {0x5c, 0x5c, 0x00}; /* \\ */
+	char TL2_orig[] = {0x5c, 0x5c, 0x00}; /* \\ */
+	char TE2[]      = {0x5c, 0x00};
 
 	expand_chars( TL0 );
 	if ( strcmp( TL0, TE0 ) != 0 ) {
 		fprintf(stderr,
 			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL0, TE0);
+			TL0_orig, TL0, TE0);
 		n_errors++;
 	}
 
@@ -132,7 +142,7 @@ void test_expand_chars ( void ) {
 	if ( strcmp( TL1, TE1 ) != 0 ) {
 		fprintf(stderr,
 			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL1, TE1);
+			TL1_orig, TL1, TE1);
 		n_errors++;
 	}
 
@@ -140,7 +150,7 @@ void test_expand_chars ( void ) {
 	if ( strcmp( TL2, TE2 ) != 0 ) {
 		fprintf(stderr,
 			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL2, TE2);
+			TL2_orig, TL2, TE2);
 		n_errors++;
 	}
 
@@ -178,7 +188,7 @@ void test_expand_nums ( void ) {
 	if ( n != TE0 ) {
 		fprintf(stderr,
 			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			n, TL0);
+			TL0, n, TE0);
 		n_errors++;
 	}
 
@@ -187,7 +197,7 @@ void test_expand_nums ( void ) {
 	if ( n != TE1 ) {
 		fprintf(stderr,
 			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			n, TL1);
+			TL1, n, TE1);
 		n_errors++;
 	}
 
@@ -196,7 +206,7 @@ void test_expand_nums ( void ) {
 	if ( n != TE2 ) {
 		fprintf(stderr,
 			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			n, TL2);
+			TL2, n, TE2);
 		n_errors++;
 	}
 
@@ -205,7 +215,7 @@ void test_expand_nums ( void ) {
 	if ( n != TE3 ) {
 		fprintf(stderr,
 			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			n, TL3);
+			TL3, n, TE3);
 		n_errors++;
 	}
 
@@ -406,3 +416,53 @@ void test_field_str () {
 		printf("field_str(): ok\n");
 	}
 }
+
+void test_get_spot_tag_attributes ( void ) {
+	int spot_id = 673394;
+	char *db_name = "PROD";
+	char *db_uid  = getenv("DB_UID");
+	char *db_pass = getenv("DB_PWD");
+	llist_t tag_list;
+
+	int n_tags;
+
+	ll_list_init( &tag_list, free, NULL );
+
+	n_tags = get_spot_tag_attributes(&tag_list, spot_id, db_name, db_uid, db_pass);
+
+	if ( n_tags == 0 ) {
+		printf("get_spot_tag_attributes(): failure (no tags returned)\n");
+	}
+	else {
+		llist_node_t *curnode;
+		struct spotlight_tag_attributes *tag_attribs;
+
+		printf("get_spot_tag_attributes(): ok\n");
+
+		for ( curnode = tag_list.head;
+		      curnode != NULL;
+		      curnode = curnode->next ) {
+
+			tag_attribs = curnode->data;
+
+			printf("    src=%d;type=%s;cat=%s",
+					tag_attribs->spot_id,
+					tag_attribs->type,
+					tag_attribs->cat );
+
+			if ( tag_attribs->group_type == spotlight_group_type_sales ) {
+				printf(";qty=1;cost=0.00");
+			}
+			else {
+				if ( tag_attribs->tag_method == spotlight_method_standard )
+					printf(";ord=[rand]");
+				else
+					printf(";num=[rand];ord=1");
+			}
+			printf("\n");
+		}
+	}
+
+	ll_destroy(&tag_list);
+}
+

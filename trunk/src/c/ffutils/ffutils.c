@@ -1,6 +1,6 @@
 #include <ffutils.h>
 #include <fcntl.h>	/* open64() and O_* flags */
-#include <ctype.h>	/* isdigit() */
+#include <ctype.h>	/* isdigit(), isspace() */
 
 #ifdef DONT_PUT_THIS_IN
 struct field_index findfields( char *header, const char *delim ){
@@ -172,6 +172,12 @@ void chomp(char *s) {
 		s[l--] = '\0';
 }
 
+void trim(char *str){
+	int i = strlen(str) - 1;
+	for(i; isspace(str[i]) && i > 0; i--)
+		str[i] = '\0';
+	return;
+}
 
 /* get's the next file specified in the trailing commandline args */
 FILE * nextfile( int argc, char *argv[], int *optind, const char *mode ) {

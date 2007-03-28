@@ -120,6 +120,12 @@ int mdyhms_datecmp(const char *a, const char *b);
   */
 void chomp(char *s);
 
+/** @brief replaces trailing white space in a string with null characters.
+  *
+  * @param str the string to be trimmed.
+  */
+void trim(char *str);
+
 /** @brief goes through a list of file names, attempting to open them.
   * it loops through trying to open each file until one is successfully
   * opened or there are no more file names in the list.
@@ -175,13 +181,14 @@ void expand_chars(char *s);
   */
 ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
 
-/** @brief determines the position of the first and the last character of the given field.
+/** @brief determines the position of the first and the last character
+  * of the given field.
   *
-  * @param *ct the line buffer
+  * @param ct the line buffer
   * @param i the field number (0-based)
-  * @param *d the field delimiter
-  * @param the position of the start character
-  * @param the position of the end character
+  * @param d the field delimiter
+  * @param start the position of the start character
+  * @param end the position of the end character
   *
   * @return 1 on success, 0 otherwise
   */
