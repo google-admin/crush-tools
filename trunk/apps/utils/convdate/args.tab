@@ -2,7 +2,7 @@
 %global = (
 	name => "convdate",
 	description => "converts a date within a field of a dt file into a different format.",
-	version => "0.1",
+	version => "0.2",
 	usage_extra => "the file is read from the stdin and written to stdout",
 	do_long_opts => 1,
 	preproc_extra => '',
@@ -29,6 +29,15 @@ END_COPYRIGHT
 	  required => 0,
 	  main_code => 'version(); exit(1);',
 	  description => 'print version info and exit'
+	},
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose runtime messages and warnings.'
 	},
 	{
 	  name => 'delim',

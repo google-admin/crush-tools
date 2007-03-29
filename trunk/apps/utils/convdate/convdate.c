@@ -21,6 +21,7 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	FILE *in  = stdin;
 	FILE *out = stdout;	/* input & output files */
+	unsigned long lineno = 0;
 
 	int field_no;		/* the field number specified by the user */
 
@@ -69,12 +70,14 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
                 	if ( getline(&buffer, &bufsz, in) > 0 ) {
                         	// Yes => Just print this to the output file
 	                        fprintf(out, "%s", buffer);
+				lineno++;
         	        }
 		}
 
 		// Process each line
 		while ( getline(&buffer, &bufsz, in) > 0 ) {
 
+			lineno++;
 			// Remove new line
 			chomp(buffer);
 
@@ -95,15 +98,21 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	                                fprintf(out, "%s%s%s\n", buffer, date, buffer + end + 1);
         	                } else {
 
-                	                // No => Bail out
-                        	        fprintf(stderr, "could not convert date \"%s\"\n", date);
-                                	return EXIT_HELP;
-                       		}
-			} else {
+                	                // No => print unmodified line
+					if ( args->verbose )
+						fprintf(stderr, "line %lu: could not convert date \"%.*s\"\n", lineno, end - start + 1, buffer + start);
 
-				// Bail out as we have not found the field.
-				fprintf(stderr, "did not find the field at %i\n", field_no);
-                                return EXIT_HELP;
+					fprintf(out, "%s\n", buffer);
+                       		}
+
+			} else { /* get_line_pos returned false */
+
+				// pass the line through if we have not found the field.
+				if ( args->verbose )
+					fprintf(stderr, "line %lu: did not find the field at %i\n", lineno, field_no);
+
+				fprintf(out, "%s\n", buffer);
+
 			} 
 		}
 	}

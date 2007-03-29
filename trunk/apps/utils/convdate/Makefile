@@ -1,6 +1,6 @@
 EXECUTABLE := convdate
 DESCRIPTION := looks for patterns within a specific field of a flat-file
-VERSION = 0.1
+VERSION = 0.2
 
 DISTFILE = $(EXECUTABLE)-$(VERSION).tgz
 # resources like README, COPYING, etc., which should be included in
