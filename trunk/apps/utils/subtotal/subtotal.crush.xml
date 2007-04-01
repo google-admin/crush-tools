@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<application>
+	<name>subtotal</name>
+	<category>General file manipulation</category>
+	<description>adds subtotal lines to a flat-file</description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="0" required="0">
+			<name>version</name>
+			<short>V</short>
+			<long>version</long>
+			<description>print version info and exit</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>verbose</name>
+			<short>v</short>
+			<long>verbose</long>
+			<description>print verbose messages during execution</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>infile</name>
+			<short>i</short>
+			<long>input</long>
+			<description>name of input file (stdin if not specified)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>input delimiter (ascii 0xfe if not specified)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>outfile</name>
+			<short>o</short>
+			<long>output</long>
+			<description>name of output file (stdout if not specified)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>start_line</name>
+			<short>l</short>
+			<long>start-line</long>
+			<description>the first line of data - everything before it is printed as-is.</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>key</name>
+			<short>k</short>
+			<long>key</long>
+			<description>1-based column number for subtotal key</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>sum</name>
+			<short>s</short>
+			<long>sum</long>
+			<description>list of 1-based column numbers to be subtotaled</description>
+		</option>
+	</options>
+	<details>
+		<item></item>
+	</details>
+	<example><![CDATA[
+# assume dtfile has Advertiser-ID, Buy-ID, and Ad-ID in fields 4, 5, 6; and
+# Quantity and Revenue in fields 15 and 16
+
+# this command aggregates on those fields and inserts lines subtotaling quantity
+# and revenue for each distinct campaign id
+
+<a href="gzdog.html">gzdog</a> $dtfile |
+	<a href="aggregate.html">aggregate</a> -p -k 4-6 -s 15,16 |
+	<b>subtotal</b> -k 2 -s 4,5 -l 2
+
+# the "-l 2" is required so that the header is not treated the same as the data
+]]></example>
+</application>

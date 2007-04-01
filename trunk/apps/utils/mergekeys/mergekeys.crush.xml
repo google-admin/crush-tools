@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<application>
+	<name>mergekeys</name>
+	<category>General file manipulation</category>
+	<description>merges two sorted flat files with some different columns</description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="0" required="0">
+			<name>version</name>
+			<short>V</short>
+			<long>version</long>
+			<description>print version info and exit</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>verbose</name>
+			<short>v</short>
+			<long>verbose</long>
+			<description>print verbose messages during execution</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>delimiting string for both input files</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>outfile</name>
+			<short>o</short>
+			<long>outfile</long>
+			<description>name of file for output</description>
+		</option>
+	</options>
+	<details>
+		<item></item>
+	</details>
+	<example><![CDATA[
+# merges impressions and clicks from the db for a given site with the
+# conversion numbers from data transfer
+
+# file delimiter
+d=`<a href="tochar.html">tochar</a> 0xfe`
+
+# create headers for db results, using the dt-style header for Site-ID
+echo "Site-ID${d}Impressions${d}Clicks" &gt; $wdir/tmp/site_delivery.log
+
+DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
+	"select site_id, sum(metric_a), sum(metric_b) \
+	   from dfa_performance \
+	  where advertiser_id = 123456 \
+	    and event_date = '01-JAN-29' \
+	    and event_type_id = 1 \
+	  group by site_id \
+	  order by site_id" \
+	&gt;&gt; $wdir/tmp/site_delivery.log
+
+# assume Site-ID is field 8, Quantity is field 12 
+<a href="gzdog.html">gzdog</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
+	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
+
+<b>mergekeys</b> -o $wdir/tmp/imps_clicks_conversions.log $wdir/tmp/site_delivery.log $wdir/tmp/dt_conversions.log
+
+# $wdir/tmp/imps_clicks_conversions.log now contains fields
+# Site-ID
+# Impressions
+# Clicks
+# Quantity
+]]></example>
+</application>

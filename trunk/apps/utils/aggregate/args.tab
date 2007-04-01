@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "aggregate",
+	category => "General file manipulation",
 	description => "aggregates data from delimited files",
 	version => "0.1",
 	trailing_opts => "[file ...]",

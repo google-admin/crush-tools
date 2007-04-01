@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "funiq",
+	category => "General file manipulation",
 	description => "deduplicates adjacent rows of data having common field values",
 	version => "0.1",
 	trailing_opts => "[file ...]",

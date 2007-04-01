@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "pivot",
+	category => "General file manipulation",
 	description => "pivots flat-file data from rows to columns",
 	version => "0.5",
 	trailing_opts => "[file ...]",

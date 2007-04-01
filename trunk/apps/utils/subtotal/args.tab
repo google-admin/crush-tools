@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "subtotal",
+	category => "General file manipulation",
 	description => "adds subtotal lines to a flat-file",
 	version => "0.1",
 	trailing_opts => "",

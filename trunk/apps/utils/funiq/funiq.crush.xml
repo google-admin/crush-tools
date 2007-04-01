@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<application>
+	<name>funiq</name>
+	<category>General file manipulation</category>
+	<description>deduplicates adjacent rows of data having common field values</description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="0" required="0">
+			<name>version</name>
+			<short>V</short>
+			<long>version</long>
+			<description>print version info and exit</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>verbose</name>
+			<short>v</short>
+			<long>verbose</long>
+			<description>print verbose messages during execution</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>delim</name>
+			<short>d</short>
+			<long>delimiter</long>
+			<description>field separator (default: 0xfe)</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>fields</name>
+			<short>f</short>
+			<long>fields</long>
+			<description>fields to consider in the deduplication</description>
+		</option>
+	</options>
+	<details>
+		<item></item>
+	</details>
+	<example><![CDATA[# deduplicate an impression file to get only the last impression of the day
+# per user
+<a href="gzdog.html">gzdog</a> Impression_123456_10-31-2005.log.gz |
+	(read header; echo $header; \
+	 sort -k 2,2 -k 1r,1r -t `<a href="tochar.html">tochar</a> 0xfe`) |
+	<b>funiq</b> -d `<a href="tochar.html">tochar</a> 0xfe` -f 2 > 2005-10-31.log
+]]></example>
+</application>

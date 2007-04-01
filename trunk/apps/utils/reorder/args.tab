@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "reorder",
+	category => "General file manipulation",
 	description => "swaps columns in a delimited flat file",
 	version => "0.1",
 	trailing_opts => "[file(s)]",

@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "convdate",
+	category => "General file manipulation",
 	description => "converts a date within a field of a dt file into a different format.",
 	version => "0.2",
 	usage_extra => "the file is read from the stdin and written to stdout",

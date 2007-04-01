@@ -1,6 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "mergekeys",
+	category => "General file manipulation",
 	description => "merges two sorted flat files with some different columns",
 	version => "0.1",
 	trailing_opts => "file1 file2",

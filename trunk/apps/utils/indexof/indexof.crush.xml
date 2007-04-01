@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<application>
+	<name>indexof</name>
+	<category>Miscellaneous utilities</category>
+	<description>prints the column number matching a given header, or 0 if not found.</description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="0" required="0">
+			<name>version</name>
+			<short>V</short>
+			<long>version</long>
+			<description>print version info and exit</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>verbose</name>
+			<short>v</short>
+			<long>verbose</long>
+			<description>print verbose messages during execution</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>field separator string (required)</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>label</name>
+			<short>l</short>
+			<long>label</long>
+			<description>the header label to look for (required)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>file</name>
+			<short>f</short>
+			<long>file</long>
+			<description>specifies file to read (default = stdin)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>string</name>
+			<short>s</short>
+			<long>string</long>
+			<description>use &amp;lt;string&amp;gt; instead of a header from a file</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>row</name>
+			<short>r</short>
+			<long>row</long>
+			<description>header line number in file (default = 1)</description>
+		</option>
+	</options>
+	<details>
+		<item></item>
+	</details>
+	<example><![CDATA[
+# this example comes straight out of .bash_functions
+
+# wraps a call to indexof with a little bit of error checing/reporting
+function get_header_index {
+	local label="$1"
+	local header="$2"
+	local delim="$3"
+	local index=`<b>indexof</b> -l "$label" -s "$header" -d "$delim"`
+	if [ $index -eq 0 ]; then
+		echo $label NOT FOUND &lt;&2
+	fi
+	echo $index
+}
+]]></example>
+</application>
