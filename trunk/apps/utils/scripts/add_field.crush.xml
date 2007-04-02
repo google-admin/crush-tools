@@ -34,18 +34,30 @@
 			<long>value</long>
 			<description>the value to place in the new field</description>
 		</option>
+		<option has_argument="0" required="0" default="">
+			<name>copy_field</name>
+			<short>c</short>
+			<long>copy</long>
+			<description>copy the value from the specified field into the new one</description>
+		</option>
 	</options>
 	<details>
 		<item>if no "label" is provided, the "value" (if provided) will be used.</item>
 		<item>a field of either 0 or 1 may be used to indicate the first position.</item>
 		<item>if a field value of -1 indicates that the field should be appended to each line.</item>
+		<item>if both -v and -c are specified, -c will be used.</item>
 	</details>
 	<example><![CDATA[
-# add a Network-ID field at the beginning of each linei in a dt file
 
 net_id=1234
 output=$wdir/tmp/$$_`basename $file | sed s/.gz$//`
 
+# add a Network-ID field at the beginning of each linei in a dt file
 <a href="gzdog.html">gzdog</a> $file | add_field -l "Network-ID" -v $net_id -f 1 -d "$delim" \
-	&gt; $output]]></example>
+	&gt; $output
+
+# duplicate the Ad-ID field (assume field 6), labelling it slightly differently
+<a href="gzdog.html">gzdog</a> $file | add_field -l "Ad ID" -c 6 -f 6 -d "$delim" \
+	&gt; $output
+]]></example>
 </application>

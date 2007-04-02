@@ -3,24 +3,28 @@
 use strict;
 use Getopt::Long;
 
-my ($help, $header, $value, $location, $delim);
+my ($help, $header, $value, $location, $delim, $copy_field);
 
 $value = '';
 $delim = chr(0xfe);
 $location = 1;
 
-&GetOptions (	"help!"		=> \$help,
-		"label:s"	=> \$header,
-		"value:s"	=> \$value,
-		"field:n"	=> \$location,
-		"delim:s"	=> \$delim
-		);
+&GetOptions (	"help"		=> \$help,
+		"label=s"	=> \$header,
+		"value=s"	=> \$value,
+		"field=n"	=> \$location,
+		"delim=s"	=> \$delim,
+		"copy=n"	=> \$copy_field,
+	);
 
 if ( $help ) {
 	usage();
 	exit(1);
 }
 
+if ( $copy_field ) {
+	$copy_field--;
+}
 
 my $expected_fields;
 while ( my $line = <> ) {
@@ -37,9 +41,10 @@ while ( my $line = <> ) {
 		}
 	}
 	if ( $header && $. == 1 ) {
+		# don't specify the copy field if processing the header line
 		print add_field($line, $header, $location, $delim), qq(\n);
 	} else {
-		print add_field($line, $value, $location, $delim), qq(\n);
+		print add_field($line, $value, $location, $delim, $copy_field), qq(\n);
 	}
 }
 
@@ -47,7 +52,13 @@ exit(0);
 
 # (line, value, position, delimiter)
 sub add_field {
-	my ($l, $v, $p, $d) = @_;
+	my ($l, $v, $p, $d, $c) = @_;
+
+	my @a;
+	if ( defined($c) ) {
+		@a = split(/\Q$d\E/, $l, -1);
+		$v = $a[$c];
+	}
 
 	# simple case: prepending the field
 	if ( $p == 1 || $p == 0 ) {
@@ -59,11 +70,8 @@ sub add_field {
 		return $l . $d . $v;
 	}
 
-	my @a = split(/\Q$d\E/, $l);
-
-	# make sure all of the elements are defined
-	for my $i ( 0 .. $expected_fields - 1 ) {
-		$a[$i] = '' unless(defined($a[$i]));
+	if ( ! @a ) {
+		@a = split(/\Q$d\E/, $l, -1);
 	}
 
 	# put the field somewhere in the middle
@@ -79,15 +87,18 @@ adds a field to a flat-file.
 usage: $0 [hdflv] [file(s)]
 
 	-h, --help	print this message and exit
-	-d, --delim	the field delimiter string (default: 0xfe)
-	-f, --field	the 1-based index for the new field (default: 1)
-	-l, --label	the string to label the new field on the first line
-	-v, --value	the value to place in the new field (default: emtpy)
+	-d, --delim <S>	the field delimiter string (default: 0xfe)
+	-f, --field <N>	the 1-based index for the new field (default: 1)
+	-l, --label <S>	label the new field as S on the first line
+	-v, --value <S>	the value to place in the new field (default: emtpy)
+	-c, --copy <N>	copy the value from field N into the new field
 
  * if no "label" is provided, the "value" will be used.
- * a field of either 0 or 1 may be used to indicate the first position.
+ * for -f, a field of either 0 or 1 may be used to indicate the first
+   position.
  * if a field value of -1 indicates that the field should be appended to
    each line.
+ * if both -v and -c are specified, -c takes precedence.
 
 ENDUSAGE
 }
