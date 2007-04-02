@@ -72,4 +72,33 @@ while ( $line_str = <> ) {
 	print join($delim, @line), $1;
 }
 
+exit(0);
 
+sub usage {
+	print STDERR << "END_USAGE";
+
+convert field values based on user-supplied mappings.
+
+usage: $0 <-f <N>> [options] [file ...]
+
+  -h, --help       print this message and exit
+  -f, --field <N>  the 1-based index of the field to translate
+  -d, --delim <S>  the field delimiter string (default: 0xfe)
+  -a, --append     append the translation after the original field
+  -p, --prepend    prepend the translation before the original field
+  -r, --replace    replace the original field with the translation
+  -m, --map <K=V>  specifies a translation mapping for a possible
+                   field value
+
+* Replacing is the default behavior, but for replacement to occur in
+  addition to appending or prepending, -r must be specified.
+
+* Mappings are specified as "K=V" pairs where K is a possible value for
+  the field, and V is the translation.
+
+* If no mapping is supplied for a field value, the value is unchanged
+  (the header is preserved unless a mapping is specified for the header
+  value).
+
+END_USAGE
+}

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <application>
 	<name>translate_field</name>
-	<category>Shell utilities</category>
-	<description></description>
+	<category>General file manipulation</category>
+	<description>convert field values based on user-supplied mappings.</description>
 	<options>
 		<option has_argument="0" required="0">
 			<name>help</name>
@@ -20,7 +20,7 @@
 			<name>field</name>
 			<short>f</short>
 			<long>field</long>
-			<description>the 1-based index for the new field</description>
+			<description>the 1-based index of the field to translate</description>
 		</option>
 		<option has_argument="0" required="0" default="">
 			<name>prepend</name>
