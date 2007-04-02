@@ -35,6 +35,7 @@ debug ::
 clean ::
 	rm -f *.o
 	rm -f $(GEN_FILES)
+	rm -f $(EXECUTABLE)
 
 dist : $(DISTFILE)
 

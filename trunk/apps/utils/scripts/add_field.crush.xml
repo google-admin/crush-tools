@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <application>
 	<name>add_field</name>
-	<category>Shell Utilities</category>
+	<category>Shell utilities</category>
 	<description>adds a field to a flat-file</description>
 	<options>
 		<option has_argument="0" required="0">

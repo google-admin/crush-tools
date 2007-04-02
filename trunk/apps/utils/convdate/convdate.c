@@ -77,10 +77,9 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		// Process each line
 		while ( getline(&buffer, &bufsz, in) > 0 ) {
 
+			// Increase line number
 			lineno++;
-			// Remove new line
-			chomp(buffer);
-
+			
 			// Find the field
 			result = get_line_pos(buffer, field_no - 1, args->delim, &start, &end);
 			if( result ) {
@@ -95,23 +94,25 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
                 	                buffer[start] = '\0';
 
         	                        // Now write the first part, the date itself and the remainder of the line
-	                                fprintf(out, "%s%s%s\n", buffer, date, buffer + end + 1);
+	                                fprintf(out, "%s%s%s", buffer, date, buffer + end + 1);
         	                } else {
 
                 	                // No => print unmodified line
-					if ( args->verbose )
+					if ( args->verbose ) {
 						fprintf(stderr, "line %lu: could not convert date \"%.*s\"\n", lineno, end - start + 1, buffer + start);
+					}
 
-					fprintf(out, "%s\n", buffer);
+					fprintf(out, "%s", buffer);
                        		}
 
 			} else { /* get_line_pos returned false */
 
 				// pass the line through if we have not found the field.
-				if ( args->verbose )
+				if ( args->verbose ) {
 					fprintf(stderr, "line %lu: did not find the field at %i\n", lineno, field_no);
+				}
 
-				fprintf(out, "%s\n", buffer);
+				fprintf(out, "%s", buffer);
 
 			} 
 		}
