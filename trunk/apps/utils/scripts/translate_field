@@ -1,0 +1,75 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+Getopt::Long::Configure( "no_ignore_case" );
+
+my ( $help, $debug, $field, $delim, $replace, $append, $prepend, %mapping );
+
+$delim = chr(0xfe);
+
+GetOptions (	"help"		=> \$help,
+		"Debug"		=> \$debug,
+		"field=n"	=> \$field,
+		"delim=s"	=> \$delim,
+		"append"	=> \$append,
+		"prepend"	=> \$prepend,
+		"replace"	=> \$replace,
+		"map=s"		=> \%mapping,
+	);
+
+if ( $help ) {
+	usage();
+	exit(1);
+}
+
+if ( ! defined($field) ) {
+	print STDERR "-f must be specified.\n";
+	exit(1);
+}
+
+$field--;
+
+# default to replace, but only if -a or -p weren't specified
+if ( ! ($append || $prepend) ) {
+	$replace = 1;
+}
+
+
+if ( $debug ) {
+	while ( my ($k, $v) = each %mapping ) {
+		print STDERR "$k => $v\n";
+	}
+}
+
+my ($line_str, @line, $field_val, $local_field);
+while ( $line_str = <> ) {
+	$line_str =~ s/([\r\n]+)//m;
+
+	@line = split(/\Q$delim\E/, $line_str, -1);
+
+	# when prepending, the field may shift
+	$local_field = $field;
+	$field_val = $line[$local_field];
+
+	# if no mapping defined, the field value is passed through unchanged
+	if ( $prepend ) {
+		splice(@line, $local_field, 1,
+			$mapping{$field_val} || $line[$local_field],
+			$field_val);
+		$local_field++;
+	}
+	if ( $append ) {
+		splice(@line, $local_field, 1,
+			$field_val,
+			$mapping{$field_val} || $line[$local_field]);
+	}
+	if ( $replace ) {
+		$line[$local_field] = $mapping{$field_val} || $field_val;
+	}
+
+	print join($delim, @line), $1;
+}
+
+

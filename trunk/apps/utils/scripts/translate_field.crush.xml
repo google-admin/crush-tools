@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<application>
+	<name>translate_field</name>
+	<category>Shell utilities</category>
+	<description></description>
+	<options>
+		<option has_argument="0" required="0">
+			<name>help</name>
+			<short>h</short>
+			<long>help</long>
+			<description>print this message and exit</description>
+		</option>
+		<option has_argument="1" required="0" default="0xfe">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>the field delimiter string</description>
+		</option>
+		<option has_argument="1" required="1" default="1">
+			<name>field</name>
+			<short>f</short>
+			<long>field</long>
+			<description>the 1-based index for the new field</description>
+		</option>
+		<option has_argument="0" required="0" default="">
+			<name>prepend</name>
+			<short>p</short>
+			<long>prepend</long>
+			<description>put the translation before the original field</description>
+		</option>
+		<option has_argument="0" required="0" default="">
+			<name>append</name>
+			<short>a</short>
+			<long>append</long>
+			<description>put the translation after the original field</description>
+		</option>
+		<option has_argument="0" required="0" default="">
+			<name>replace</name>
+			<short>r</short>
+			<long>replace</long>
+			<description>replace the original field with the translation</description>
+		</option>
+		<option has_argument="0" required="0" default="">
+			<name>value</name>
+			<short>v</short>
+			<long>value</long>
+			<description>the value to place in the new field</description>
+		</option>
+		<option has_argument="1" required="0" default="">
+			<name>mapping</name>
+			<short>m</short>
+			<long>map</long>
+			<description>specifies a translation mapping for a possible field value</description>
+		</option>
+	</options>
+	<details>
+		<item>Replacing is the default behavior, but for replacement to occur in addition to appending or prepending, -r must be specified.</item>
+		<item>Mappings are specified as "K=V" pairs where K is a possible value for the field, and V is the translation.</item>
+		<item>If no mapping is supplied for a field value, the value is unchanged (the header is preserved unless a mapping is specified for the header value).</item>
+	</details>
+	<example><![CDATA[
+
+header=`<a href="bash_functions.html#get_header_line">get_header_line</a> Activity_123456_01-01-2029.log.gz`
+delim=`<a href="bash_functions.html#get_header_delim">get_header_delim</a> "$header"`
+i_event_id=`<a href="bash_functions.html#get_header_index">get_header_index</a> "Event-ID" "$header" "$delim"`
+
+<a href="gzdog.html">gzdog</a> Activity_123456_01-01-2029.log.gz |
+	<b>translate_field</b> -i $i_event_id -d "$delim" -m 1=Post-Click -m 2=Post-Impression -m 0=Unmatched \
+	> $wdir/tmp/$$_Activity_123456_01-01-2029.log
+
+]]></example>
+</application>
