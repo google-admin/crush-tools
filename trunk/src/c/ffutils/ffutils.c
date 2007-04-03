@@ -174,7 +174,7 @@ void chomp(char *s) {
 
 void trim(char *str){
 	int i = strlen(str) - 1;
-	for(i; isspace(str[i]) && i > 0; i--)
+	for(; isspace(str[i]) && i > 0; i--)
 		str[i] = '\0';
 	return;
 }
@@ -370,8 +370,10 @@ int get_line_pos( const char *ct, const int field_no, const char *d, int *start,
 			*end = i;
 		}	
 
-		// Did we find a delimiter?
-		if( strncmp(ct + i, d, len_d) == 0 ) {
+		// Did we find a delimiter or linebreak?
+		if( strncmp(ct + i, d, len_d) == 0 ||
+		    *(ct + i) == '\n' || *(ct + i) == '\r'
+		  ) {
 			*end = i - 1;
 		}
 	}
