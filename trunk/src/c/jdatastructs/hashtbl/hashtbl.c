@@ -67,7 +67,7 @@ int ht_put( hashtbl_t *tbl, char *key, void *data ) {
 
 	if ( (elem = malloc(sizeof(ht_elem_t))) == NULL )
 		return -1;
-	if ( (elem->key = malloc( sizeof(char) * strlen(key) )) == NULL ) {
+	if ( (elem->key = malloc( sizeof(char) * strlen(key) + 1 )) == NULL ) {
 		free(elem);
 		return -1;
 	}
