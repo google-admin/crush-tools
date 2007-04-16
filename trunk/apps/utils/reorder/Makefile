@@ -12,7 +12,7 @@ CC := $(shell which gcc)
 
 MAINGENERATOR := $(shell which cgen)
 ARGSTAB := args.tab
-CFLAGS := -g -O2 -Wall -D_GNU_SOURCE
+CFLAGS := -O2 -Wall -D_GNU_SOURCE
 DBCFLAGS := $(CFLAGS) -g -DDEBUG
 LINKFLAGS := -lffutils -lsplitter
 
