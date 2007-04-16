@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <application>
 	<name>indexof</name>
-	<category>Miscellaneous utilities</category>
+	<category>Specific to data transfer files</category>
 	<description>prints the column number matching a given header, or 0 if not found.</description>
 	<options>
 		<option has_argument="0" required="0">

@@ -89,5 +89,13 @@ END_COPYRIGHT
 	  required => 0,
 	  description => 'specifies that the output need not be sorted.'
 	},
+	{
+	  name => 'labels',
+	  shortopt => 'l',
+	  longopt => 'labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'how to label the aggregation fields (default: unchanged)'
+	},
 );
 

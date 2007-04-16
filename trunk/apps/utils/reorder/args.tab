@@ -1,5 +1,6 @@
 # data relevant to the application as a whole
 %global = (
+	category => 'General file manipulation',
 	name => "reorder",
 	category => "General file manipulation",
 	description => "swaps columns in a delimited flat file",

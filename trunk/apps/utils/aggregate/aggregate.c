@@ -119,18 +119,24 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		   version of aggregate.
 		 */
 
-		extract_fields_to_string (inbuf, outbuf, outbuf_sz, key_fields, nkeys, delim ) ;
+		extract_fields_to_string (inbuf, outbuf, outbuf_sz,
+					  key_fields, nkeys, delim ) ;
 
 		if ( nsums ) {
 			strcat(outbuf, delim);
 			str_len = strlen(outbuf);
-			extract_fields_to_string (inbuf, outbuf + str_len, outbuf_sz - str_len, sum_fields, nsums, delim ) ;
+			extract_fields_to_string (inbuf, outbuf + str_len,
+						  outbuf_sz - str_len,
+						  sum_fields, nsums, delim ) ;
 		}
 
 		if ( ncounts ) {
 			strcat(outbuf, delim);
 			str_len = strlen(outbuf);
-			extract_fields_to_string (inbuf, outbuf + str_len, outbuf_sz - str_len, count_fields, ncounts, delim ) ;
+			extract_fields_to_string (inbuf, outbuf + str_len,
+						  outbuf_sz - str_len,
+						  count_fields, ncounts,
+						  delim ) ;
 		}
 
 		puts(outbuf);

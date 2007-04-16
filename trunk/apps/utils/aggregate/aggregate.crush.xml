@@ -58,6 +58,12 @@
 			<long>no-sort</long>
 			<description>specifies that the output need not be sorted.</description>
 		</option>
+		<option has_argument="1" required="0">
+			<name>labels</name>
+			<short>l</short>
+			<long>labels</long>
+			<description>how to label the aggregation fields (default: unchanged)</description>
+		</option>
 	</options>
 	<details>
 		<item>all column indexes are 1-based.</item>

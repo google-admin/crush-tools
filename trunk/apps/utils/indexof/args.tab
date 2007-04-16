@@ -1,7 +1,7 @@
 # data relevant to the application as a whole
 %global = (
 	name => "indexof",
-	category => "Miscellaneous utilities",
+	category => "Specific to data transfer files",
 	description => "prints the column number matching a given header, or 0 if not found.",
 	version => "1.0",
 	trailing_opts => "",

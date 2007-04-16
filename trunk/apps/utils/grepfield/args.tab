@@ -1,5 +1,6 @@
 # data relevant to the application as a whole
 %global = (
+	category => 'General file manipulation',
 	name => "grepfield",
 	category => "General file manipulation",
 	description => "looks for patterns within a specific field of a flat-file",

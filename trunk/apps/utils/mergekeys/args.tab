@@ -1,5 +1,6 @@
 # data relevant to the application as a whole
 %global = (
+	category => 'General file manipulation',
 	name => "mergekeys",
 	category => "General file manipulation",
 	description => "merges two sorted flat files with some different columns",
