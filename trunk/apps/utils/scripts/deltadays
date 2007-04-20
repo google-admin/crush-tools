@@ -1,0 +1,48 @@
+#!/usr/bin/perl -w -I/home/dfarep/pm
+# -*-perl-*-
+use strict;
+
+use Date::Calc qw(Delta_DHMS);
+use DART::DateFormat;
+use Getopt::Long;
+
+
+my( $dfs, $start, $end, $help );
+$dfs = 'YYYY-MM-DD';
+&GetOptions(	"help!"		=> \$help,
+		"start:s"	=> \$start,
+		"end:s"		=> \$end,
+		"format:s"	=> \$dfs
+	   );
+
+if( ! defined($start) ){
+	$start = shift(@ARGV);
+}
+if( ! defined($end) ){
+	$end = shift(@ARGV);
+}
+
+if( $help || !(defined($start) && defined($end)) ){
+	usage();
+	exit(1);
+}
+
+my $df = DART::DateFormat->new($dfs);
+my @dhms = Delta_DHMS($df->parse($start), $df->parse($end));
+print abs($dhms[0]) + 1, qq(\n);
+exit(0);
+
+sub usage {
+	print STDERR <<ENDUSAGE;
+
+calculates the number of days in a range
+
+usage: $0 [-s <date>] [-e <date>] [-f <format>] [start] [end]
+
+	-h, --help		print this message and exit.
+	-s, --start <date>	start date of range
+	-e, --end <date>	end date of range
+	-f, --format <format>	date format to use (default: YYYY-MM-DD)
+
+ENDUSAGE
+}
