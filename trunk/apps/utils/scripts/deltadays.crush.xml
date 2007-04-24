@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<application>
+	<name>deltadays</name>
+	<category>Miscellaneous utilities</category>
+	<description>prints the number of days in a date range</description>
+	<options>
+		<option has_argument="0" required="0" default="0xfe">
+                        <name>help</name>
+                        <short>h</short>
+                        <long>help</long>
+                        <description>print usage message and exit</description>
+                </option>
+		<option has_argument="1" required="1">
+			<name>start</name>
+			<short>s</short>
+			<long>start</long>
+			<description>beginning of date range</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>end</name>
+			<short>e</short>
+			<long>end</long>
+			<description>end of date range</description>
+		</option>
+		<option has_argument="1" required="1">
+			<name>format</name>
+			<short>f</short>
+			<long>format</long>
+			<description>input date format (default: YYYY-MM-DD)</description>
+		</option>
+	</options>
+	<details>
+		<item>start and end dates may be provided as trailing arguments instead of using -s and -e.</item>
+	</details>
+	<example><![CDATA[
+<a href="bash_functions.html#set_dates">set_dates</a> weekly
+
+dt_files=`<a href="findfiles.html">findfiles</a> -d $dt_dir -s $startdate -e $enddate -g "Activity_${spot_id}_*.log.gz"`
+
+n_dates=`<b>deltadays</b> $startdate $enddate`
+n_files=`echo $dt_files | wc -w`
+
+if [ $n_dates -gt $n_files ]; then
+	<a href="bash_functions.html#warn">warn</a> "missing input files."
+	exit 2
+fi
+]]></example>
+</application>
