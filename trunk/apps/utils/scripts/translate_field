@@ -7,7 +7,7 @@ Getopt::Long::Configure( "no_ignore_case" );
 
 my ( $help, $debug, $field, $delim, $replace, $append, $prepend, %mapping );
 
-$delim = chr(0xfe);
+$delim = $ENV{"DELIMITER"} || chr(0xfe);
 
 GetOptions (	"help"		=> \$help,
 		"Debug"		=> \$debug,

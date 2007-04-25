@@ -17,7 +17,7 @@ $pwd = $ENV{'DB_PWD'};
 # d (delimiter) provided for spliting input lines or joining output
 
 my ($help, $sqlfile, $sql, $infile, $outfile, $d);
-$d = chr(0xfe);
+$d = $ENV{"DELIMITER"} || chr(0xfe);
 
 GetOptions(	'help'		=> \$help,
 		'file:s'	=> \$sqlfile,

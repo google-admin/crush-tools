@@ -6,7 +6,7 @@ use Getopt::Long;
 my ($help, $header, $value, $location, $delim, $copy_field);
 
 $value = '';
-$delim = chr(0xfe);
+$delim = $ENV{"DELIMITER"} || chr(0xfe);
 $location = 1;
 
 &GetOptions (	"help"		=> \$help,

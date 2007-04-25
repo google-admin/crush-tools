@@ -7,7 +7,7 @@ use FileHandle;
 
 my ($h, $d, $i, $o, $noescape);
 
-$d = chr(0xfe);
+$d = $ENV{DELIMITER} || chr(0xfe);
 
 &GetOptions(	"help!"		=> \$h,
 		"delim:s"	=> \$d,
