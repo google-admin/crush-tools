@@ -73,10 +73,12 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	char empty_string[] = "";
 
-	if ( ! args->delim ) 
-		args->delim = default_delim;
-	else
-		expand_chars( args->delim );
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
+	}
+	expand_chars( args->delim );
 
 	delim = args->delim;
 
