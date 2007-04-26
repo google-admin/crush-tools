@@ -58,8 +58,11 @@ int convdate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	// Set default delimiter if necessary.
 	if ( ! args->delim ) {
-		args->delim = default_delim;
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
 	}
+	expand_chars(args->delim);
 
 	// Process the input stream
 	if ( in != NULL ) {
