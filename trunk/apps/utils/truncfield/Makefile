@@ -1,18 +1,56 @@
-# doing this causes a preprocessor warning :|
-# DEFINES=-DMAX_TRUNC_FIELDS=16
+EXECUTABLE := truncfield
+DESCRIPTION := truncates specified fields from a string-delimited data stream
+VERSION = 2.0
 
-DEFINES=
+DISTFILE = $(EXECUTABLE)-$(VERSION).tgz
+# resources like README, COPYING, etc., which should be included in
+# the distribution file
+RESOURCES := 
 
-INSTALLDIR=/home/jhinds/bin/
-INCLUDE=/home/jhinds/include
+WORKDIR := $(shell pwd)
+CC := $(shell which gcc)
 
-BINNAME=truncfield
+MAINGENERATOR := $(shell which cgener)
+ARGSTAB := args.tab
+CFLAGS := -O2 -Wall -D_GNU_SOURCE
+DBCFLAGS := $(CFLAGS) -g -DDEBUG
+LINKFLAGS := -lffutils -lqsort_helper
 
-SRCFILES=./truncfield.c
+GEN_FILES := main.c usage.c
+GEN_OBJECTS := $(patsubst %.c,%.o,$(GEN_FILES))
+CFILES := $(filter-out $(GEN_FILES), $(wildcard *.c))
+CHEADERS :=$(wildcard *.h)
+OBJECTS := $(patsubst %.c,%.o,$(CFILES))
+DEPS := $(patsubst %.o,%.d,$(OBJECTS))
 
-CFLAGS=-ansi -Wall -O2
+.PHONY : debug deps clean dist
+
+default : $(EXECUTABLE)
+
+deps :  $(OBJECTS) $(GEN_OBJECTS)
+
+debug ::
+	$(CC) $(DBCFLAGS) -o $(EXECUTABLE) $(CFILES) $(LINKFLAGS)
+
+clean ::
+	rm -f *.o
+	rm -f *.d
+	rm -f $(GEN_FILES)
+
+dist : $(DISTFILE)
+
+$(DISTFILE) : $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES)
+	@ls $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES) | sed s:^:$(EXECUTABLE)-$(VERSION)/: >MANIFEST
+	@(cd ..; ln -s $(WORKDIR) $(EXECUTABLE)-$(VERSION))
+	(cd ..; tar -czvf $(WORKDIR)/$(DISTFILE) `cat $(WORKDIR)/MANIFEST`)
+	@(cd ..; rm $(EXECUTABLE)-$(VERSION))
+
+$(GEN_OBJECTS) : $(GEN_FILES)
+
+$(GEN_FILES) : $(ARGSTAB)
+	$(MAINGENERATOR) -a $(ARGSTAB)
+
+$(EXECUTABLE) : $(GEN_OBJECTS) $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(GEN_OBJECTS) $(OBJECTS) $(LINKFLAGS)
 
 
-build ::; gcc ${CFLAGS} -I${INCLUDE} ${DEFINES} -o ${BINNAME} ${SRCFILES}
-
-install ::; cp ${BINNAME} ${INSTALLDIR}
