@@ -52,8 +52,12 @@ int grepfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		exit(EXIT_HELP);
 	}
 
-	if ( ! args->delim )
-		args->delim = default_delim;
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
+	}
+	expand_chars(args->delim);
 
 	reg_flags = REG_EXTENDED;
 	if ( args->ignore_case ) reg_flags |= REG_ICASE;
