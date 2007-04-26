@@ -60,8 +60,11 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 #endif
 
 	if ( ! args->delim ) {
-		args->delim = default_delim;
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
 	}
+	expand_chars(args->delim);
 
 	/* may add output option later */
 	fpout = stdout;
