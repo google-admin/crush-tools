@@ -11,7 +11,7 @@ use Text::Trim;
 getopts('hvprd:e:i:b:c:');
 
 # Define default delimiter
-my $delim = `tochar 0xfe`;
+my $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
 # Print help if requested
 if ($opt_h) {
