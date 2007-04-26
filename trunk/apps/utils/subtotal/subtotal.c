@@ -37,7 +37,7 @@ int subtotal ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	size_t n_fields;	/* the number of fields in the input line */
 	int current_line, starting_line;
-	char default_delim[2];
+	char default_delim[] = {0xfe, 0x00};
 	FILE *in, *out;
 
 	key = atoi(args->key);
@@ -46,10 +46,12 @@ int subtotal ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	else
 		starting_line = 0;
 
-	default_delim[0] = 0xfe;
-	default_delim[1] = 0x00;
-	if ( ! args->delim )
-		args->delim = default_delim;
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
+	}
+	expand_chars(args->delim);
 
 	sums = NULL;
 	sum_cols = NULL;
