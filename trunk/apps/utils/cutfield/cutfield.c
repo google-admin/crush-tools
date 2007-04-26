@@ -1,237 +1,108 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <getopt.h>
-#include <splitter.h>
+/********************************
+  copyright
+ ********************************/
+#include "cutfield_main.h"
+#include <err.h>
 
-#ifndef INBUFFER_MAX
-#define INBUFFER_MAX 2048
-#endif
+#include <ffutils.h>
+#include <qsort_helper.h>
 
-#ifndef MAX_TRUNC_FIELDS 
-#define MAX_TRUNC_FIELDS 64
-#endif
+/** @brief  
+  * 
+  * @param args contains the parsed cmd-line options & arguments.
+  * @param argc number of cmd-line arguments.
+  * @param argv list of cmd-line arguments
+  * @param optind index of the first non-option cmd-line argument.
+  * 
+  * @return exit status for main() to return.
+  */
+int cutfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
-/*****************
- jhinds 2004.01.22
+	char   default_delim[] = { 0xfe, 0x00 };
 
- with multi-field support.  see single_field_version directory for 
- previous version
- *****************/
+	int   *field_list = NULL;	/* list of fields to remove */
+	size_t field_list_sz = 0;
 
-/*** benchmarking
+	char  *in_buffer = NULL;	/* holds a line of input */
+	size_t in_buffer_sz = 0;	/* the size of the input buffer */
+	size_t n_fields = 0;		/* the number of fields from input
+					   file */
 
---- multi-field version ---
-bash-2.03$ time ./truncfield -f 1,3,4 -d `tochar 0254` -o tf.out sa_event_886646_01-13-2004.log 
- 
-real    0m40.747s
-user    0m20.690s
-sys     0m19.400s
-
---- single-field version ---
-bash-2.03$ time ./truncfield -d `tochar 0254` -f 1 sa_event_886646_01-13-2004.log | ./truncfield -d `tochar 0254` -f 3 | ./truncfield -d `tochar 0254` -f 4 -o tf.out 
- 
-real    1m16.536s
-user    0m50.900s
-sys     0m32.080s
-
-
-***/
-
-static struct option long_options[] =
-        {
-          /* These options set a flag. */
-          {"help",	no_argument,	    0, 'h'},
-          {"delimiter",	required_argument,  0, 'd'},
-          {"field",	required_argument,  0, 'f'},
-          {"output-file",required_argument, 0, 'o'},
-          {"append-file",required_argument, 0, 'a'},
-          {0, 0, 0, 0}
-        };
-
-void usage(char *);
-size_t set_fields(int*,char*);
-
-
-int main(int argc, char *argv[]){
-	FILE *in = NULL, *out = NULL;
-	unsigned char delim='\0';
-	char *buffer, *pos, *ppos, *mark;
-	int field=0, inctr = 0;
-	int *fields=NULL, n_fields = 0;
-	int c, option_index;
-
-	while( (c = getopt_long(argc, argv, "hd:f:a:o:", long_options,
-				&option_index) ) != -1)
-	switch(c){
-		case 'h':
-			usage(argv[0]);
-			exit(1);
-			break;
-		case 'd':
-			delim = optarg[0];
-			break;
-		case 'o':
-			if(out == NULL)
-				if(! (out = fopen(optarg, "w")) ){
-					perror(optarg);
-					exit(-1);
-				}
-			break;
-		case 'a':
-			if(out == NULL)
-				if(! (out = fopen(optarg, "a")) ){
-					perror(optarg);
-					exit(-1);
-				}
-			break;
-		case 'f':
-			/* n_fields = set_fields(fields, optarg); */
-			n_fields = splitnums(optarg, &fields, 0);
-			break;
-		case '?':	/* getopt_long prints error message */
-			break;
-		default:
-			if(out) fclose(out);
-			exit(-1);
-			break;
-	}
-
-	if(delim == '\0' || n_fields == 0){
-		usage(argv[0]);
-		if(out != NULL) fclose(out);
-		exit(1);
-	}
-
-	/* for testing purposes */
-#ifdef DEBUG
-	fprintf(stderr,"%d fields specified.\n",n_fields);
-#endif
-	field = fields[n_fields - 1];
-
-	if(out == NULL)
-		out = stdout;
-
-	if( (buffer = malloc(INBUFFER_MAX)) == NULL){
-		fprintf(stderr,"unable to allocate memory.\n");
-		fclose(out);
-		return -1;
-	}
-
-	inctr = optind;	/* optind comes from getopt */
-	do{
-		int i, fctr = 0;
-		if(inctr == argc){
-			in = stdin;
+	if ( args->output_fname ) {
+		if ( ! freopen( args->output_fname, "w", stdout ) ) {
+			warn(args->output_fname);
+			return EXIT_FILE_ERR;
 		}
-		else if( (in = fopen( argv[inctr], "r")) == NULL ){
-			perror(argv[inctr]);
-			fclose(out);
-			free(buffer);
-			return 2;
+	}
+	else if ( args->append_fname ) {
+		if ( ! freopen( args->append_fname, "a", stdout ) ) {
+			warn(args->append_fname);
+			return EXIT_FILE_ERR;
 		}
-		while(fgets(buffer, INBUFFER_MAX, in) != NULL) {
-			i = 0;
-			fctr = 0;
-			mark = ppos = buffer;
+	}
 
-			/* bugfix - removing first field wasn't working */
-			if( fields[0] == 1 ){
-				ppos = strchr(buffer, delim) + 1;
-				if(++fctr == n_fields){
-					fprintf(out,"%s",ppos);
+	field_list_sz = expand_nums( args->fields, &field_list, &field_list_sz );
+	if ( field_list_sz < 1 ) {
+		fprintf(stderr, "%s: error expanding field list.\n",
+				argv[0]);
+		return EXIT_HELP;
+	}
+	qsort( field_list, field_list_sz, sizeof(field_list[0]),
+			(qsort_cmp_func_t) qsort_intcmp );
+
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
+	}
+	expand_chars(args->delim);
+
+	if ( optind < argc ) {
+		fclose(stdin);
+		stdin = nextfile(argc, argv, &optind, "r");
+	}
+
+	while ( stdin ) {
+		
+		int next_field_to_skip;	/* index into field_list */
+		int i;			/* index of current input field */
+		int f_first, f_last;	/* position of first and last char
+					   in a field */
+		int first_field_printed;/* used to control delimiter output */
+
+		while ( getline(&in_buffer, &in_buffer_sz, stdin) > 0 ) {
+			next_field_to_skip = 0;
+			n_fields = fields_in_line(in_buffer, args->delim);
+			first_field_printed = 0;
+
+			for ( i = 0; i < n_fields; i++ ) {
+				if ( field_list[next_field_to_skip] == i + 1 ) {
+					++next_field_to_skip;
 					continue;
 				}
-				mark = ppos;
-				i++;
+				if ( ! get_line_pos ( in_buffer, i, args->delim, &f_first, &f_last ) )
+					continue;
+
+				if ( first_field_printed )
+					printf("%s", args->delim);
+
+				printf("%.*s", f_last - f_first + 1, &(in_buffer[f_first]));
+				first_field_printed = 1;
 			}
 
-			while( (pos = strchr(ppos, delim)) != NULL ){
-				i++;
-				if(i == fields[fctr]){
-					fwrite(mark, sizeof(char),
-						ppos - mark - 1, out);
+			/* print everything after the last field in the
+			 * line (preserves input line-break style) */
+			get_line_pos ( in_buffer, n_fields - 1, args->delim, &f_first, &f_last );
+			printf("%s", &(in_buffer[f_last + 1]));
 
-			/* no more fields to cut - just print the rest of
-			   the line */
-					if(++fctr == n_fields){
-						/* fprintf(out,"%s",pos+1); */
-						fprintf(out,"%s",pos);
-						break;
-					}
-					mark = pos;
-/* move past delim */
-				}
-				ppos = pos +1 ;
-			}
-			/* handle the last field */
-			if(fctr != n_fields && ++i == fields[fctr]){
-				fwrite(mark, sizeof(char),
-					ppos - mark - 1, out);
-				fputc('\n', out);
-			}
-			/* handle lines w/out as many fields as specified */
-			else if(fctr < n_fields && i<fields[fctr])
-				fprintf(out,"%s",mark);
 		}
 
-		fclose(in);
-	} while ( ++inctr < argc );
+		stdin = nextfile(argc, argv, &optind, "r");
+	}
 
-	free(buffer);
-	free(fields);
-        fclose(out);
+	free(field_list);
+	free(in_buffer);
 
-	return 0;
+	return EXIT_OKAY;
 }
 
-
-/****
- * splits comma-separated string into array of ints
- * returns number of elements in array
- ****/
-size_t set_fields(int *fields, char *arg){
-	int i = 0, o = 0;
-	char token[9], *pos, *ppos;
-
-	if(arg == NULL || strlen(arg) == 0){
-		return 0;
-	}
-	if( strchr(arg,',') == NULL){
-		sscanf(arg,"%u",&(fields[0]));
-		return 1;
-	}
-	ppos = arg;
-	while( (pos = strchr(ppos, ',')) != NULL && i < MAX_TRUNC_FIELDS ){
-		o = pos - ppos;
-		strncpy(token, ppos, o);
-		token[o] = '\0';
-		sscanf(token,"%u",&(fields[i]));
-		ppos = pos + 1;
-		i++;
-	}
-	if(i < MAX_TRUNC_FIELDS){
-		/* get the last token */
-		o = strlen(ppos);
-		strncpy(token, ppos, o);
-		token[o] = '\0';
-		sscanf(token,"%u",&(fields[i]));
-		i++;
-	}
-	return i;
-}
-
-
-
-void usage(char *bin){
-	fprintf(stderr,"2004, jhinds\n");
-	fprintf(stderr,"\nremoves fields from a character-delimited file.\n");
-	fprintf(stderr,
-	"\nusage: %s <-d delim> <-f field> [ -o|-a outfile ] [input file(s)]\n\n", bin);
-	fprintf(stderr,"-h|--help\t\tprint this message and exit\n");
-	fprintf(stderr,"-d|--delimiter\t\tsingle-character file delimiter\n");
-	fprintf(stderr,"-f|--field\t\tcomma-separated positive numeric field numbers\n");
-	fprintf(stderr,"-o|--output-file\toptional file for printing output.\n");
-	fprintf(stderr,"-a|--append-file\toptional file for appending output.\n\n");
-	fprintf(stderr,"you shouldn't use both -a and -o, but if you do, only the first will be used.\n");
-}
