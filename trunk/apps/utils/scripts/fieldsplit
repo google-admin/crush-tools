@@ -1,0 +1,119 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+my( $h, $d, $f, $keep, $dir, $prefix );
+$d = $ENV{'DELIMITER'} || chr(0xfe);
+$dir = './';
+$prefix = '';
+
+&GetOptions(	"help!"		=> \$h,
+		"keepheader!"	=> \$keep,
+		"delim:s"	=> \$d,
+		"field:n"	=> \$f,
+		"path:s"	=> \$dir,
+		"name:s"	=> \$prefix
+		);
+
+if( $h || ! defined($f) ){
+	usage();
+	exit(1);
+}
+
+if( $d eq '^' || $d eq '$' || $d eq '\\' || $d eq '|' ){
+	$d = '\\' . $d;
+}
+
+$f--;
+
+my $flush = 10000;
+my %fdat = ();
+my $lineno = 0;
+
+my $header;
+if ( $keep ) {
+	$header = <>;
+}
+
+while(my $lstr = <>){
+	$lineno++;
+	my @line = split(/\Q$d\E/, $lstr, -1);
+	if( ! defined($line[$f]) || $line[$f] eq '' ){
+		$line[$f] = '_blank_value';
+	}
+	push @{ $fdat{$line[$f]} }, $lstr;
+	if( $lineno == $flush ){
+		foreach my $key ( keys %fdat ){
+			my $k = $key;
+			$k =~ s/[\r\n]//g;
+			$k =~ s/\s/_/g;
+			$k =~ s/\//_/g;
+			my $fname = $dir . '/' . $prefix . $k;
+
+		# if keeping the header and  the file doesn't exist yet
+		# open it & print the header to it
+			if ( $keep && ! -f $fname ) {
+				open(F, "> $fname") or die "$fname: $!\n";
+				print F $header;
+			} else {
+				open(F, ">> $fname") or die "$fname: $!\n";
+			}
+
+			foreach my $l ( @{ $fdat{$key} } ){
+				print F $l;
+			}
+
+			close(F);
+			delete $fdat{$key};
+		}
+		$lineno = 0;
+	}
+}
+
+foreach my $key ( keys %fdat ){
+	my $k = $key;
+	$k =~ s/[\r\n]//g;
+	$k =~ s/\s/_/g;
+	$k =~ s/\//_/g;
+	my $fname = $dir . '/' . $prefix . $k;
+	if ( $keep && ! -f $fname ) {
+		open(F, "> $fname") or die "$fname: $!\n";
+		print F $header;
+	} else {
+		open(F, ">> $fname") or die "$fname: $!\n";
+	}
+	foreach my $l ( @{ $fdat{$key} } ){
+		print F $l;
+	}
+	close(F);
+}
+
+exit(0);
+
+
+sub usage {
+	print STDERR <<__USAGE__;
+
+splits a file into multiple files according to a particular field value.
+
+usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
+
+	-h, --help	print this message and exit
+	-f, --field N	split on field number N (required)
+	-d, --delim D	specifies D as the field delimiter (default: 0xfe)
+	-p, --path dir	specifies dir as directory in which files will be
+			placed (default: ./)
+	-n, --name <PREFIX> output filename prefix
+	-k, --keep	keep the header in all of the resulting files
+
+filenames will be the -n prefix argument (if any) followed by whatever the
+value of the field was (with spaces and slashes replaced with underscores),
+or "_blank_value" for lines where the field was empty.
+
+NOTE: you should insure none of the files which will be created exist before
+running this - new data will just be appended to the existing file in that
+case.
+
+__USAGE__
+}
