@@ -46,8 +46,8 @@ END_COPYRIGHT
 	  shortopt => 'd',
 	  longopt => 'delim',
 	  type => 'var',
-	  required => 1,
-	  description => 'field separator string (required)'
+	  required => 0,
+	  description => 'field separator string'
 	},
 	{
 	  name => 'label',

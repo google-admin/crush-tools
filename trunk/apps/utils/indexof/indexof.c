@@ -3,12 +3,14 @@
  ********************************/
 #include "indexof_main.h"
 #include "indexof.h"
+#include <ffutils.h>
 
 int indexof ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	FILE *in;
 	int lineno = 1, curline = 0, index = 1;
 	char *buf = NULL, *tok;
 	size_t buflen = 0;
+	char default_delim[] = {0xfe, 0x00};
 
 	if ( args->file != NULL ) {
 		if ( (in = fopen(args->file, "r")) == NULL ) {
@@ -19,6 +21,13 @@ int indexof ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	else {
 		in = stdin;
 	}
+
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delim;
+	}
+	expand_chars(args->delim);
 
 	if( args->row != 0 )
 		sscanf(args->row, "%d", &lineno);

@@ -8,7 +8,7 @@ ARGSTAB := args.tab
 
 CFLAGS := -O2 -Wall -D_GNU_SOURCE
 DBCFLAGS := $(CFLAGS) -g -DDEBUG
-LINKFLAGS :=
+LINKFLAGS := -lffutils
 
 GEN_FILES := main.c usage.c
 GEN_OBJECTS := $(patsubst %.c,%.o,$(GEN_FILES))
