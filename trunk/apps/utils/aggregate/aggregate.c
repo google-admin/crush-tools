@@ -44,6 +44,8 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	char default_delim[] = { 0xFE, 0x00 };	/* default delimiter string */
 
 	delim = args->delim;
+	if ( ! delim )
+		delim = getenv("DELIMITER");
 
 	if ( delim )
 		expand_chars(delim);
