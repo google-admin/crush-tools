@@ -57,8 +57,12 @@ int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		}
 	}
 
-	if ( ! args->delim )
-		args->delim = default_delimiter;
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = default_delimiter;
+	}
+	expand_chars(args->delim);
 
 	retval = merge_files( a, b, out, args );
 
