@@ -33,8 +33,12 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	size_t bufsz;
 
 	/* use the default delimiter if necessary */
-	if ( ! args->delim )
-		args->delim = delim ;
+	if ( ! args->delim ) {
+		args->delim = getenv("DELIMITER");
+		if ( ! args->delim )
+			args->delim = delim ;
+	}
+	expand_chars(args->delim);
 
 	/* turn the user-provided list of field numbers
 	   into an array of ints */
