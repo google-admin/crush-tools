@@ -19,7 +19,7 @@
   * 
   * @return exit status for main() to return.
   */
-int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
+int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ) {
 
 	char delim[] = { 0xfe , 0x00 };	/* the delimiter */
 	int *fields;			/* array of field indexes */
@@ -31,6 +31,9 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	int i;
 	char *buf;
 	size_t bufsz;
+
+	int dup_count = 1;	/* used with -c option */
+	char linebreak[3];
 
 	/* use the default delimiter if necessary */
 	if ( ! args->delim ) {
@@ -65,7 +68,20 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	buf = NULL;
 	bufsz = 0;
 
-	getline(&buf, &bufsz, in);
+	i = getline(&buf, &bufsz, in);
+
+	/* ASSUMPTION: there can only be 1 or 2 chars in a linebreak
+	 * sequence */
+	if ( buf[i-2] == '\r' || buf[i-2] == '\n' ) {
+		linebreak[0] = buf[i-2];
+		linebreak[1] = buf[i-1];
+		linebreak[2] = '\0';
+	}
+	else {
+		linebreak[0] = buf[i-1];
+		linebreak[1] = '\0';
+	}
+	chomp(buf);
 
 	for ( i = 0; i < n_fields; i++ ) {
 		get_line_field( prev_line[i], buf, FIELD_LEN_LIMIT - 1,
@@ -75,8 +91,13 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	while ( in ) {
 		int matching_fields;
+
 		while ( getline(&buf, &bufsz, in) > 0 ) {
+
+			chomp(buf);
+
 			matching_fields = 0;
+
 			for ( i = 0; i < n_fields; i++ ) {
 				/* extract the field from the input line */
 				get_line_field( cur_field, buf, FIELD_LEN_LIMIT - 1,
@@ -92,12 +113,36 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 			/* if not all of the fields matched, the line
 			   wasn't a duplicate */
-			if ( matching_fields != n_fields )
+			if ( matching_fields != n_fields ) {
+
+				if ( args->count ) {
+					/* print the number of dups for
+					 * the previous output line */
+					printf("%s%d%s", args->delim, dup_count, linebreak);
+				}
+				else {
+					/* give the previous output line a linebreak */
+					printf("%s", linebreak);
+				}
 				printf("%s", buf);
+				dup_count = 1;
+			}
+			else {
+				dup_count++;
+			}
 		}
 
 		fclose(in);
 		in = nextfile( argc, argv, &optind, "r");
+	}
+
+	if ( args->count ) {
+		/* print the number of dups for the last output line */
+		printf("%s%d%s", args->delim, dup_count, linebreak);
+	}
+	else {
+		/* give the last output line a linebreak */
+		printf("%s", linebreak);
 	}
 
 	for ( i = 0; i < n_fields; i++ ) {

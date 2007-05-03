@@ -57,5 +57,13 @@ END_COPYRIGHT
 	  type => 'var',
 	  required => 1,
 	  description => 'fields to consider in the deduplication'
-	}
+	},
+	{
+	  name => 'count',
+	  shortopt => 'c',
+	  longopt => 'count',
+	  type => 'flag',
+	  required => 0,
+	  description => 'produce a count of duplicated lines',
+	},
 );
