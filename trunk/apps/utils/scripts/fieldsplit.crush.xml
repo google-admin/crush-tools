@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<application>
+	<name>fieldsplit</name>
+	<category>General file manipulation</category>
+	<description>splits a file into multiple files according to a particular field value</description>
+	<options>
+		<option has_argument="0" required="0">
+                        <name>help</name>
+                        <short>h</short>
+                        <long>help</long>
+                        <description>print usage message and exit</description>
+                </option>
+		<option has_argument="1" required="1">
+			<name>field</name>
+			<short>f</short>
+			<long>field</long>
+			<description>the field number to split on</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>delim</name>
+			<short>d</short>
+			<long>delim</long>
+			<description>field separator string</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>path</name>
+			<short>p</short>
+			<long>path</long>
+			<description>directory in which output files should be placed (default: .)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>name</name>
+			<short>n</short>
+			<long>name</long>
+			<description>prefix for output file names</description>
+		</option>
+		<option has_argument="0" required="0">
+			<name>keep_header</name>
+			<short>k</short>
+			<long>keep</long>
+			<description>keep the input header in all resulting files</description>
+		</option>
+	</options>
+	<details>
+		<item>
+filenames will be the -n prefix argument (if any) followed by whatever the
+value of the field was (with spaces and slashes replaced with underscores),
+or "_blank_value" for lines where the field was empty.
+		</item>
+		<item>
+You should insure none of the files which will be created exist before
+running this - new data will just be appended to the existing file in that
+case.
+		</item>
+		<item>
+Be careful about using this on fields with many distinct values, as one file will
+be generated for each one.
+		</item>
+	</details>
+	<example><![CDATA[
+<a href="bash_functions.html#set_dates">set_dates</a> weekly
+
+dt_files=`<a href="findfiles.html">findfiles</a> -d $dt_dir -s $startdate -e $enddate -g "Activity_${spot_id}_*.log.gz"`
+
+n_dates=`<b>deltadays</b> $startdate $enddate`
+n_files=`echo $dt_files | wc -w`
+
+if [ $n_dates -gt $n_files ]; then
+	<a href="bash_functions.html#warn">warn</a> "missing input files."
+	exit 2
+fi
+]]></example>
+</application>
