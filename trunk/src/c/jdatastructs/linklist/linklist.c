@@ -57,9 +57,17 @@ int ll_rm_elem ( llist_t *list, llist_node_t *node ) {
 	if ( node->next )
 		node->next->prev = node->prev;
 
+	#ifdef DEBUG
+	fprintf(stderr, "freeing node data \"%s\" at %p\n", node->data, node->data);
+	#endif
+	
 	if ( list->free )	/* free the payload if a function was given */
 		list->free(node->data);
 
+	#ifdef DEBUG
+	fprintf(stderr, "freeing node at %p\n", node);
+	#endif
+	
 	free(node);	/* free the node structure itself */
 
 	list->nnodes--;	/* indicate that there's now 1 fewer nodes in the list */

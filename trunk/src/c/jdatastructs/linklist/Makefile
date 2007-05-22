@@ -4,7 +4,8 @@ DOXYFILE = linklist.doxygen
 CC	:= gcc
 LD	:= ld
 
-CFLAGS	:= -I. -I../include -O2 -Wall -fPIC
+#CFLAGS	:= -I. -I../include -O2 -Wall -fPIC -DDEBUG
+CFLAGS  := -I. -I../include -O2 -Wall -fPIC
 LDFLAGS := ld -dy -G -z text
 AR      := ar -r
 
