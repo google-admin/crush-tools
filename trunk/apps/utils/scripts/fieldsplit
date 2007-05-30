@@ -37,6 +37,9 @@ if ( $keep ) {
 while(my $lstr = <>){
 	$lineno++;
 	my @line = split(/\Q$d\E/, $lstr, -1);
+	if ( $f == $#line ) {
+		$line[$f] =~ s/[\r\n]//g;
+	}
 	if( ! defined($line[$f]) || $line[$f] eq '' ){
 		$line[$f] = '_blank_value';
 	}
@@ -44,7 +47,6 @@ while(my $lstr = <>){
 	if( $lineno == $flush ){
 		foreach my $key ( keys %fdat ){
 			my $k = $key;
-			$k =~ s/[\r\n]//g;
 			$k =~ s/\s/_/g;
 			$k =~ s/\//_/g;
 
