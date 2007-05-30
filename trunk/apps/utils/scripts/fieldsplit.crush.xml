@@ -34,6 +34,18 @@
 			<long>name</long>
 			<description>prefix for output file names</description>
 		</option>
+		<option has_argument="1" required="0">
+			<name>suffix</name>
+			<short>s</short>
+			<long>suffix</long>
+			<description>suffix for output file names (e.g. a file extension)</description>
+		</option>
+		<option has_argument="1" required="0">
+			<name>xform</name>
+			<short>x</short>
+			<long>xform-name</long>
+			<description>a substitution regex to apply to field values before building the output filename</description>
+		</option>
 		<option has_argument="0" required="0">
 			<name>keep_header</name>
 			<short>k</short>
@@ -45,7 +57,8 @@
 		<item>
 filenames will be the -n prefix argument (if any) followed by whatever the
 value of the field was (with spaces and slashes replaced with underscores),
-or "_blank_value" for lines where the field was empty.
+or "_blank_value" for lines where the field was empty, followed by the -s
+suffix argument (if any).
 		</item>
 		<item>
 You should insure none of the files which will be created exist before
@@ -58,16 +71,18 @@ be generated for each one.
 		</item>
 	</details>
 	<example><![CDATA[
-<a href="bash_functions.html#set_dates">set_dates</a> weekly
 
-dt_files=`<a href="findfiles.html">findfiles</a> -d $dt_dir -s $startdate -e $enddate -g "Activity_${spot_id}_*.log.gz"`
+# split a dt file up into one file per country
+#	keep headers
+#	use .log extension
+#	put resulting files into $wdir/tmp
 
-n_dates=`<b>deltadays</b> $startdate $enddate`
-n_files=`echo $dt_files | wc -w`
+i_country_id=`get_header_field "Country-ID" "$header" "$delim"`
 
-if [ $n_dates -gt $n_files ]; then
-	<a href="bash_functions.html#warn">warn</a> "missing input files."
-	exit 2
-fi
+gzdog $dtfile |
+	<b>fieldsplit</b> -k -d "$delim" -f "$i_country_id" -p $wdir/tmp \
+		-n "`basename $dtfile | sed s/.log.gz//`_" \
+		-s .log
+
 ]]></example>
 </application>

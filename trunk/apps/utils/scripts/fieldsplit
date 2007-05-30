@@ -3,26 +3,24 @@
 use strict;
 use Getopt::Long;
 
-my( $h, $d, $f, $keep, $dir, $prefix );
+my( $h, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames );
 $d = $ENV{'DELIMITER'} || chr(0xfe);
 $dir = './';
-$prefix = '';
+$prefix = $suffix = '';
 
-&GetOptions(	"help!"		=> \$h,
-		"keepheader!"	=> \$keep,
-		"delim:s"	=> \$d,
-		"field:n"	=> \$f,
-		"path:s"	=> \$dir,
-		"name:s"	=> \$prefix
+&GetOptions(	"help"		=> \$h,
+		"keepheader"	=> \$keep,
+		"delim=s"	=> \$d,
+		"field=n"	=> \$f,
+		"path=s"	=> \$dir,
+		"name=s"	=> \$prefix,
+		"suffix=s"	=> \$suffix,
+		"xform-name=s"	=> \$xform_outnames,
 		);
 
 if( $h || ! defined($f) ){
 	usage();
 	exit(1);
-}
-
-if( $d eq '^' || $d eq '$' || $d eq '\\' || $d eq '|' ){
-	$d = '\\' . $d;
 }
 
 $f--;
@@ -49,9 +47,14 @@ while(my $lstr = <>){
 			$k =~ s/[\r\n]//g;
 			$k =~ s/\s/_/g;
 			$k =~ s/\//_/g;
-			my $fname = $dir . '/' . $prefix . $k;
 
-		# if keeping the header and  the file doesn't exist yet
+			if ( $xform_outnames ) {
+				eval "\$k =~ $xform_outnames;";
+			}
+
+			my $fname = $dir . '/' . $prefix . $k . $suffix;
+
+		# if keeping the header and the file doesn't exist yet
 		# open it & print the header to it
 			if ( $keep && ! -f $fname ) {
 				open(F, "> $fname") or die "$fname: $!\n";
@@ -76,7 +79,13 @@ foreach my $key ( keys %fdat ){
 	$k =~ s/[\r\n]//g;
 	$k =~ s/\s/_/g;
 	$k =~ s/\//_/g;
-	my $fname = $dir . '/' . $prefix . $k;
+
+	if ( $xform_outnames ) {
+		eval "\$k =~ $xform_outnames;";
+	}
+
+	my $fname = $dir . '/' . $prefix . $k . $suffix;
+
 	if ( $keep && ! -f $fname ) {
 		open(F, "> $fname") or die "$fname: $!\n";
 		print F $header;
@@ -105,11 +114,16 @@ usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
 	-p, --path dir	specifies dir as directory in which files will be
 			placed (default: ./)
 	-n, --name <PREFIX> output filename prefix
+	-s, --suffix <SUFFIX> output filename suffix
 	-k, --keep	keep the header in all of the resulting files
+	-x, --xform-names <SUBSTITUTION>
+			user-supplied substitution regex to transform
+			output names (e.g. 's/[^-\\w]//g')
 
 filenames will be the -n prefix argument (if any) followed by whatever the
 value of the field was (with spaces and slashes replaced with underscores),
-or "_blank_value" for lines where the field was empty.
+or "_blank_value" for lines where the field was empty, followed by the
+-s argument (if any).
 
 NOTE: you should insure none of the files which will be created exist before
 running this - new data will just be appended to the existing file in that
