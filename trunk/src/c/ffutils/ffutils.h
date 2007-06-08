@@ -115,6 +115,15 @@ char * field_start(const char *cs, size_t fn, const char *delim) ;
   */
 int mdyhms_datecmp(const char *a, const char *b);
 
+/** @brief compares two date strings in the format DD-MM-YYYY_HH24:MI:SS
+  * 
+  * @param a first date
+  * @param b second date
+  * 
+  * @return -1 if a < b; 0 if a == b; 1 if a > b.
+  */
+int dmyhms_datecmp(const char *a, const char *b);
+
 /** @brief removes linebreak characters from the end of a string.
   * @param s a null-terminated array of characters
   */

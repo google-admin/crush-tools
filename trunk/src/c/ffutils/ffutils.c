@@ -131,38 +131,29 @@ char * field_start(const char *cs, size_t fn, const char *delim) {
 }
 
 
-int mdyhms_datecmp(const char *a, const char *b){
-	int ay, am, ad, ah, ai, as;
-	int by, bm, bd, bh, bi, bs;
-	sscanf(a, "%2d%*c%2d%*c%4d%*c%2d:%2d:%2d", &am, &ad, &ay, &ah, &ai, &as);
-	sscanf(b, "%2d%*c%2d%*c%4d%*c%2d:%2d:%2d", &bm, &bd, &by, &bh, &bi, &bs);
+int mdyhms_datecmp ( const char *a, const char *b ) {
+	/* if the years are equal, do a straight string comparison */
+	if ( ! (a[6] - b[6]
+	     || a[7] - b[7]
+	     || a[8] - b[8]
+	     || a[9] - b[9] ) )
+		return strcmp(a, b);
 
-	if( ay == by && am == bm && ad == bd &&
-	    ah == bh && ai == bi && as == bs )
-		return 0;
-	if( ay < by )
-		return -1;
-	else if( ay == by ) {
-		if( am < bm )
-			return -1;
-		else if( am == bm ) {
-			if( ad < bd )
-				return -1;
-			else if( ad == bd ){
-				if( ah < bh )
-					return -1;
-				else if( ah == bh ){
-					if( ai < bi )
-						return -1;
-					else if( ai == bi ){
-						if( as < bs )
-							return -1;
-					}
-				}
-			}
-		}
-	}
-	return 1;
+	/* if different years, compare only the years */
+	return strncmp(a + 6, b + 6, 4);
+}
+
+
+int dmyhms_datecmp ( const char *a, const char *b ) {
+	int cmp;
+
+	cmp = strncmp(a + 6, b + 6, 4);	/* compare years */
+	if ( cmp ) return cmp;
+
+	cmp = strncmp(a + 3, b + 3, 2); /* compare months */
+	if ( cmp ) return cmp;
+
+	return strcmp(a, b);		/* compare date and time */
 }
 
 
