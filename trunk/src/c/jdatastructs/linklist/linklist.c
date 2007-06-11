@@ -121,18 +121,24 @@ int ll_add_elem( llist_t *list, void *data, insert_point_t at ) {
 		   in (at == beginning) ) */
 		if ( cur == list->head ) {
 			/* put the new node in front */
+			list->head->prev = newnode;
 			newnode->next = list->head;
 			list->head = newnode;
 		} else if ( cur != NULL ) {
-			/* put the new node in the middle somewhere */
-			newnode->next = cur;
+			/* put the new node in front of the one that's
+			   bigger */
+
+			 /* per first condition, here current definitely
+			    has a previous */
+			cur->prev->next = newnode;
 			newnode->prev = cur->prev;
-			newnode->prev->next = newnode;
+			newnode->next = cur;
 			cur->prev = newnode;
 		} else {
 			/* put the new node at the end */
 			newnode->prev = list->tail;
-			list->tail->next = newnode;
+			if ( list->tail != NULL )
+				list->tail->next = newnode;
 			list->tail = newnode;
 		}
 	}
