@@ -127,6 +127,7 @@ int ll_add_elem( llist_t *list, void *data, insert_point_t at ) {
 			/* put the new node in the middle somewhere */
 			newnode->next = cur;
 			newnode->prev = cur->prev;
+			newnode->prev->next = newnode;
 			cur->prev = newnode;
 		} else {
 			/* put the new node at the end */
