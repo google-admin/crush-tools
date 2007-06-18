@@ -4,6 +4,7 @@
 
 void test_mempool_available ( mempool_t *p, size_t expected );
 void test_mempool_add ( mempool_t *p, const char *str );
+void test_mempool_alloc ( mempool_t *p );
 void test_mempool_reset ( mempool_t *p );
 
 int main ( int argc, char *argv[] ) {
@@ -18,7 +19,8 @@ int main ( int argc, char *argv[] ) {
 	test_mempool_add( pool, "goodbye world" );
 	test_mempool_reset( pool );
 	test_mempool_add( pool, "let's try this again" );
-	test_mempool_available( pool, 128 - strlen("let's try this again") - 2 );
+	test_mempool_available( pool, 128 - strlen("let's try this again") - 1 );
+	test_mempool_alloc( pool );
 
 	mempool_destroy( pool );
 
@@ -53,7 +55,7 @@ void test_mempool_add ( mempool_t *p, const char *str ) {
 		return;
 	}
 
-	if ( (retval = mempool_available(p)) != avail - sz - 1 ) {
+	if ( (retval = mempool_available(p)) != avail - sz) {
 		printf("failed - mempool_available() returned %u instead of %u.\n",
 				retval, avail - sz - 1);
 		return;
@@ -65,6 +67,37 @@ void test_mempool_add ( mempool_t *p, const char *str ) {
 		return;
 	}
 
+	printf("ok.\n");
+}
+
+void test_mempool_alloc( mempool_t *p ) {
+	void *loc;
+	size_t avail = mempool_available(p);
+
+	struct {
+		int a;
+		float b;
+	} small_struct;
+
+	struct {
+		char str[256];
+	} big_struct;
+
+	printf( "test mempool_alloc(): " );
+
+	loc = (void *) mempool_alloc( p, sizeof(small_struct) );
+
+	if ( loc == NULL ) {
+		printf("failed - returned null\n");
+		return;
+	}
+
+	loc = (void *) mempool_alloc( p, sizeof(big_struct) );
+
+	if ( loc != NULL ) {
+		printf("failed - did not return null\n");
+		return;
+	}
 	printf("ok.\n");
 }
 

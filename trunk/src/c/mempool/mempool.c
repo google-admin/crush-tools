@@ -70,8 +70,30 @@ void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size ) {
 		return NULL;
 	}
 
-	pool->next += thing_size + 1;
+	pool->next += thing_size;
 
+	return location;
+}
+
+/** @brief reserves space within a memory pool
+  * 
+  * @param pool in which the space should be reserved
+  * @param n_bytes the number of bytes to reserve
+  * 
+  * @return the address in the memory pool where the thing was stored,
+  * or NULL if there wasn't enough room.
+  */
+void * mempool_alloc ( mempool_t *pool, size_t n_bytes ) {
+	void *location;
+
+	if ( ! pool )
+		return NULL;
+	if ( ! n_bytes || n_bytes > pool->capacity - pool->next )
+		return NULL;
+
+	location = pool->buffer + pool->next;
+
+	pool->next += n_bytes;
 	return location;
 }
 

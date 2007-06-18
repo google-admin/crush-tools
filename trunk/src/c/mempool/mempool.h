@@ -42,6 +42,16 @@ size_t mempool_available ( mempool_t *pool );
   */
 void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size );
 
+/** @brief reserves space within a memory pool
+  * 
+  * @param pool in which the space should be reserved
+  * @param n_bytes the number of bytes to reserve
+  * 
+  * @return the address in the memory pool where the thing was stored,
+  * or NULL if n_bytes was zero or there wasn't enough room.
+  */
+void * mempool_alloc ( mempool_t *pool, size_t n_bytes );
+
 /** @brief zeroes out pool usage.
   * although they may not be immediately cleared out, existing references
   * to pool content should be considered invalid after a call to
