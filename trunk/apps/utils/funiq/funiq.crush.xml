@@ -34,6 +34,12 @@
 			<long>fields</long>
 			<description>fields to consider in the deduplication</description>
 		</option>
+		<option has_argument="0" required="0">
+			<name>count</name>
+			<short>c</short>
+			<long>count</long>
+			<description>produce a count of duplicated lines</description>
+		</option>
 	</options>
 	<details>
 		<item></item>
