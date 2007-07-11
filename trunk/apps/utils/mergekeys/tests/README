@@ -1,0 +1,6 @@
+test 00 - both files of equal length with all the same keys
+test 01 - both files contain only a header
+test 02 - file a contains only a header; file b has data
+test 03 - file a has data; file b contains only a header
+test 04 - last line of a has keys greater than last line of b
+test 05 - last line of a has keys less than last line of b

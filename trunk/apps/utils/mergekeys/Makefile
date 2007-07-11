@@ -23,7 +23,7 @@ CHEADERS :=$(wildcard *.h)
 OBJECTS := $(patsubst %.c,%.o,$(CFILES))
 DEPS := $(patsubst %.o,%.d,$(OBJECTS))
 
-.PHONY : debug deps clean dist
+.PHONY : debug deps clean dist test
 
 default : $(EXECUTABLE)
 
@@ -31,6 +31,9 @@ deps :  $(OBJECTS) $(GEN_OBJECTS)
 
 debug ::
 	$(CC) $(DBCFLAGS) -o $(EXECUTABLE) $(CFILES) $(LINKFLAGS)
+
+test ::
+	tests/run_tests.sh
 
 clean ::
 	rm -f *.o
