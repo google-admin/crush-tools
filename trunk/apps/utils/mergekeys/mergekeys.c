@@ -94,6 +94,9 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					   to those in a */
 	size_t nkeys, ntomerge;
 	int keycmp = 0;
+	int bufa_flag = 0;		/* 0 => there is no data line in bufx or the line in bufx has already been written.*/
+	int bufb_flag = 0;		/* 1 => there is data in bufx which needs to be handled.*/
+					
 
 	bufa = bufb = NULL;
 	basz = bbsz = 0;
@@ -164,6 +167,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			if ( getline(&bufa, &basz, a) <= 0 ) {
 				break;
 			}
+			bufa_flag = 1;
 			chomp(bufa);
 		}
 		if ( keycmp >= 0 ) {
@@ -172,7 +176,10 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			 * need another line from b
 			 */
 			if ( getline(&bufb, &bbsz, b) > 0 )
+			{
 				chomp(bufb);
+				bufb_flag = 1;
+			}
 		}
 
 		if ( !feof(b) ) {
@@ -192,6 +199,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
 					fprintf(out, "%s%s", args->delim, field_b);
 				}
+				bufa_flag = 0;
+				bufb_flag = 0;
 			} else if ( keycmp < 0 ) {
 				/* key from a is less than key from b:
 				 * print line from a with empty b fields 
@@ -200,6 +209,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				fprintf(out, "%s", bufa);
 				for ( i = 0; i < ntomerge; i++ )
 					fputs(args->delim, out);
+				bufa_flag = 0;
 			} else {
 				/* key from a is greater than key from b:
 				 * print b fields with empty a fields
@@ -222,6 +232,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
 					fprintf(out, "%s%s", args->delim, field_b);
 				}
+
+				bufb_flag = 0;
 			}
 		} else {
 			/* no more lines in file b - just print empty fields */
@@ -229,14 +241,30 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			for ( i = 0; i < ntomerge; i++ )
 				fputs(args->delim, out);
 			keycmp = -1;
+			bufa_flag = 0;
 		}
 		fputc('\n', out);
 	}
 
 	/* if there's anything left in file b, print it out with empty fields for a */
 	if ( ! feof(b) ) {
-		while ( getline(&bufb, &bbsz, b) > 0 ) {
-			chomp(bufb);
+
+
+		/* If the last line of file a is already written, make sure that it will not be touched again. */
+		if (bufa_flag == 0)
+			keycmp = 1;
+
+		while (! feof(b) )
+		{
+			/* Do not read the next line until the last "b" line of the first loop is written. */
+			if (bufb_flag == 0)
+			{
+				if ( getline(&bufb, &bbsz, b) > 0 ) 
+					chomp(bufb);
+				else
+					break;
+			}
+				
 			/* make sure the last key from file a was printed */
 			if ( keycmp < 0 ) {
 				for ( i = 0; i < nkeys; i++ ) {
@@ -312,6 +340,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				}
 			}
 			fputc('\n', out);
+			bufb_flag = 0;
 		}
 	}
 
