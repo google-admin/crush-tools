@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <application>
 	<name>find_not_processed</name>
-	<category>Miscellaneous</category>
+	<category>Miscellaneous utilities</category>
 	<description>finds files in a directory which are not listed in a log file.</description>
 	<options>
 		<option has_argument="0" required="0">
