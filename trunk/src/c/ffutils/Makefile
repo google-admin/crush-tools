@@ -11,11 +11,11 @@ PROCFLAGS := parse=FULL include=. include=$(INCDIR)
 PC_CFLAGS	:= -I. -Wall -D_LARGEFILE64_SOURCE
 HEADER_FILES := $(wildcard *.h)
 
-PROC_FILES := $(filter-out ffutils_test.c, $(wildcard *.pc))
+PROC_FILES := $(wildcard *.pc)
 PROC_CFILES := $(patsubst %.pc,%.c,$(PROC_FILES))
 PROC_OBJECTS := $(patsubst %.pc,%.o,$(PROC_FILES))
 
-C_FILES := $(wildcard *.c)
+C_FILES := $(filter-out ffutils_test.c, $(wildcard *.c))
 OBJECTS := $(patsubst %.c, %.o, $(C_FILES) $(PROC_CFILES))
 
 default : libffutils.a
