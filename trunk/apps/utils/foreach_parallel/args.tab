@@ -29,14 +29,22 @@ END_COPYRIGHT
 	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
 	  description => 'print this message and exit'
 	},
+#	{
+#	  name => 'version',
+#	  shortopt => 'V',
+#	  longopt => 'version',
+#	  type => 'flag',
+#	  required => 0,
+#	  main_code => 'version(); exit(1);',
+#	  description => 'print version info and exit'
+#	},
 	{
-	  name => 'version',
+	  name => 'verbose',
 	  shortopt => 'V',
-	  longopt => 'version',
+	  longopt => 'verbose',
 	  type => 'flag',
 	  required => 0,
-	  main_code => 'version(); exit(1);',
-	  description => 'print version info and exit'
+	  description => 'print verbose runtime messages.',
 	},
 	{
 	  name => 'variable',

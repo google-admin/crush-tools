@@ -5,7 +5,7 @@ VERSION = 0.1
 DISTFILE = $(EXECUTABLE)-$(VERSION).tgz
 # resources like README, COPYING, etc., which should be included in
 # the distribution file
-RESOURCES := 
+RESOURCES := Makefile args.tab
 
 WORKDIR := $(shell pwd)
 CC := $(shell which gcc)
@@ -34,7 +34,6 @@ debug ::
 
 clean ::
 	rm -f *.o
-	rm -f *.d
 	rm -f $(GEN_FILES)
 
 dist : $(DISTFILE)
