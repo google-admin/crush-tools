@@ -18,7 +18,7 @@ DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
 	  order by site_id" \
 	&gt;&gt; $wdir/tmp/site_delivery.log
 
-# assume Site-ID is field 8, Quantity is field 12 
+# assume Site-ID is field 8, Quantity is field 12
 <a href="gzdog.html">gzdog</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
 	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
 
@@ -30,3 +30,4 @@ DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
 # Clicks
 # Quantity
 
+# if in addition option "-l" is used, only those sites are listed which have a result in the database.

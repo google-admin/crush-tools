@@ -7,12 +7,12 @@
 /** @brief opens all the files necessary, sets a default
   * delimiter if none was specified, and calls the
   * merge_files() function.
-  * 
+  *
   * @param args contains the parsed cmd-line options & arguments.
   * @param argc number of cmd-line arguments.
   * @param argv list of cmd-line arguments
   * @param optind index of the first non-option cmd-line argument.
-  * 
+  *
   * @return exit status for main() to return.
   */
 int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
@@ -96,7 +96,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 	int keycmp = 0;
 	int bufa_flag = 0;		/* 0 => there is no data line in bufx or the line in bufx has already been written.*/
 	int bufb_flag = 0;		/* 1 => there is data in bufx which needs to be handled.*/
-					
+
 
 	bufa = bufb = NULL;
 	basz = bbsz = 0;
@@ -201,16 +201,20 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				}
 				bufa_flag = 0;
 				bufb_flag = 0;
+
+				fputc('\n', out);
 			} else if ( keycmp < 0 ) {
 				/* key from a is less than key from b:
-				 * print line from a with empty b fields 
+				 * print line from a with empty b fields
 				 * and continue
 				 */
 				fprintf(out, "%s", bufa);
 				for ( i = 0; i < ntomerge; i++ )
 					fputs(args->delim, out);
 				bufa_flag = 0;
-			} else {
+
+				fputc('\n', out);
+			} else if ( ! args->left ) {
 				/* key from a is greater than key from b:
 				 * print b fields with empty a fields
 				 * and continue
@@ -234,6 +238,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				}
 
 				bufb_flag = 0;
+
+				fputc('\n', out);
 			}
 		} else {
 			/* no more lines in file b - just print empty fields */
@@ -242,8 +248,9 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				fputs(args->delim, out);
 			keycmp = -1;
 			bufa_flag = 0;
+
+			fputc('\n', out);
 		}
-		fputc('\n', out);
 	}
 
 	/* if there's anything left in file b, print it out with empty fields for a */
@@ -259,12 +266,12 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			/* Do not read the next line until the last "b" line of the first loop is written. */
 			if (bufb_flag == 0)
 			{
-				if ( getline(&bufb, &bbsz, b) > 0 ) 
+				if ( getline(&bufb, &bbsz, b) > 0 )
 					chomp(bufb);
 				else
 					break;
 			}
-				
+
 			/* make sure the last key from file a was printed */
 			if ( keycmp < 0 ) {
 				for ( i = 0; i < nkeys; i++ ) {
@@ -283,10 +290,12 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					fprintf(out, "%s%s", args->delim, field_b);
 				}
 				keycmp = 1;
+
+				fputc('\n', out);
 			} else if ( keycmp < 0 ) {
 
 				/* key from a is less than key from b:
-				 * print line from a with empty b fields 
+				 * print line from a with empty b fields
 				 */
 				fprintf(out, "%s", bufa);
 				for ( i = 0; i < ntomerge; i++ )
@@ -295,9 +304,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 
 				keycmp = 1;
 
-
 				/* now print b also */
-				{
+				if( ! args->left ) {
 					int j = 0;
 					/* print the keys from b */
 					for ( i = 0; i < nfields_a; i++ ) {
@@ -315,8 +323,10 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 						get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
 						fprintf(out, "%s%s", args->delim, field_b);
 					}
+
+					fputc('\n', out);
 				}
-			} else {
+			} else if ( ! args->left ) {
 				/* key from a is greater than key from b:
 				 * print b fields with empty a fields
 				 * and continue
@@ -338,8 +348,10 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
 					fprintf(out, "%s%s", args->delim, field_b);
 				}
+
+				fputc('\n', out);
 			}
-			fputc('\n', out);
+
 			bufb_flag = 0;
 		}
 	}

@@ -43,6 +43,15 @@ END_COPYRIGHT
 	  description => 'print verbose messages during execution'
 	},
 	{
+	  name => 'left',
+	  shortopt => 'l',
+	  longopt => 'left',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->left++;',
+	  description => 'require left match, i.e. drop lines in the second file that do not have a match in the first file'
+	},
+	{
 	  name => 'delim',
 	  shortopt => 'd',
 	  longopt => 'delim',
