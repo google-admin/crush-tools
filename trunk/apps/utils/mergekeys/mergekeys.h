@@ -5,7 +5,7 @@
 #ifndef MERGEKEYS_H
 #define MERGEKEYS_H
 
-#define MAX_FIELD_LEN 63
+#define MAX_FIELD_LEN 255
 
 int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) ;
 

@@ -3,6 +3,7 @@
  ********************************/
 #include "mergekeys_main.h"
 #include "mergekeys.h"
+#include <locale.h>
 
 /** @brief opens all the files necessary, sets a default
   * delimiter if none was specified, and calls the
@@ -63,6 +64,11 @@ int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			args->delim = default_delimiter;
 	}
 	expand_chars(args->delim);
+
+	/* set locale with values from the environment so strcoll()
+	   will work correctly. */
+	setlocale(LC_ALL, "");
+	setlocale(LC_COLLATE, "");
 
 	retval = merge_files( a, b, out, args );
 
@@ -188,7 +194,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			for ( i = 0; i < nkeys; i++ ) {
 				get_line_field(field_a, bufa, MAX_FIELD_LEN, keyfields[i], args->delim);
 				get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[i], args->delim);
-				if ( (keycmp = strcmp( field_a, field_b ) ) != 0 )
+				if ( (keycmp = strcoll( field_a, field_b ) ) != 0 )
 					break;
 			}
 
@@ -277,7 +283,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				for ( i = 0; i < nkeys; i++ ) {
 					get_line_field(field_a, bufa, MAX_FIELD_LEN, keyfields[i], args->delim);
 					get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[i], args->delim);
-					if ( (keycmp = strcmp( field_a, field_b ) ) != 0 )
+					if ( (keycmp = strcoll( field_a, field_b ) ) != 0 )
 						break;
 				}
 			}
