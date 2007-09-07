@@ -33,7 +33,7 @@ debug ::
 	$(CC) $(DBCFLAGS) -o $(EXECUTABLE) $(CFILES) $(LINKFLAGS)
 
 test ::
-	tests/run_tests.sh
+	./tests.sh
 
 clean ::
 	rm -f *.o

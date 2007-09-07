@@ -23,6 +23,12 @@
 			<description>print verbose messages during execution</description>
 		</option>
 		<option has_argument="1" required="0">
+			<name>left</name>
+			<short>l</short>
+			<long>left</long>
+			<description>require left match, i.e. drop lines in the second file that do not have a match in the first file</description>
+		</option>
+		<option has_argument="1" required="0">
 			<name>delim</name>
 			<short>d</short>
 			<long>delim</long>
@@ -58,7 +64,7 @@ DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
 	  order by site_id" \
 	&gt;&gt; $wdir/tmp/site_delivery.log
 
-# assume Site-ID is field 8, Quantity is field 12 
+# assume Site-ID is field 8, Quantity is field 12
 <a href="gzdog.html">gzdog</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
 	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
 
@@ -69,5 +75,6 @@ DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
 # Impressions
 # Clicks
 # Quantity
-]]></example>
+
+# if in addition option "-l" is used, only those sites are listed which have a result in the database.]]></example>
 </application>
