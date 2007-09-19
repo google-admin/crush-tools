@@ -116,6 +116,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 					   to those in A */
 	size_t nkeys, ntomerge;
 	int keycmp = 0;
+	int first_data_line = 1;
 	int bufa_flag = 0;		/* 0 => there is no data line in bufx or the line in bufx has already been written.*/
 	int bufb_flag = 0;		/* 1 => there is data in bufx which needs to be handled.*/
 
@@ -141,13 +142,13 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 	if ( args->verbose )
 		printf("fields in a: %s\nfields in b: %s\n", bufa, bufb);
 
-	if( (keyfields = malloc(sizeof(int) * nfields_a)) == NULL ) {
+	if ( (keyfields = malloc(sizeof(int) * nfields_a)) == NULL ) {
 		fprintf(stderr, "allocating key array - out of memory\n");
 		free(bufa);
 		free(bufb);
 		return EXIT_MEM_ERR;
 	}
-	if( (mergefields = malloc(sizeof(int) * nfields_b)) == NULL ) {
+	if ( (mergefields = malloc(sizeof(int) * nfields_b)) == NULL ) {
 		fprintf(stderr, "allocating merge-fields array - out of memory\n");
 		free(bufa);
 		free(bufb);
@@ -167,7 +168,7 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 	}
 
 	/* if B had more fields than A, all of those need merged */
-	for( ; i < nfields_b; i++ ) {
+	for ( ; i < nfields_b; i++ ) {
 		mergefields[ ntomerge++ ] = i;
 	}
 
@@ -179,20 +180,32 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 	}
 	fputc('\n', out);
 
+	/* this handles the case where A has only a header, forcing a
+	   line-read at the beginning of the section that deals with
+	   the tail end of file B. */
+	keycmp = A_GREATER;
+	bufb_flag = 0;
+
 	/* go through the rest of the 2 files */
 	while ( !feof(a) ) {
-		if ( A_LE_B( keycmp ) ) {
-			/* keys were either the same for previous line,
-			 * or keys from A were smaller (A printed out).
+		/* if keys are equal, there is a chance that the next line of file B will
+		 * match the keys from A as well.  so keep the current line from file A.
+		 */
+		if ( first_data_line || A_LT_B( keycmp ) ) {
+			/* keys from A were smaller (A printed out).
 			 * need another line from A
 			 */
 			if ( getline(&bufa, &basz, a) <= 0 ) {
+				/* EOF. make sure we don't print any A fields while
+				   handling the rest of file B.
+				 */
+				keycmp = B_GREATER;
 				break;
 			}
 			bufa_flag = 1;
 			chomp(bufa);
 		}
-		if ( A_GE_B( keycmp ) ) {
+		if ( first_data_line || A_GE_B( keycmp ) ) {
 			/* keys were either the same for previous line,
 			 * or keys from B were smaller (B printed out).
 			 * need another line from B
@@ -203,6 +216,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				bufb_flag = 1;
 			}
 		}
+
+		first_data_line = 0;
 
 		if ( !feof(b) ) {
 
@@ -220,6 +235,12 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				continue;
 			}
 
+			/* if line B is greater than line A, and A has already been
+			   printed once, just get another line from A
+			 */
+			if ( A_LT_B( keycmp ) && bufa_flag == 0 )
+				continue;
+
 			if ( A_EQ_B( keycmp ) ) {
 				/* keys are equal */
 				fprintf(out, "%s", bufa);
@@ -231,7 +252,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				bufb_flag = 0;
 
 				fputc('\n', out);
-			} else if ( A_LT_B( keycmp ) ) {
+			}
+			else if ( A_LT_B( keycmp ) ) {
 				/* key from A is less than key from B:
 				 * print line from A with empty B fields
 				 * and continue
@@ -242,7 +264,8 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				bufa_flag = 0;
 
 				fputc('\n', out);
-			} else {
+			}
+			else {
 				/* key from A is greater than key from B:
 				 * print B fields with empty A fields
 				 * and continue
@@ -269,104 +292,136 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 
 				fputc('\n', out);
 			}
-		} else {
-			/* no more lines in file B - just print empty fields */
-			fprintf(out, "%s", bufa);
-			for ( i = 0; i < ntomerge; i++ )
-				fputs(args->delim, out);
+		}
+		else {	/* feof(b) */
+
+			/* no more lines in file B - if line from A hasn't been printed yet,
+			   just print it with empty B fields and force the comparison 
+			   result to show B as greater than A.
+			 */
+
+			if ( bufa_flag == 1 ) {
+				fprintf(out, "%s", bufa);
+				for ( i = 0; i < ntomerge; i++ )
+					fputs(args->delim, out);
+				fputc('\n', out);
+			}
 			keycmp = B_GREATER;
 			bufa_flag = 0;
+			bufb_flag = 0;
 
-			fputc('\n', out);
 		}
 	}
 
 	/* if there's anything left in file B, print it out with empty fields for A */
 	if ( ! feof(b) ) {
 
+		/* Handle all lines from B with keys less than last line of A */
+		while ( A_GT_B( keycmp ) && ! feof(b) ) {
+			int j = 0;
+			if ( bufb_flag == 0 ) {
+				if ( getline(&bufb, &bbsz, b) <= 0 )
+					break;
+				chomp(bufb);
+				bufb_flag = 1;
+			}
 
-		/* If the last line of file A is already written, make sure that it will not be touched again. */
-		if (bufa_flag == 0)
-			keycmp = A_GREATER;
-
-		while (! feof(b) )
-		{
-			/* Do not read the next line until the last B line from the first loop is written. */
-			if (bufb_flag == 0)
-			{
-				if ( getline(&bufb, &bbsz, b) > 0 )
-					chomp(bufb);
-				else
+			for ( i = 0; i < nkeys; i++ ) {
+				get_line_field(field_a, bufa, MAX_FIELD_LEN, keyfields[i], args->delim);
+				get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[i], args->delim);
+				if ( (keycmp = strcoll( field_a, field_b ) ) != 0 )
 					break;
 			}
 
-			/* make sure the last key from file A was printed */
-			if ( A_LT_B( keycmp ) ) {
-				for ( i = 0; i < nkeys; i++ ) {
-					get_line_field(field_a, bufa, MAX_FIELD_LEN, keyfields[i], args->delim);
-					get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[i], args->delim);
-					if ( (keycmp = strcoll( field_a, field_b ) ) != 0 )
-						break;
-				}
+			if ( ! A_GT_B( keycmp ) ) {
+				break;
 			}
 
-			if ( args->left && A_GT_B( keycmp ) ) {
-				/* non-match - get the next line from B */
+			if ( args->left ) {
+				/* skip non-matching lines */
 				bufb_flag = 0;
 				continue;
 			}
 
-			if ( A_EQ_B( keycmp ) ) {
-				/* keys are equal */
-				fprintf(out, "%s", bufa);
-				for ( i = 0; i < ntomerge; i++ ) {
-					get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
-					fprintf(out, "%s%s", args->delim, field_b);
+			/* print the keys from B */
+			for ( i = 0; i < nfields_a; i++ ) {
+				if ( keyfields[j] == i ) {
+					get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[j], args->delim);
+					fprintf(out, "%s%s", (j > 0 ? args->delim : ""), field_b);
+					j++;
+				} else {
+					fputs(args->delim, out);
 				}
-				keycmp = A_GREATER;
+			}
 
-				fputc('\n', out);
-			} else if ( A_LT_B( keycmp ) ) {
+			/* print the non-keys from B */
+			for ( i = 0; i < ntomerge; i++ ) {
+				get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
+				fprintf(out, "%s%s", args->delim, field_b);
+			}
 
-				/* key from A is less than key from B:
-				 * print line from a with empty B fields
-				 */
+			fputc('\n', out);
+
+			bufb_flag = 0;
+		}
+
+		/* Handle all lines from B with keys equal to the last line of A */
+		while ( A_EQ_B( keycmp ) && ! feof(b) ) {
+			if ( bufb_flag == 0 ) {
+				if ( getline(&bufb, &bbsz, b) <= 0 )
+					break;
+				chomp(bufb);
+				bufb_flag = 1;
+			}
+
+			for ( i = 0; i < nkeys; i++ ) {
+				get_line_field(field_a, bufa, MAX_FIELD_LEN, keyfields[i], args->delim);
+				get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[i], args->delim);
+				if ( (keycmp = strcoll( field_a, field_b ) ) != 0 )
+					break;
+			}
+
+			if ( ! A_EQ_B( keycmp ) ) {
+				break;
+			}
+
+			fprintf(out, "%s", bufa);
+			for ( i = 0; i < ntomerge; i++ ) {
+				get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
+				fprintf(out, "%s%s", args->delim, field_b);
+			}
+
+			fputc('\n', out);
+
+			bufa_flag = 0;
+			bufb_flag = 0;
+		}
+
+		/* If a match between A and B is required (i.e. args->left),
+		   we can safely skip the rest of file B. */
+		if ( A_LT_B( keycmp ) && ! args->left ) {
+
+			/* if the last line from A hasn't been printed yet, and no match was found
+			   in B, print A line now with empty B fields. */
+			if ( bufa_flag != 0 ) {
 				fprintf(out, "%s", bufa);
 				for ( i = 0; i < ntomerge; i++ )
 					fputs(args->delim, out);
 				fputc('\n', out);
+			}
 
-				/* avoid further key comparisons */
-				keycmp = A_GREATER;
-
-				/* now print B also */
-				if( ! args->left ) {
-					int j = 0;
-					/* print the keys from B */
-					for ( i = 0; i < nfields_a; i++ ) {
-						if ( keyfields[j] == i ) {
-							get_line_field(field_b, bufb, MAX_FIELD_LEN, keyfields[j], args->delim);
-							fprintf(out, "%s%s", (j > 0 ? args->delim : ""), field_b);
-							j++;
-						} else {
-							fputs(args->delim, out);
-						}
-					}
-
-					/* print the non-keys from B */
-					for ( i = 0; i < ntomerge; i++ ) {
-						get_line_field(field_b, bufb, MAX_FIELD_LEN, mergefields[i], args->delim);
-						fprintf(out, "%s%s", args->delim, field_b);
-					}
-
-					fputc('\n', out);
-				}
-			} else {
-				/* key from A is greater than key from B:
-				 * print B fields with empty A fields
-				 * and continue
-				 */
+			/* The last line of A has definitely now been printed. dump the rest of
+			   file B with empties for non-key A fields */
+			while (! feof(b) ) {
 				int j = 0;
+
+				if ( bufb_flag == 0 ) {
+					if ( getline(&bufb, &bbsz, b) <= 0 )
+						break;
+					chomp(bufb);
+					bufb_flag = 1;
+				}
+
 				/* print the keys from B */
 				for ( i = 0; i < nfields_a; i++ ) {
 					if ( keyfields[j] == i ) {
@@ -385,10 +440,10 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 				}
 
 				fputc('\n', out);
+				bufb_flag = 0;
 			}
-
-			bufb_flag = 0;
 		}
+
 	}
 
 	free(bufa);
