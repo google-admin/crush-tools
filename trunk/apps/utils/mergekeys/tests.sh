@@ -2,7 +2,7 @@
 
 wdir=`dirname $0`
 
-subtests=(00 01 02 03 04 05)
+subtests=(00 01 02 03 04 05 06 07)
 datadir=$wdir/tests
 test_delim='\t'
 
@@ -20,8 +20,8 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 
 		left=$datadir/test_${t}.a
 		right=$datadir/test_${t}.b
-		expected=$datadir/test_${t}.$optstring.expected
-		out=$datadir/test_${t}.out
+		expected=$datadir/test_${t}.${optstring}.expected
+		out=$datadir/test_${t}.${optstring}.out
 
 		if [ -e $expected ]; then
 
