@@ -10,9 +10,9 @@ tests=("" "-l")
 test_names=("regular" "require left line")
 errors=0
 
-echo "" # just put an empty line for readability
-
 for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
+
+	echo "" # just put an empty line for readability
 
 	optstring=`echo ${tests[$i]} | sed 's/\s//g'`
 
