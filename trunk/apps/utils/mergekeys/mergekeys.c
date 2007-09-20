@@ -397,18 +397,19 @@ int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) {
 			bufb_flag = 0;
 		}
 
+		/* if the last line from A hasn't been printed yet, and
+		   no match was found in B, print A line now with empty B
+		   fields. */
+		if ( bufa_flag != 0 ) {
+			fprintf(out, "%s", bufa);
+			for ( i = 0; i < ntomerge; i++ )
+				fputs(args->delim, out);
+			fputc('\n', out);
+		}
+
 		/* If a match between A and B is required (i.e. args->left),
 		   we can safely skip the rest of file B. */
 		if ( A_LT_B( keycmp ) && ! args->left ) {
-
-			/* if the last line from A hasn't been printed yet, and no match was found
-			   in B, print A line now with empty B fields. */
-			if ( bufa_flag != 0 ) {
-				fprintf(out, "%s", bufa);
-				for ( i = 0; i < ntomerge; i++ )
-					fputs(args->delim, out);
-				fputc('\n', out);
-			}
 
 			/* The last line of A has definitely now been printed. dump the rest of
 			   file B with empties for non-key A fields */
