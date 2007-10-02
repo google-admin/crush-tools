@@ -43,13 +43,28 @@ END_COPYRIGHT
 	  description => 'print verbose messages during execution'
 	},
 	{
+	  name => 'inner',
+	  shortopt => 'i',
+	  longopt => 'inner',
+	  type => 'flag',
+	  required => 0,
+	  description => 'inner join - i.e. drop lines that do not have a match in both files'
+	},
+	{
+	  name => 'right',
+	  shortopt => 'r',
+	  longopt => 'right',
+	  type => 'flag',
+	  required => 0,
+	  description => 'right outer join - i.e. drop lines in the first file that do not have a match in the second file'
+	},
+	{
 	  name => 'left',
 	  shortopt => 'l',
 	  longopt => 'left',
-	  type => 'custom_flag',
+	  type => 'flag',
 	  required => 0,
-	  parseopt_code => 'args->left++;',
-	  description => 'require left match, i.e. drop lines in the second file that do not have a match in the first file'
+	  description => 'left outer join - i.e. drop lines in the second file that do not have a match in the first file'
 	},
 	{
 	  name => 'delim',

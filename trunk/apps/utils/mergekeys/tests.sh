@@ -12,12 +12,12 @@
 
 wdir=`dirname $0`
 
-subtests=(00 01 02 03 04 05 06 07)
+subtests=(00 01 02 03 04 05 06 07 08)
 datadir=$wdir/tests
 test_delim='\t'
 
-tests=("" "-l")
-test_names=("regular" "require left line")
+tests=("" "-l" "-r" "-i")
+test_names=("full outer" "left outer" "right outer" "inner")
 errors=0
 
 for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
