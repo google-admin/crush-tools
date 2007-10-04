@@ -14,7 +14,12 @@ void q_enqueue( queue_t *q, void *data ){
 }
 
 void * q_dequeue(queue_t *q){
-	void *d = q->head->data;
+	void *d;
+
+	if ( q->head == NULL )
+		return NULL;
+
+	d = q->head->data;
 	ll_rm_elem(q, q->head);
 	return d;
 }

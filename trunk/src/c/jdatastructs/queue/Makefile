@@ -5,7 +5,7 @@ CC	:= gcc
 LD	:= ld
 
 OBJECTS := $(wildcard *.o) $(wildcard ../linklist/*.o)
-CFLAGS	+= -I. -g -I../include -L../lib -O2 -Wall -fPIC
+CFLAGS	+= -I. -I../include -L../lib -O2 -Wall -fPIC
 # -llinklist
 LDFLAGS := -dy -G -z text 
 AR      := ar

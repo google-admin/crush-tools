@@ -12,12 +12,12 @@ HEADERS := $(shell for d in $(SUBDIRS); do ls $$d/*.h; done)
 SOURCES := $(shell for d in $(SUBDIRS); do ls $$d/*.c; done)
 OBJECTS := $(shell for d in $(SUBDIRS); do ls $$d/*.o; done)
 
-CFLAGS	+= -I. -g -I../include -L../lib -O2 -Wall -fPIC
+CFLAGS	+= -I. -I../include -L../lib -O2 -Wall -fPIC
 LDFLAGS := -dy -G -z text 
 AR      := ar
 ARFLAGS := rcs
-INCDIR	:= ~/include/
-LIBDIR	:= ~/lib/
+INCDIR	:= /usr/local/devprac/include/
+LIBDIR	:= /usr/local/devprac/lib/
 
 .PHONY : all docs
 
