@@ -254,7 +254,8 @@ right_file_loop :
 				/* if the keys in the next line of LEFT are the same,
 				   handle "many:1".
 				 */
-				if ( peek_keys ( left, buffer_left) == 0 ) {
+				int peek_cmp = peek_keys ( left, buffer_left);
+				if ( (args->inner && peek_cmp <= 0) || peek_cmp == 0 ) {
 					goto left_file_loop;
 				}
 
