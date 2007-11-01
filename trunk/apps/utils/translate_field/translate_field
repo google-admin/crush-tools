@@ -5,7 +5,8 @@ use Getopt::Long;
 
 Getopt::Long::Configure( "no_ignore_case" );
 
-my ( $help, $debug, $field, $delim, $replace, $append, $prepend, %mapping );
+my ( $help, $debug, $field, $delim, $replace, $append, $prepend, %mapping,
+     $external );
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
@@ -17,6 +18,7 @@ GetOptions (	"help"		=> \$help,
 		"prepend"	=> \$prepend,
 		"replace"	=> \$replace,
 		"map=s"		=> \%mapping,
+		"external=s"	=> \$external,
 	);
 
 if ( $help ) {
@@ -30,6 +32,12 @@ if ( ! defined($field) ) {
 }
 
 $field--;
+
+if ( $external ) {
+	print STDERR "sourcing $external\n" if ( $debug );
+	eval `cat $external` or die;
+	if ( $@ ) { die }
+}
 
 # default to replace, but only if -a or -p weren't specified
 if ( ! ($append || $prepend) ) {
@@ -89,16 +97,64 @@ usage: $0 <-f <N>> [options] [file ...]
   -r, --replace    replace the original field with the translation
   -m, --map <K=V>  specifies a translation mapping for a possible
                    field value
+  -e, --external <F> specifies a file containing perl expressions which
+		  define mappings in the hashtable "\%mapping"
 
-* Replacing is the default behavior, but for replacement to occur in
-  addition to appending or prepending, -r must be specified.
-
-* Mappings are specified as "K=V" pairs where K is a possible value for
-  the field, and V is the translation.
-
-* If no mapping is supplied for a field value, the value is unchanged
-  (the header is preserved unless a mapping is specified for the header
-  value).
+see `perldoc $0` for more details.
 
 END_USAGE
 }
+
+=head1 SUMMARY
+
+convert field values based on user-supplied mappings.
+
+usage: $0 <-f <N>> [options] [file ...]
+
+  -h, --help       print this message and exit
+  -f, --field <N>  the 1-based index of the field to translate
+  -d, --delim <S>  the field delimiter string (default: 0xfe)
+  -a, --append     append the translation after the original field
+  -p, --prepend    prepend the translation before the original field
+  -r, --replace    replace the original field with the translation
+  -m, --map <K=V>  specifies a translation mapping for a possible
+                   field value
+  -e, --external <F> specifies a file containing perl expressions which
+		  define mappings in the hashtable "\%mapping"
+
+=head1 DETAILS
+
+=over 2
+
+=item *
+
+Replacing is the default behavior, but for replacement to occur in
+addition to appending or prepending, -r must be specified.
+
+=item *
+
+Mappings passed to -m are specified as "K=V" pairs where K is a
+possible value for the field, and V is the translation.
+
+=item *
+
+If no mapping is supplied for a field value, the value is unchanged
+(the header is preserved unless a mapping is specified for the header
+value).
+
+=item *
+
+The file specified by -e may have statements like
+
+	$mapping{hello} = 'salve';
+	$mapping{world} = 'orbis terrae';
+
+or
+
+	%mapping = ( "hello" => "salve", "world" => "orbis terrae" );
+
+The latter will nullify any -m parameters passed on the commandline.
+
+=back
+
+=cut
