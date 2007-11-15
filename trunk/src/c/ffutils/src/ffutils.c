@@ -1,6 +1,14 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <ffutils.h>
 #include <fcntl.h>	/* open64() and O_* flags */
 #include <ctype.h>	/* isdigit(), isspace() */
+
+#ifndef HAVE_OPEN64
+#define open64 open
+#endif
 
 #ifdef DONT_PUT_THIS_IN
 struct field_index findfields( char *header, const char *delim ){
@@ -185,10 +193,11 @@ FILE * nextfile( int argc, char *argv[], int *optind, const char *mode ) {
 	else  if ( strchr(mode, 'a') )
 		fd_flags |= O_WRONLY | O_CREAT | O_APPEND;
 
+#ifdef O_LARGEFILE
 	fd_flags |= O_LARGEFILE;
+#endif
 
 	while ( *optind < argc ) {
-
 		if ( (fd = open64( argv[(*optind)++], fd_flags )) != -1 ) {
 			fp = fdopen( fd, mode );
 			break;
