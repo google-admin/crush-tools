@@ -1,13 +1,9 @@
-/** @file hashtbl.h
-  * @brief Interface for the hashtbl library.
+/** @file hashtbl2.h
+  * @brief Interface for the hashtbl2 library.
   *
   * This is a chained hashtable implementation, internally utilizing the
-  * linklist library.  Note that for all key comparisons (in ht2_put(), ht2_get(),
-  * ht2_delete(), etc.) strcmp() is used for comparing the keys.  So while there's
-  * nothing to stop you from using some other data type as a lookup key, that 
-  * data item cannot contain any NULL bytes before the end if the key comparison 
-  * is going to behave as expected.
-  *
+  * linklist library.  In this version, all key comparisons are performed
+  * using memcmp().
   */
 
 #include <stdlib.h>

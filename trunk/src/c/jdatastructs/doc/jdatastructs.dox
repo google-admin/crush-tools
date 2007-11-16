@@ -1,9 +1,11 @@
 /** @mainpage
-  * This is a C library of various data structures.  It was
-  * written for Regis University course cs437, Advanced File
-  * and Data Structures.
+  *
+  * @section Introduction
+  *
+  * This is a C library of various data structures.
   *
   * @section copy Author and Copyright
+  *
   * Written by Jeremy Hinds <jeremy.hinds@gmail.com>
   *
   * &copy; 2005, Jeremy Hinds
@@ -13,9 +15,14 @@
   * - linklist.h
   * - queue.h
   * - bstree.h
-  * - hashtbl.h (and hashfuncs.h)
+  * - hashtbl.h, hashtbl2.h, and hashfuncs.h
   *
   * @section Links
   *
   * <a href="../../index.html">Back to the main docs page</a>
+  *
+  * @section History
+  *
+  * This library was originally written for Regis University course cs437,
+  * Advanced File and Data Structures.
   */

@@ -2,18 +2,6 @@
   * @brief Interface for the doubly-linked list library.
   */
 
-/** @mainpage
-  * This is a library which provides doubly-linked list functionality.  It was 
-  * written for Regis University course CS437, Advanced File and Data Structures.
-  *
-  * @section copy Author and Copyright
-  * Written by Jeremy Hinds <jeremy.hinds@gmail.com>
-  *
-  * &copy; 2005, Jeremy Hinds
-  *
-  * @section Links
-  * <a href="../../index.html">Back to the main docs page</a>
-  */
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>	/* memcmp() */
