@@ -295,7 +295,8 @@ target_alias = @target_alias@
 @DX_COND_doc_TRUE@    $(DX_CLEAN_PDF) \
 @DX_COND_doc_TRUE@    $(DX_CLEAN_LATEX)
 
-@DX_COND_man_TRUE@dist_man1_MANS = @DX_DOCDIR@/man/man1/doxample.c.1
+@DX_COND_man_TRUE@MANPAGES = $(wildcard @DX_DOCDIR@/man/man3/*.h.3)
+@DX_COND_man_TRUE@dist_man1_MANS = $(MANPAGES)
 MOSTLYCLEANFILES = $(DX_CLEANFILES)
 EXTRA_DIST = reconf configure $(DX_CONFIG)
 SUBDIRS = m4 src doc
@@ -534,7 +535,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/@DX_DOCDIR@/man/man1 $(distdir)/config
+	$(mkdir_p) $(distdir)/. $(distdir)/@DX_DOCDIR@/man/man3 $(distdir)/config
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

@@ -11,7 +11,8 @@
 include aminclude.am
 
 if DX_COND_man
-dist_man1_MANS = @DX_DOCDIR@/man/man1/doxample.c.1
+MANPAGES = $(wildcard @DX_DOCDIR@/man/man3/*.h.3)
+dist_man1_MANS = $(MANPAGES)
 
 $(dist_man1_MANS): doxygen-doc
 endif
