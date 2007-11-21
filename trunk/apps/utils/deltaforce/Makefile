@@ -1,4 +1,4 @@
-EXECUTABLE := deltaforce 
+EXECUTABLE := deltaforce
 DESCRIPTION := applies changes from a file on the right hand side to the file on the left. 
 VERSION = 0.1
 
