@@ -1,0 +1,61 @@
+# data relevant to the application as a whole
+%global = (
+	category => 'General file manipulation',
+	name => "deltaforce",
+	category => "General file manipulation",
+	description => "applies any updates from a delta extract onto a full extract",
+	version => "0.1",
+	trailing_opts => "file1 file2",
+	usage_extra => "",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2005
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose messages during execution'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'delimiting string for both input files'
+	},
+	{
+ 	  name => 'outfile',
+ 	  shortopt => 'o',
+ 	  longopt => 'outfile',
+ 	  type => 'var',
+ 	  required => 0,
+ 	  description => 'name of file for output'
+	}
+);
