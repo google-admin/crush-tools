@@ -1,0 +1,6 @@
+./configure [--prefix=/install/path]
+make
+make install
+
+
+default install path is /usr/local/
