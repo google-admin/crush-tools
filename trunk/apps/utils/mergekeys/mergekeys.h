@@ -1,8 +1,34 @@
-#include <ffutils.h>
-#include <fcntl.h>	/* open64() */
-#include <unistd.h>	/* off64_t & close() */
-#include <err.h>	/* warn() */
-#include <locale.h>
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef HAVE_FFUTILS_H
+# include <ffutils.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>	/* open64() */
+#endif
+
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>	/* off64_t & close() */
+#endif
+
+#ifdef HAVE_ERR_H
+# include <err.h>	/* warn() */
+#endif
+
+#ifdef HAVE_LOCALE_H
+# include <locale.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 
 #ifndef MERGEKEYS_H
 #define MERGEKEYS_H

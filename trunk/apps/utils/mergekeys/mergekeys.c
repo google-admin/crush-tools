@@ -4,6 +4,9 @@
 #include "mergekeys_main.h"
 #include "mergekeys.h"
 
+#ifndef HAVE_OPEN64
+# define open64 open
+#endif
 
 char *delim;
 size_t nfields_left;
