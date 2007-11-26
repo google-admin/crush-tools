@@ -4,7 +4,6 @@
 #include <assert.h>
 
 #include <ffutils.h>
-#include <splitter.h>
 #include <hashtbl.h>
 #include <linklist.h>
 

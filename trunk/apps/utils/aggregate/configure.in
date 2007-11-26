@@ -10,11 +10,10 @@ if test "$CGENER" = "not found"; then
 	AC_MSG_ERROR([the cgener application is required to build this application], 1)
 fi
 
-AC_CHECK_HEADERS([hashtbl.h ffutils.h splitter.h linklist.h])
+AC_CHECK_HEADERS([hashtbl.h ffutils.h linklist.h])
 
 AC_CHECK_LIB(jdatastructs, ll_list_init, [], AC_MSG_ERROR([libjdatastructs is required to build this application], 1))
 AC_CHECK_LIB(ffutils, nextfile, [], AC_MSG_ERROR([libffutils is required to build this application], 1))
-AC_CHECK_LIB(splitter, splitnums, [], AC_MSG_ERROR([libsplitter is required to build this application], 1))
 
 AC_CHECK_FUNCS(open64)
 

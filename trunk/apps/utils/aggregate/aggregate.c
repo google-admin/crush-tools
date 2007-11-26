@@ -31,6 +31,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	int *key_fields;	/* array of key field indexes */
 	int *count_fields;	/* array of count field indexes */
 	int *sum_fields;	/* array of sum field indexes */
+	int arsz = 0;		/* size of array allocated by expand_nums() */
 
 	size_t n_hash_elems;
 
@@ -55,21 +56,24 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	nkeys = ncounts = nsums = 0;
 	key_fields = count_fields = sum_fields = NULL;
 
-	nkeys = splitnums( args->keys, &key_fields, 0 );
+	arsz = 0;
+	nkeys = expand_nums( args->keys, &key_fields, &arsz );
 
 	assert(nkeys != 0);
 
 	decrement_values( key_fields, nkeys );
 
 	if ( args->sums ) {
-		nsums = splitnums( args->sums, &sum_fields, 0 );
+		arsz = 0;
+		nsums = expand_nums( args->sums, &sum_fields, &arsz );
 		decrement_values( sum_fields, nsums );
 		sum_precisions = malloc(sizeof(int) * nsums);
 		memset(sum_precisions, 0, sizeof(int) * nsums); 
 	}
 
 	if ( args->counts ) {
-		ncounts = splitnums( args->counts, &count_fields, 0 );
+		arsz = 0;
+		ncounts = expand_nums( args->counts, &count_fields, &arsz );
 		decrement_values( count_fields, ncounts );
 	}
 
