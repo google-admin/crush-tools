@@ -83,7 +83,7 @@ int reorder ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		if ( (order = malloc(order_sz * sizeof(int))) == NULL )
 			goto memerror;
 
-		order_elems = splitnums(args->fields, &order, order_sz);
+		order_elems = expand_nums(args->fields, &order, &order_sz);
 
 		if ( args->verbose ) {
 			int i;

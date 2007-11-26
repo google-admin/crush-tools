@@ -1,7 +1,18 @@
-#include <regex.h>
-#include <assert.h>
-#include <ffutils.h>
-#include <splitter.h>
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#if HAVE_REGEX_H
+# include <regex.h>
+#endif
+
+#if HAVE_ASSERT_H
+# include <assert.h>
+#endif
+
+#if HAVE_FFUTILS_H
+# include <ffutils.h>
+#endif
 
 #ifndef REORDER_H
 #define REORDER_H
