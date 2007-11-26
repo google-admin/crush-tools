@@ -1,18 +1,8 @@
 #!/bin/bash
 
-# test 00 - 1:1 matching between both files
-# test 01 - both files have just a header
-# test 02 - file A has just a header; B has data
-# test 03 - A has data; file B has just a header
-# test 04 - last line of A is greater than last line of B
-# test 05 - last line of A is less than last line of B
-# test 06 - case-insensitive string collation (assumes local en_US.iso88591)
-# test 07 - one:many relationship between keys in A and B
-
-
 wdir=`dirname $0`
 
-subtests=(00)
+subtests=(00 01)
 datadir=$wdir/tests
 test_delim='\t'
 

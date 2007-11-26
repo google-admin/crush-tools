@@ -22,24 +22,6 @@
 			<long>verbose</long>
 			<description>print verbose messages during execution</description>
 		</option>
-		<option has_argument="0" required="0">
-			<name>inner</name>
-			<short>i</short>
-			<long>inner</long>
-			<description>inner join, i.e. drop all lines that do not have a match in both files</description>
-		</option>
-		<option has_argument="0" required="0">
-			<name>left</name>
-			<short>l</short>
-			<long>left</long>
-			<description>left-outer join, i.e. drop lines from the second file that do not have a match in the first file</description>
-		</option>
-		<option has_argument="0" required="0">
-			<name>right</name>
-			<short>r</short>
-			<long>right</long>
-			<description>right-outer join, i.e. drop lines from the first file that do not have a match in the second file</description>
-		</option>
 		<option has_argument="1" required="0">
 			<name>delim</name>
 			<short>d</short>
@@ -57,36 +39,41 @@
 		<item></item>
 	</details>
 	<example><![CDATA[
-# merges impressions and clicks from the db for a given site with the
-# conversion numbers from data transfer
+# add new impressions to a state file containing each user's
+# most recent impressions.  both files should contain a header line,
+# and the key must be the first field.
 
-# file delimiter
-d=`<a href="tochar.html">tochar</a> 0xfe`
+$ cat state.log
 
-# create headers for db results, using the dt-style header for Site-ID
-echo "Site-ID${d}Impressions${d}Clicks" &gt; $wdir/tmp/site_delivery.log
+User-ID	Time
+576460800472936588þ10-29-2007-11:39:17
+576460811342764419þ11-02-2007-19:55:28
+576460813268863640þ10-26-2007-15:39:56
+576460814111164904þ10-30-2007-16:53:36
+576460820781706784þ11-09-2007-12:29:18
+576460824354116471þ11-09-2007-12:40:31
 
-DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -s \
-	"select site_id, sum(metric_a), sum(metric_b) \
-	   from dfa_performance \
-	  where advertiser_id = 123456 \
-	    and event_date = '01-JAN-29' \
-	    and event_type_id = 1 \
-	  group by site_id \
-	  order by site_id" \
-	&gt;&gt; $wdir/tmp/site_delivery.log
+$ gzdog Impression_673394_11-10-2007.log.gz |
+	reorder -f 2,1 |
+	(read h; echo $h; sort -k 1,1 -k 2r,2r) \
+	> delta.log
+$ cat delta.log
 
-# assume Site-ID is field 8, Quantity is field 12
-<a href="gzdog.html">gzdog</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
-	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
+User-ID	Time
+576460811342764419þ11-10-2007-19:55:28
+576460820781706784þ11-10-2007-12:29:18
+576460824354134567þ11-10-2007-12:40:31
 
-<b>deltaforce</b> -o $wdir/tmp/imps_clicks_conversions.log $wdir/tmp/site_delivery.log $wdir/tmp/dt_conversions.log
+$ <b>deltaforce</b> state.log delta.log
 
-# $wdir/tmp/imps_clicks_conversions.log now contains fields
-# Site-ID
-# Impressions
-# Clicks
-# Quantity
+User-ID	Time
+576460800472936588	10-29-2007-11:39:17
+576460811342764419	11-10-2007-19:55:28
+576460813268863640	10-26-2007-15:39:56
+576460814111164904	10-30-2007-16:53:36
+576460820781706784	11-10-2007-12:29:18
+576460824354116471	11-09-2007-12:40:31
+576460824354134567	11-10-2007-12:40:31
 
-# if in addition option "-l" is used, only those sites are listed which have a result in the database.]]></example>
+]]></example>
 </application>
