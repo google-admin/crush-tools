@@ -1,8 +1,34 @@
-#include <ffutils.h>
-#include <fcntl.h>	/* open64() */
-#include <unistd.h>	/* off64_t & close() */
-#include <err.h>	/* warn() */
-#include <locale.h>
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#if HAVE_FFUTILS_H
+# include <ffutils.h>
+#endif
+
+#if HAVE_FCNTL_H
+# include <fcntl.h>	/* open64() */
+#endif
+
+#if HAVE_UNISTD_H
+# include <unistd.h>	/* off64_t & close() */
+#endif
+
+#if HAVE_ERR_H
+# include <err.h>	/* warn() */
+#endif
+
+#if HAVE_LOCALE_H
+# include <locale.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 
 #ifndef DELTAFORCE_H
 #define DELTAFORCE_H
