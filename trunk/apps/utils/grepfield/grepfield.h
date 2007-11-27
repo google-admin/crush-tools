@@ -1,7 +1,17 @@
-#include <regex.h>
+#if HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#if HAVE_REGEX_H
+# include <regex.h>
+#endif
+
 #include <stdlib.h>
 #include <sys/types.h>
-#include <ffutils.h>
+
+#if HAVE_FFUTILS_H
+# include <ffutils.h>
+#endif
 
 #ifndef GREPFIELD_H
 #define GREPFIELD_H
