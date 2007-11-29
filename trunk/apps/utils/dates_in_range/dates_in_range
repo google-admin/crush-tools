@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Date::Calc qw(Add_Delta_Days);
+use DART::DateFormat;
+use Getopt::Long;
+
+my ($help, $s, $e, $f, $inc);
+$s = $e = '';
+$f = 'YYYY-MM-DD';
+$inc = 1;
+
+&GetOptions(
+	"help!"		=> \$help,
+	"start:s"	=> \$s,
+	"end:s"		=> \$e,
+	"format:s"	=> \$f,
+	"increment:n"	=> \$inc
+);
+
+
+if (	$help ||			# user asked for it
+	$s !~ /^\d{4}-\d{2}-\d{2}$/ ||	# malformed start date
+	$e !~ /^\d{4}-\d{2}-\d{2}$/ ||	# malformed end date
+	$e lt $s ) {			# end is before start
+
+	usage();
+	exit(1);
+}
+
+my $c = $s;
+my $df = DART::DateFormat->new($f);
+
+do {
+	my @a = split(/-/, $c);
+	print $df->format(@a), qq(\n);
+	$c = sprintf("%.4d-%.2d-%.2d", Add_Delta_Days(@a, $inc));
+} while ( $c le $e );
+
+
+
+sub usage {
+	print STDERR <<ENDUSAGE;
+
+prints all of the dates within a range
+
+usage: $0 <-s YYYY-MM-DD> <-e YYYY-MM-DD>
+options:
+	-s, --start <DATE>	beginning of the range
+	-e, --end <DATE>	end of the range
+	-f, --format <STR>	specifies an alternate date format
+	-i, --increment <N>	specifies the number of days by which to
+					increment
+
+for date format string usage, see \`perldoc DART::DateFormat\`.  default is
+ISO 8601.
+
+ENDUSAGE
+}
