@@ -4,7 +4,7 @@
 #include "aggregate_main.h"
 #include "aggregate.h"
 
-#define AGG_TMP_BUF_SIZE 256
+#define AGG_TMP_BUF_SIZE 64
 
 int ncounts;		/* the number of count fields */
 int nsums;		/* the number of sum fields */
@@ -104,6 +104,11 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	outbuf = NULL;
 	outbuf_sz = 0;
+
+	/* set locale with values from the environment so strcoll()
+	   will work correctly. */
+	setlocale(LC_ALL, "");
+	setlocale(LC_COLLATE, "");
 
 	if ( args->preserve ) {
 		size_t str_len;
@@ -299,7 +304,7 @@ int key_strcmp ( char **a, char **b ) {
 		blen = get_line_field(fb, *b, 255, i, delim);
 		if ( alen < 0 || blen < 0 )
 			break;
-		retval = strcmp(fa, fb);
+		retval = strcoll(fa, fb);
 		i++;
 	}
 
