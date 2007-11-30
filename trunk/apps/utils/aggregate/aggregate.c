@@ -4,6 +4,7 @@
 #include "aggregate_main.h"
 #include "aggregate.h"
 
+#define AGG_TMP_BUF_SIZE 256
 
 int ncounts;		/* the number of count fields */
 int nsums;		/* the number of sum fields */
@@ -31,7 +32,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	int *key_fields;	/* array of key field indexes */
 	int *count_fields;	/* array of count field indexes */
 	int *sum_fields;	/* array of sum field indexes */
-	int arsz = 0;		/* size of array allocated by expand_nums() */
+	size_t arsz = 0;	/* size of array allocated by expand_nums() */
 
 	size_t n_hash_elems;
 
@@ -157,7 +158,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	/* loop through all files */
 	while ( in != NULL ) {
 		struct aggregation *value;
-		char tmpbuf[64];
+		char tmpbuf[AGG_TMP_BUF_SIZE];
 		size_t tmplen;
 		int in_hash;
 
@@ -191,7 +192,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			}
 
 			for ( i = 0; i < nsums; i++ ) {
-				tmplen = get_line_field( tmpbuf, inbuf, 63, sum_fields[i], delim );
+				tmplen = get_line_field( tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, sum_fields[i], delim );
 				if ( tmplen > 0 ) {
 					n = float_str_precision(tmpbuf);
 					if ( sum_precisions[i] < n )
@@ -201,7 +202,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			}
 
 			for ( i = 0; i < ncounts; i++ ) {
-				tmplen = get_line_field( tmpbuf, inbuf, 63, count_fields[i], delim );
+				tmplen = get_line_field( tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, count_fields[i], delim );
 				if ( tmplen > 0 ) {
 					value->counts[i] += 1;
 				}
