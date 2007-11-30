@@ -2,11 +2,11 @@
   copyright
  ********************************/
 #include "pivot_main.h"
-#include <splitter.h>
 #include <ffutils.h>
 #include <hashtbl.h>
 #include <linklist.h>
 
+#include <locale.h>
 #include <assert.h>
 
 /* #define DEBUG */
@@ -53,6 +53,7 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	double *line_values;			/* array of values */
 
+	size_t arrsz;
 	int *keys, *pivots, *values;		/* field index lists */
 	size_t n_keys, n_pivots, n_values;	/* list sizes*/
 	int *value_precisions;			/* floating-point precision of input values */
@@ -82,12 +83,20 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	delim = args->delim;
 
+	/* set locale with values from the environment so strcoll()
+	   will work correctly. */
+	setlocale(LC_ALL, "");
+	setlocale(LC_COLLATE, "");
+
 	keys = pivots = values = NULL;
 
 	/* turn field list strings into arrays of numbers */
-	n_keys = splitnums( args->keys, &keys, 0 );
-	n_pivots = splitnums( args->pivots, &pivots, 0 );
-	n_values = splitnums( args->values, &values, 0 );
+	arrsz = 0;
+	n_keys = expand_nums( args->keys, &keys, &arrsz );
+	arrsz = 0;
+	n_pivots = expand_nums( args->pivots, &pivots, &arrsz );
+	arrsz = 0;
+	n_values = expand_nums( args->values, &values, &arrsz );
 
 	value_precisions = calloc( n_values, sizeof(int) );
 
@@ -477,7 +486,7 @@ int key_strcmp ( char **a, char **b ) {
 		blen = get_line_field(fb, *b, 255, i, delim);
 		if ( alen < 0 || blen < 0 )
 			break;
-		retval = strcmp(fa, fb);
+		retval = strcoll(fa, fb);
 		i++;
 	}
 
