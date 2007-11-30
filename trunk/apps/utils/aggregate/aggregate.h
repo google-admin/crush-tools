@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <assert.h>
+#include <locale.h>
 
 #include <ffutils.h>
 #include <hashtbl.h>
