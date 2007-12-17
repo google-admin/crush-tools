@@ -51,7 +51,7 @@ if ( $debug ) {
 	}
 }
 
-my ($line_str, @line, $field_val, $local_field);
+my ($line_str, @line, $field_val, $trans_val, $local_field);
 while ( $line_str = <> ) {
 	$line_str =~ s/([\r\n]+)//m;
 
@@ -61,20 +61,27 @@ while ( $line_str = <> ) {
 	$local_field = $field;
 	$field_val = $line[$local_field];
 
+	if ( defined($mapping{$field_val}) ) {
+		$trans_val = $mapping{$field_val};
+	}
+	else {
+		$trans_val = $line[$local_field];
+	}
+
 	# if no mapping defined, the field value is passed through unchanged
 	if ( $prepend ) {
 		splice(@line, $local_field, 1,
-			$mapping{$field_val} || $line[$local_field],
+			$trans_val,
 			$field_val);
 		$local_field++;
 	}
 	if ( $append ) {
 		splice(@line, $local_field, 1,
 			$field_val,
-			$mapping{$field_val} || $line[$local_field]);
+			$trans_val);
 	}
 	if ( $replace ) {
-		$line[$local_field] = $mapping{$field_val} || $field_val;
+		$line[$local_field] = $trans_val;
 	}
 
 	print join($delim, @line), $1;

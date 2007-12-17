@@ -65,7 +65,7 @@ delim=`<a href="bash_functions.html#get_header_delim">get_header_delim</a> "$hea
 i_event_id=`<a href="bash_functions.html#get_header_index">get_header_index</a> "Event-ID" "$header" "$delim"`
 
 <a href="gzdog.html">gzdog</a> Activity_123456_01-01-2029.log.gz |
-	<b>translate_field</b> -i $i_event_id -d "$delim" -m 1=Post-Click -m 2=Post-Impression -m 0=Unmatched \
+	<b>translate_field</b> -f $i_event_id -d "$delim" -m 1=Post-Click -m 2=Post-Impression -m 0=Unmatched \
 	> $wdir/tmp/$$_Activity_123456_01-01-2029.log
 
 ]]></example>
