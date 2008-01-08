@@ -37,16 +37,22 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 
 			echo -n "test $i - \"${test_names[$i]}\" (sub test ${t}): "
 
-			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $out
+			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $out.1
+                        cat $left | $wdir/mergekeys -d "$test_delim" $optstring - $right > $out.2
+                        cat $right | $wdir/mergekeys -d "$test_delim" $optstring $left - > $out.3
 
-			if [ "`diff -q $out $expected`" ]; then
-				(( errors++ ))
-				echo "failed"
-				echo "		see $out"
-			else
-				echo "passed"
-				rm $out
-			fi
+                        if [ "`diff -q $out.1 $expected`" ] || [ "`diff -q $out.2 $expected`" ] || [ "`diff -q $out.3 $expected`" ]; then
+                                (( errors++ ))
+                                echo "failed"
+				for ((j=1; j<=3; j++)); do
+	                                if [ "`diff -q $out.$j $expected`" ]; then echo "          see $out.$j"; fi
+				done
+				
+                        else
+                                echo "passed"
+                                rm $out.*
+                        fi
+
 
 		else
 

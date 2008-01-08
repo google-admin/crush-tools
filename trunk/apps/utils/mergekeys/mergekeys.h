@@ -63,6 +63,6 @@ int merge_files( FILE *a, FILE *b, enum join_type_t join_type, FILE *out, struct
 void classify_fields ( char   *left_header, char *right_header );
 int compare_keys ( char *buffer_left, char *buffer_right );
 void join_lines ( char *left_line, char *right_line, FILE *out );
-int peek_keys ( FILE *file, char *current_line ) ;
+int my_peek_keys ( char *peek_line, char *current_line ) ;
 
 #endif /* MERGEKEYS_H */

@@ -54,7 +54,7 @@
 		</option>
 	</options>
 	<details>
-		<item></item>
+		<item>use "-" for either the left or right input file to read from standard input.</item>
 	</details>
 	<example><![CDATA[
 # merges impressions and clicks from the db for a given site with the

@@ -20,6 +20,7 @@ size_t ntomerge;
 					   
 size_t nkeys, ntomerge;
 
+
 /** @brief opens all the files necessary, sets a default
   * delimiter if none was specified, and calls the
   * merge_files() function.
@@ -42,23 +43,35 @@ int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		fprintf(stderr, "missing file arguments.  see %s -h for usage information.\n", argv[0]);
 		return EXIT_HELP;
 	}
-
-	if( (fd_tmp = open64(argv[optind], O_RDONLY)) < 0 ){
-		perror(argv[optind]);
-		return EXIT_FILE_ERR;
-	}
-	if ( (left = fdopen(fd_tmp, "r")) == NULL ) {
-		perror(argv[optind]);
-		return EXIT_FILE_ERR;
+	else if ( str_eq(argv[optind], "-") && str_eq(argv[optind+1], "-") ) {
+		fprintf(stderr, "standard output passed for both input files. see %s -h for usage information.\n", argv[0]);
+                return EXIT_HELP;
 	}
 
-	if( (fd_tmp = open64(argv[optind+1], O_RDONLY)) < 0 ){
-		perror(argv[optind+1]);
-		return EXIT_FILE_ERR;
+	if ( str_eq(argv[optind], "-") )
+		left = stdin;
+	else {
+		if( (fd_tmp = open64(argv[optind], O_RDONLY)) < 0 ){
+			perror(argv[optind]);
+			return EXIT_FILE_ERR;
+		}
+		if ( (left = fdopen(fd_tmp, "r")) == NULL ) {
+			perror(argv[optind]);
+			return EXIT_FILE_ERR;
+		}
 	}
-	if ( (right = fdopen(fd_tmp, "r")) == NULL ) {
-		perror(argv[optind+1]);
-		return EXIT_FILE_ERR;
+
+	if ( str_eq(argv[optind+1], "-") )
+		right = stdin;
+	else {
+		if( (fd_tmp = open64(argv[optind+1], O_RDONLY)) < 0 ){
+			perror(argv[optind+1]);
+			return EXIT_FILE_ERR;
+		}
+		if ( (right = fdopen(fd_tmp, "r")) == NULL ) {
+			perror(argv[optind+1]);
+			return EXIT_FILE_ERR;
+		}
 	}
 
 	if ( ! args->outfile )
@@ -111,14 +124,24 @@ int merge_files( FILE *left, FILE *right, enum join_type_t join_type, FILE *out,
 	/* input line buffers for first & second files */
 	char *buffer_left = NULL;
 	char *buffer_right = NULL;
+	char *peek_buffer_left = NULL;
+	char *peek_buffer_right = NULL;
 
 	/* size of the buffers */
 	size_t buffer_left_size = 0;
 	size_t buffer_right_size = 0;
+	size_t peek_buffer_left_size = 0;
+	size_t peek_buffer_right_size = 0;
 
-	char field_right[MAX_FIELD_LEN+1];	/* buffer for holding field values */
+	/* end of file flags */
+	int eof_left = 0;
+	int eof_right = 0;
 
-	int i;				/* general-purpose counter */
+	/* buffer for holding field values */
+	char field_right[MAX_FIELD_LEN+1];
+
+	/* general-purpose counter */
+	int i;
 
 	/** @todo take into account that files a & b might have the same fields in
 	  * a different order.
@@ -173,31 +196,26 @@ int merge_files( FILE *left, FILE *right, enum join_type_t join_type, FILE *out,
 	}
 	fputc('\n', out);
 
+	/* we need to have the buffers cleared before the first call to my_getline */
+	free(buffer_left);
+	buffer_left = NULL;
+	free(buffer_right);
+	buffer_right = NULL;
 
 	/* force a line-read from LEFT the first time around. */
 	keycmp = LEFT_RIGHT_EQUAL;
-
-	if ( getline( &buffer_right, &buffer_right_size, right ) > 0 ) {
-		chomp( buffer_right );
-	}
-	else {
-		free(buffer_right);
-		buffer_right = NULL;
-	}
-
+	my_getline( &buffer_right, &buffer_right_size, &peek_buffer_right, &peek_buffer_right_size, right, &eof_right );
 
 left_file_loop :
-	while ( ! feof( left ) ) {
+
+	while ( ! eof_left ) {
 		int left_line_printed = 0;
 
 		if ( LEFT_LE_RIGHT( keycmp ) ) {
-			if ( getline(&buffer_left, &buffer_left_size, left) <= 0 ) {
-				free( buffer_left );
-				buffer_left = NULL;
+			if ( my_getline(&buffer_left, &buffer_left_size, &peek_buffer_left, &peek_buffer_left_size, left, &eof_left) <= 0) {
 				keycmp = compare_keys ( buffer_left, buffer_right );
 				goto right_file_loop;
 			}
-			chomp(buffer_left);
 		}
 
 		keycmp = compare_keys ( buffer_left, buffer_right );
@@ -212,7 +230,7 @@ left_file_loop :
 			/* everybody likes an inner join */
 			join_lines ( buffer_left, buffer_right, out );
 
-			if ( peek_keys ( left, buffer_left ) == 0 ) {
+			if ( my_peek_keys ( peek_buffer_left, buffer_left ) == 0 ) {
 				/* the keys in the next line of LEFT are the same.
 				   handle "many:1"
 				 */
@@ -223,19 +241,14 @@ left_file_loop :
 		}
 
 right_file_loop :
-		while ( ! feof( right ) ) {
+
+		while ( ! eof_right ) {
 			if ( LEFT_GT_RIGHT ( keycmp ) ) {
 				if ( join_type == join_type_outer || join_type == join_type_right_outer )
 					join_lines ( NULL, buffer_right, out );
 			}
 
-			if ( getline( &buffer_right, &buffer_right_size, right ) <= 0 ) {
-				free( buffer_right );
-				buffer_right = NULL;
-			}
-			else {
-				chomp(buffer_right);
-			}
+			my_getline( &buffer_right, &buffer_right_size, &peek_buffer_right, &peek_buffer_right_size, right, &eof_right );
 			keycmp = compare_keys ( buffer_left, buffer_right );
 
 			if ( LEFT_LT_RIGHT ( keycmp ) ) {
@@ -257,7 +270,7 @@ right_file_loop :
 				/* if the keys in the next line of LEFT are the same,
 				   handle "many:1".
 				 */
-				int peek_cmp = peek_keys ( left, buffer_left);
+				int peek_cmp = my_peek_keys ( peek_buffer_left, buffer_left);
 				if ( (args->inner && peek_cmp <= 0) || peek_cmp == 0 ) {
 					goto left_file_loop;
 				}
@@ -266,15 +279,9 @@ right_file_loop :
 				   handle "1:many" by staying in this inner loop.  otherwise,
 				   go back to the outer loop. */
 
-				if ( peek_keys ( right, buffer_right ) != 0 ) {
+				if ( my_peek_keys ( peek_buffer_right, buffer_right ) != 0 ) {
 					/* need a new line from RIGHT */
-					if ( getline( &buffer_right, &buffer_right_size, right ) <= 0 ) {
-						free( buffer_right );
-						buffer_right = NULL;
-					}
-					else {
-						chomp(buffer_right);
-					}
+					my_getline( &buffer_right, &buffer_right_size, &peek_buffer_right, &peek_buffer_right_size, right, &eof_right );
 					goto left_file_loop;
 				}
 			}
@@ -288,14 +295,63 @@ cleanup:
 		free(buffer_left);
 	if ( buffer_right )
 		free(buffer_right);
+	if ( peek_buffer_left )
+		free(peek_buffer_left);
+	if ( peek_buffer_right )
+		free(peek_buffer_right);
 	if ( keyfields )
 		free(keyfields);
 	if ( mergefields )
 		free(mergefields);
 
-	peek_keys ( NULL, NULL );
-
 	return retval;
+}
+
+
+/* wrapper for get line with peek */
+int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_size, FILE *in, int *eof_flag ) {
+
+	/* if both buffers are empty, we are at the very beginning */
+	if(*peek_buffer == NULL && *buffer == NULL) {
+		
+		/* first get the actual line to work with */
+		if(getline( buffer, size, in ) <= 0) {
+			*buffer = NULL;
+			*eof_flag = 1;
+			return 0;
+		}
+		chomp(*buffer);
+	
+		/* then get the peek line */
+		if(getline( peek_buffer, peek_size, in ) <= 0)
+			*peek_buffer = NULL;
+		else
+			chomp(*peek_buffer);
+
+		return 1;
+	}
+	/* if the peek buffer is not empty, we are right in the middle */
+	else if(*peek_buffer != NULL) {
+		
+		/* first copy the peek line into the actual line buffer; make sure we have enough memory for the copy */
+		*buffer = (char *) realloc(*buffer, sizeof(char) * (strlen(*peek_buffer) + 1));
+		*buffer = strcpy(*buffer, *peek_buffer);
+
+		/* then read a new peek line */
+		if(getline( peek_buffer, peek_size, in ) <= 0)
+                        *peek_buffer = NULL;
+		else
+			chomp(*peek_buffer);
+
+		return 1;
+	}
+	/* here we are at the end of the file */
+	else {
+		*buffer = NULL;
+		*eof_flag = 1;
+	}
+
+	return 0;
 }
 
 
@@ -346,8 +402,6 @@ void join_lines ( char *left_line, char *right_line, FILE *out ) {
 
 	fputc('\n', out);
 }
-
-
 
 
 /* identifies fields as keys or to-be-merged */
@@ -410,31 +464,13 @@ int compare_keys ( char *buffer_left, char *buffer_right ) {
 }
 
 
+/* compares kees of the current and the next line */
+int my_peek_keys ( char *peek_line, char *current_line ) {
+	int result = 1;
 
-int peek_keys ( FILE *file, char *current_line ) {
-	off_t cur_pos;
-	int cmp;
-
-	static char *buf = NULL;
-	static size_t buf_size = 0;
-
-	if ( file == NULL && current_line == NULL ) {
-		free(buf);
-		buf = NULL;
-		return 0;
+	if ( peek_line != NULL ) {
+		result = compare_keys ( current_line, peek_line );
 	}
-
-	cur_pos = ftello( file );
-
-	if ( getline( &buf, &buf_size, file ) <= 0 ) {
-		free( buf );
-		buf = NULL;
-		return 1;
-	}
-	chomp(buf);
-	cmp = compare_keys ( current_line, buf );
-
-	fseeko( file, cur_pos, SEEK_SET );
-
-	return cmp;
+	
+	return result;
 }
