@@ -230,7 +230,7 @@ left_file_loop :
 			/* everybody likes an inner join */
 			join_lines ( buffer_left, buffer_right, out );
 
-			if ( my_peek_keys ( peek_buffer_left, buffer_left ) == 0 ) {
+			if ( peek_keys ( peek_buffer_left, buffer_left ) == 0 ) {
 				/* the keys in the next line of LEFT are the same.
 				   handle "many:1"
 				 */
@@ -270,7 +270,7 @@ right_file_loop :
 				/* if the keys in the next line of LEFT are the same,
 				   handle "many:1".
 				 */
-				int peek_cmp = my_peek_keys ( peek_buffer_left, buffer_left);
+				int peek_cmp = peek_keys ( peek_buffer_left, buffer_left);
 				if ( (args->inner && peek_cmp <= 0) || peek_cmp == 0 ) {
 					goto left_file_loop;
 				}
@@ -279,7 +279,7 @@ right_file_loop :
 				   handle "1:many" by staying in this inner loop.  otherwise,
 				   go back to the outer loop. */
 
-				if ( my_peek_keys ( peek_buffer_right, buffer_right ) != 0 ) {
+				if ( peek_keys ( peek_buffer_right, buffer_right ) != 0 ) {
 					/* need a new line from RIGHT */
 					my_getline( &buffer_right, &buffer_right_size, &peek_buffer_right, &peek_buffer_right_size, right, &eof_right );
 					goto left_file_loop;
@@ -312,10 +312,10 @@ cleanup:
 int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_size, FILE *in, int *eof_flag ) {
 
 	/* if both buffers are empty, we are at the very beginning */
-	if(*peek_buffer == NULL && *buffer == NULL) {
+	if ( *peek_buffer == NULL && *buffer == NULL ) {
 		
 		/* first get the actual line to work with */
-		if(getline( buffer, size, in ) <= 0) {
+		if ( getline( buffer, size, in ) <= 0 ) {
 			*buffer = NULL;
 			*eof_flag = 1;
 			return 0;
@@ -323,7 +323,7 @@ int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_si
 		chomp(*buffer);
 	
 		/* then get the peek line */
-		if(getline( peek_buffer, peek_size, in ) <= 0)
+		if ( getline( peek_buffer, peek_size, in ) <= 0 )
 			*peek_buffer = NULL;
 		else
 			chomp(*peek_buffer);
@@ -331,14 +331,23 @@ int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_si
 		return 1;
 	}
 	/* if the peek buffer is not empty, we are right in the middle */
-	else if(*peek_buffer != NULL) {
+	else if ( *peek_buffer != NULL ) {
 		
-		/* first copy the peek line into the actual line buffer; make sure we have enough memory for the copy */
-		*buffer = (char *) realloc(*buffer, sizeof(char) * (strlen(*peek_buffer) + 1));
+		/* make sure we have enough memory for the copy */
+		if ( *size < *peek_size ) {
+			*buffer = (char *) realloc(*buffer, sizeof(char) * (strlen(*peek_buffer) + 1));
+			if ( *buffer == NULL ) {
+				warn("not able to reallocate new memory to copy the peek buffer into the current buffer.");
+				exit(2);
+			}
+		}
+
+		/* first copy the peek line into the actual line buffer */
 		*buffer = strcpy(*buffer, *peek_buffer);
+		*size   = *peek_size;
 
 		/* then read a new peek line */
-		if(getline( peek_buffer, peek_size, in ) <= 0)
+		if ( getline( peek_buffer, peek_size, in ) <= 0 )
                         *peek_buffer = NULL;
 		else
 			chomp(*peek_buffer);
@@ -465,7 +474,7 @@ int compare_keys ( char *buffer_left, char *buffer_right ) {
 
 
 /* compares kees of the current and the next line */
-int my_peek_keys ( char *peek_line, char *current_line ) {
+int peek_keys ( char *peek_line, char *current_line ) {
 	int result = 1;
 
 	if ( peek_line != NULL ) {
