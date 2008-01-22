@@ -6,14 +6,17 @@ subtests=(00 01)
 datadir=$wdir/tests
 test_delim='\t'
 
-tests=("")
+tests=(
+	"\$left \$right"
+	"- \$right"
+	"\$left -"
+)
+
 errors=0
 
 for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 
 	echo "" # just put an empty line for readability
-
-	optstring=`echo ${tests[$i]} | sed 's/\s//g'`
 
 	for t in ${subtests[*]}; do
 
@@ -22,11 +25,17 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 		expected=$datadir/test_${t}.expected
 		out=$datadir/test_${t}.out
 
+		eval "optstring=\"${tests[$i]}\""
+
 		if [ -e $expected ]; then
 
 			echo -n "test $i - (sub test ${t}): "
 
-			$wdir/deltaforce -d "$test_delim" $optstring $left $right > $out
+			case $i in
+				0) $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
+				1) cat $left | $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
+				2) cat $right | $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
+			esac
 
 			if [ "`diff -q $out $expected`" ]; then
 				(( errors++ ))

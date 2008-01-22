@@ -6,7 +6,7 @@
 	description => "applies any updates from a delta extract onto a full extract",
 	version => "0.1",
 	trailing_opts => "file1 file2",
-	usage_extra => "",
+	usage_extra => "if one of file1 or file2 is specified as \\\"-\\\", stdin will be used for that input stream.",
 	do_long_opts => 1,
 	preproc_extra => '',
 	copyright => <<END_COPYRIGHT

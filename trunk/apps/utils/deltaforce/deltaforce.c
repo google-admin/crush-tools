@@ -41,22 +41,38 @@ int deltaforce ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		return EXIT_HELP;
 	}
 
-	if( (fd_tmp = open64(argv[optind], O_RDONLY)) < 0 ){
-		perror(argv[optind]);
-		return EXIT_FILE_ERR;
-	}
-	if ( (left = fdopen(fd_tmp, "r")) == NULL ) {
-		perror(argv[optind]);
-		return EXIT_FILE_ERR;
+	if ( str_eq( argv[optind], argv[optind + 1] ) ) {
+		fprintf(stderr, "%s: 2 input files cannot be the same\n",
+				argv[0]);
+		return EXIT_HELP;
 	}
 
-	if( (fd_tmp = open64(argv[optind+1], O_RDONLY)) < 0 ){
-		perror(argv[optind+1]);
-		return EXIT_FILE_ERR;
+	if ( str_eq( argv[optind], "-" ) ) {
+		left = stdin;
 	}
-	if ( (right = fdopen(fd_tmp, "r")) == NULL ) {
-		perror(argv[optind+1]);
-		return EXIT_FILE_ERR;
+	else {
+		if( (fd_tmp = open64(argv[optind], O_RDONLY)) < 0 ){
+			perror(argv[optind]);
+			return EXIT_FILE_ERR;
+		}
+		if ( (left = fdopen(fd_tmp, "r")) == NULL ) {
+			perror(argv[optind]);
+			return EXIT_FILE_ERR;
+		}
+	}
+
+	if ( str_eq( argv[optind + 1], "-" ) ) {
+		right = stdin;
+	}
+	else {
+		if( (fd_tmp = open64(argv[optind+1], O_RDONLY)) < 0 ){
+			perror(argv[optind+1]);
+			return EXIT_FILE_ERR;
+		}
+		if ( (right = fdopen(fd_tmp, "r")) == NULL ) {
+			perror(argv[optind+1]);
+			return EXIT_FILE_ERR;
+		}
 	}
 
 	if ( ! args->outfile )
