@@ -1,0 +1,93 @@
+# data relevant to the application as a whole
+%global = (
+	name => "aggregate2",
+	description => "aggregates data which has been pre-sorted by key(s)",
+	version => "0.1",
+	trailing_opts => "[file ...]",
+	usage_extra => "",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+copyright 2008
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+# valid types are
+#	flag		- no argument
+#	var		- required argument
+#	var_optional	- optional argument
+#	custom_flag	- no arg, and specify parseopt_code 
+#	custom_var	- required arg, and specify parseopt_code 
+#	custom_var_optional - optional arg, and specify parseopt_code 
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose messages during execution'
+	},
+	{
+	  name        => 'delim',
+	  shortopt    => 'd',
+	  longopt     => 'delim',
+	  type        => 'var',
+	  description => 'field separator string',
+	},
+	{
+	  name        => 'preserve_header',
+	  shortopt    => 'p',
+	  longopt     => 'preserve-header',
+	  type        => 'flag',
+	  description => 'do not treat first line as data'
+	},
+	{
+	  name        => 'keys',
+	  shortopt    => 'k',
+	  longopt     => 'keys',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'list of aggregation keys',
+	},
+	{
+	  name        => 'sums',
+	  shortopt    => 's',
+	  longopt     => 'sums',
+	  type        => 'var',
+	  description => 'list of fields to sum',
+	},
+	{
+	  name        => 'counts',
+	  shortopt    => 'c',
+	  longopt     => 'counts',
+	  type        => 'var',
+	  description => 'list of aggregation count',
+	},
+	{
+	  name        => 'outfile',
+	  shortopt    => 'o',
+	  longopt     => 'outfile',
+	  type        => 'var',
+	  description => 'file to which output should be written (default: stdout)',
+	},
+);
