@@ -13,7 +13,8 @@ static void print_line(
 		const int *counts,
 		size_t ncounts,
 		const double *sums,
-		int nsums );
+		int nsums,
+		int *sums_precision );
 
 static int extract_keys (
 		char *target,
@@ -22,6 +23,8 @@ static int extract_keys (
 		int *keys,
 		size_t nkeys );
 
+
+static int float_precision( char *n );
 
 /** @brief  
   * 
@@ -42,8 +45,10 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	int *keys   = NULL,
 	    *sums   = NULL,
-	    *counts = NULL;
-
+	    *counts = NULL,
+	    *sums_precision = NULL;	/* output the same precision as
+					   in the input */
+	int cur_precision;
 	size_t  keys_sz   = 0,
 		sums_sz   = 0,
 		counts_sz = 0;
@@ -93,6 +98,8 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		}
 		for ( i = 0; i < nsums; i++ )
 			sums[i]--;
+
+		sums_precision = calloc( nsums, sizeof(int) );
 	}
 
 	if ( args->counts ) {
@@ -175,7 +182,7 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	while ( in ) {
 		while ( getline( &input_line, &input_line_sz, in ) > 0 ) {
-
+			chomp(input_line);
 			if ( input_line_sz > keybuf_sz ) {
 				char *tmp;
 				tmp = realloc(cur_keys, input_line_sz);
@@ -201,7 +208,7 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 			if ( prev_keys[0] != '\0' &&
 			   ! str_eq( cur_keys, prev_keys ) ) {
-				print_line( out, prev_keys, args->delim, cur_counts, ncounts, cur_sums, nsums );
+				print_line( out, prev_keys, args->delim, cur_counts, ncounts, cur_sums, nsums, sums_precision );
 
 				memset( cur_counts, 0, ncounts * sizeof(int) );
 				memset( cur_sums, 0, nsums * sizeof(double) );
@@ -218,6 +225,11 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 				get_line_field(field_buf, input_line, 63, sums[i], args->delim);
 				f = atof( field_buf );
 				cur_sums[i] += f;
+
+				cur_precision = float_precision( field_buf );
+
+				if ( cur_precision > sums_precision[i] )
+					sums_precision[i] = cur_precision;
 			}
 
 			strcpy( prev_keys, cur_keys );
@@ -225,8 +237,12 @@ int aggregate2 ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		in = nextfile( argc, argv, &optind, "r" );
 	}
 
-	print_line( out, prev_keys, args->delim, cur_counts, ncounts, cur_sums, nsums );
+	print_line( out, prev_keys, args->delim, cur_counts, ncounts, cur_sums, nsums, sums_precision );
 
+	free( keys );
+	free( counts );
+	free( sums );
+	free( sums_precision );
 	free( cur_counts );
 	free( cur_sums );
 	free( cur_keys );
@@ -269,13 +285,14 @@ static void print_line(
 		const int *counts,
 		size_t ncounts,
 		const double *sums,
-		int nsums )
+		int nsums,
+		int *sums_precision )
 {
 	int i;
 	fputs( keys, out );
 
 	for ( i = 0; i < nsums; i++ ) {
-		fprintf( out, "%f", sums[i] ); 
+		fprintf( out, "%.*f", sums_precision[i], sums[i] ); 
 		if ( i < nsums - 1 )
 			fputs( delim, out );
 	}
@@ -292,3 +309,14 @@ static void print_line(
 	fputs( "\n", out );
 }
 
+
+static int float_precision( char *n ) {
+	char *dot;
+	if ( n == NULL || n[0] == '\0' )
+		return 0;
+	dot = strchr(n, '.');
+	if ( dot == NULL ) 
+		return 0;
+
+	return strlen(dot) - 1;
+}

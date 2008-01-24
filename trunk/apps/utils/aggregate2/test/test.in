@@ -1,8 +1,8 @@
-Text-1	Text-2	Numeric-1	Numeric-2
-first text value	a	1	8
-first text value	a	1	5
-first text value	b	1	3
-second text value	b	2	2
-second text value	c	2	3
-second text value	c	2	1
-second text value	d	2	7
+Text-1	Text-2	Numeric-1	Numeric-2	Numeric-3
+first text value	a	1	8	3.14
+first text value	a	1	5	4.0
+first text value	b	1	3	10
+second text value	b	2	2	13.333
+second text value	c	2	3	6.9
+second text value	c	2	1	8
+second text value	d	2	7	1
