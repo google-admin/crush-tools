@@ -52,10 +52,6 @@
 
 
 int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) ;
-
-void classify_fields ( char   *left_header, char *right_header );
 int compare_keys ( char *buffer_left, char *buffer_right );
-void join_lines ( char *left_line, char *right_line, FILE *out );
-int peek_keys ( FILE *file, char *current_line ) ;
 
 #endif /* DELTAFORCE_H */

@@ -57,5 +57,12 @@ END_COPYRIGHT
  	  type => 'var',
  	  required => 0,
  	  description => 'name of file for output'
-	}
+	},
+	{
+	  name        => 'keys',
+	  shortopt    => 'k',
+	  longopt     => 'keys',
+	  type        => 'var',
+	  description => 'primary key field(s) in both input files (default: 1)'
+	},
 );

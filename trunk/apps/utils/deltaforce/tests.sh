@@ -2,11 +2,15 @@
 
 wdir=`dirname $0`
 
-subtests=(00 01)
 datadir=$wdir/tests
 test_delim='\t'
 
-tests=(
+tests=(00 01 02)
+test_opts=( "" "" "-k 2" )
+test_names=( "defaults" "defaults" "key field" )
+
+subtests=("files for both" "stdin on left" "stdin on right")
+files=(
 	"\$left \$right"
 	"- \$right"
 	"\$left -"
@@ -18,23 +22,25 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 
 	echo "" # just put an empty line for readability
 
-	for t in ${subtests[*]}; do
+	left=$datadir/test_${tests[$i]}-full.txt
+	right=$datadir/test_${tests[$i]}-delta.txt
 
-		left=$datadir/test_${t}-full.txt
-		right=$datadir/test_${t}-delta.txt
-		expected=$datadir/test_${t}.expected
-		out=$datadir/test_${t}.out
+	# output should be the same for all 3 ways of passing input
+	expected=$datadir/test_${tests[$i]}.expected
 
-		eval "optstring=\"${tests[$i]}\""
+	for st in `seq 0 $(( ${#subtests[*]} - 1 ))`; do
+		out=$datadir/test_${tests[$i]}_subtest_$st.out
+
+		eval "fileopts=\"${files[$st]}\""
 
 		if [ -e $expected ]; then
 
-			echo -n "test $i - (sub test ${t}): "
+			echo -ne "test $i ${test_names[$i]} (${subtests[$st]}):\t"
 
-			case $i in
-				0) $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
-				1) cat $left | $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
-				2) cat $right | $wdir/deltaforce -d "$test_delim" -o $out $optstring;;
+			case $st in
+				0) $wdir/deltaforce -d "$test_delim" ${test_opts[$i]} -o $out $fileopts;;
+				1) cat $left | $wdir/deltaforce -d "$test_delim" ${test_opts[$i]} -o $out $fileopts;;
+				2) cat $right | $wdir/deltaforce -d "$test_delim" ${test_opts[$i]} -o $out $fileopts;;
 			esac
 
 			if [ "`diff -q $out $expected`" ]; then
@@ -47,11 +53,7 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 			fi
 
 		else
-
-			echo "creating $expected from $left, $right and options ${tests[$i]}"
-
-			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $expected
-
+			echo "no expected output for test $i" >&2
 		fi
 
 	done
@@ -59,3 +61,5 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 done
 
 echo -e "\n$errors errors\n"
+
+exit $errors
