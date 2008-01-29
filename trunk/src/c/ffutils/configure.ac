@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 AC_INIT([ffutils],
-        [1.0],
+        [1],
         [jeremy hinds jhinds@doubleclick.com],
         [ffutils])
 AC_CONFIG_AUX_DIR(config)
