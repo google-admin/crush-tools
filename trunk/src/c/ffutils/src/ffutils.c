@@ -336,49 +336,29 @@ ssize_t expand_nums ( char *arg, int **array, size_t *array_size ) {
 
 
 int get_line_pos( const char *ct, const int field_no, const char *d, int *start, int *end) {
-	int i      = 0,
-	    len    = strlen(ct),
-	    len_d  = strlen(d),
-	    field  = 0;
+	char *field, *field_end;
 
-	// Set "not found" values.
-	*start = -1;
-	*end   = -1;
-
-	// Are we searching for the first field?
-	if( field_no == 0 ) {
-		*start = 0;
+	field = field_start( ct, field_no + 1, d );
+	if ( field == NULL ) {
+		*start = -1;
+		*end = -1;
+		return 0;
 	}
 
-	// Search for the n-th field
-	for (i = 0; *start == -1 && i < len; i++ ) {
+	*start = field - ct;
+	field_end = strstr(field, d);
 
-		// Did we find a delimiter?
-		if ( strncmp(ct + i, d, len_d) == 0 ) {
-			field += 1;
-			if( field == field_no ) {
-				*start = i + len_d;
-			}
-		}
+	if ( field_end == NULL ) {
+		/* last field of line.  comparison against *start
+		   handles the case where the field is empty. */
+		*end = strlen(ct) - 1;
+		if ( *end < *start )
+			*end = *start;
 	}
+	else
+		*end = field_end - ct - 1;
 
-	// Seach in the string
-	for( i = *start; *end == -1 && i < len; i++ ) {
-	
-		// Did we hit the last character of the line?
-		if( i == len - 1 ) {
-			*end = i;
-		}	
-
-		// Did we find a delimiter or linebreak?
-		if( strncmp(ct + i, d, len_d) == 0 ||
-		    *(ct + i) == '\n' || *(ct + i) == '\r'
-		  ) {
-			*end = i - 1;
-		}
-	}
-
-	return *start != -1 && *end != -1 ? 1 : 0;
+	return 1;
 }
 
 
