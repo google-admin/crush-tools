@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
 		return(1);
 	}
 
-	n = splitnums(argv[1], &array, NULL);
+	n = splitnums(argv[1], &array, 0);
 	for(i=0; i<n; i++){
 		printf("%d ", array[i]);
 	}
