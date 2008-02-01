@@ -225,4 +225,64 @@ char * cut_field( char *ct, const int i, const char *d);
   */
 ssize_t field_str( const char *value, const char *line, const char *delim);
 
+#ifdef __GNUC__
+/* no __VA_ARGS__ in vc++, and the use of '##' is
+   a GNU cpp extension.  so these versions take a single
+   rquired argument.  */
+
+/** @brief emit an error message.
+  *
+  * the message will include the file and line number.
+  *
+  * @param s format string
+  * @param a value to pass into format string
+  */
+#define WARN(s, a) \
+	fprintf(stderr, "%s:%d: " s, __FILE__, __LINE__, a)
+		
+/** @brief emit an error message and exit.
+  *
+  * the message will include the file and line number.  the
+  * exit code is -1.
+  *
+  * @param s format string
+  * @param a value to pass into format string
+  */
+#define DIE(s, a) \
+	do { \
+		WARN((s), (a)); \
+		exit(-1); \
+	} while ( 0 )
+		
+#else
+
+/** @brief emit an error message.
+  *
+  * the message will include the file and line number.
+  *
+  * @param s format string
+  * @param ... optional values to pass into format string
+  */
+#define WARN(s, ...) \
+	fprintf(stderr, "%s: (%s:%d): " s, \
+			getenv("_"), __FILE__,__LINE__, ##__VA_ARGS__)
+
+/** @brief emit an error message and exit.
+  *
+  * the message will include the file and line number.  the exit
+  * code is -1.
+  *
+  * @param s format string
+  * @param ... optional values to pass into format string
+  */
+#define DIE(s, ...) \
+	do { \
+		fprintf(stderr, "%s: (%s:%d): " s, \
+			getenv("_"), __FILE__,__LINE__, ##__VA_ARGS__); \
+		exit(-1); \
+	} while ( 0 )
+
+#endif /* ifdef WIN32 */
+
+
 #endif /* FFUTILS_H */
