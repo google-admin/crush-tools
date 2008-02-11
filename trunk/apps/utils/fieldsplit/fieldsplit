@@ -29,7 +29,9 @@ if( $h || ! defined($f) ){
 
 $f--;
 
-my $flush = 10000;
+# allow flush threshold to come from env so it can be tested
+# with smaller input files
+my $flush = $ENV{FIELDSPLIT_FLUSH} || 10000;
 my %fdat = ();
 my $lineno = 0;
 
@@ -47,7 +49,7 @@ while(my $lstr = <>){
 		$line[$f] = '_blank_value';
 	}
 
-    my $split_key = transform_splitfield($line[$f]);
+	my $split_key = transform_splitfield($line[$f]);
 	push @{ $fdat{$split_key} }, $lstr;
 
 	if( $lineno == $flush ){
