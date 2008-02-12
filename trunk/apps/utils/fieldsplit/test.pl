@@ -2,10 +2,12 @@
 
 use strict;
 use FindBin ();
+use Getopt::Long;
 
 $ENV{FIELDSPLIT_FLUSH} = 2;
 
 my $verbose = 0;
+GetOptions ( "verbose" => \$verbose );
 
 my $wdir = $FindBin::Bin;
 my $exe  = "$wdir/fieldsplit";
@@ -27,6 +29,36 @@ my %tests = (
 		   expected_return => 1,
 		   discard_output => 1,
 		 },
+	'003' => { description => "split on full first field value",
+		   params => [
+			 '-f', '1',
+			 '-d', "\"\t\"",
+			 '-p', "$wdir/test/003",
+			 '-s', '.actual',
+			 "$wdir/test/001-transform-key.txt"
+			 ],
+		   expected_return => 0,
+	},
+	'004' => { description => "preserve header, use default delimiter",
+		   params => [
+			 '-f', '6',
+			 '-p', "$wdir/test/004",
+			 '-s', '.actual',
+			 '-k',
+			 "$wdir/test/002-data.txt"
+			 ],
+		   expected_return => 0,
+	},
+	'005' => { description => "properly split on last field in line (with blank values)",
+		   params => [
+			 '-f', '11',
+			 '-p', "$wdir/test/005",
+			 '-s', '.actual',
+			 '-k',
+			 "$wdir/test/002-data.txt"
+			 ],
+		   expected_return => 0,
+	},
 );
 
 my $n_failed = 0;
@@ -74,17 +106,27 @@ foreach my $test ( sort keys %tests ) {
 	}
 
 	if ( $verbose ) {
-		print "\nexpected: ", (join ' ', keys %expected_output) , "\n";
-		print "actual:   ",   (join ' ', keys %actual_output)   , "\n";
+		print "\nexpected: ", (join ' ', keys %expected_output),
+		      "\nactual:   ", (join ' ', keys %actual_output), "\n";
 	}
 
 	if ( set_diff( \%expected_output, \%actual_output )
 	  || set_diff( \%actual_output, \%expected_output ) ) {
 		print "failed (mismatched output files)\n";
+		if ( $verbose ) {
+			print "actual missing:   '",
+				join("' ,'", set_diff( \%expected_output, \%actual_output ) ),
+				qq('\n);
+			print "expected missing: '",
+				join("' ,'", set_diff( \%actual_output, \%expected_output ) ),
+				qq('\n);
+		}
+
 		$n_failed++;
 		next;
 	}
-	
+
+	my $failed_diff = 0;
 	for my $e_fname ( keys %expected_output ) {
 		my $a_fname = $e_fname;
 		$e_fname .= '.expected';
@@ -92,9 +134,13 @@ foreach my $test ( sort keys %tests ) {
 		my $is_different = `diff -q $wdir/test/$test/$e_fname $wdir/test/$test/$a_fname`;
 		if ( $is_different ) {
 			print "failed ($e_fname differs from $a_fname)\n";
-			$n_failed++;
-			next;
+			$failed_diff = 1;
 		}
+	}
+
+	if ( $failed_diff ) {
+		$n_failed++;
+		next;
 	}
 
 	print "passed\n";
