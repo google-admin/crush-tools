@@ -45,60 +45,26 @@ while(my $lstr = <>){
 
 	my @line = split(/\Q$d\E/, $lstr, -1);
 
-	my $split_key;
-	if( ! defined($line[$f]) || $line[$f] eq '' ){
-		$split_key = '_blank_value';
-	}
-	else {
-		$split_key = transform_splitfield( $line[$f] );
-	}
+	my $split_key = transform_splitfield( $line[$f] );
 
 	push @{ $fdat{$split_key} }, $lstr;
 
 	if( $lineno == $flush ){
-		foreach my $key ( keys %fdat ){
-			my $fname = $dir . '/' . $prefix . $key . $suffix;
-
-		# if keeping the header and the file doesn't exist yet
-		# open it & print the header to it
-			if ( $keep && ! -f $fname ) {
-				open(F, "> $fname") or die "$fname: $!\n";
-				print F $header;
-			} else {
-				open(F, ">> $fname") or die "$fname: $!\n";
-			}
-
-			foreach my $l ( @{ $fdat{$key} } ){
-				print F $l;
-			}
-
-			close(F);
-			delete $fdat{$key};
-		}
+		flush_data( \%fdat );
 		$lineno = 0;
 	}
 }
 
-foreach my $key ( keys %fdat ){
-	my $fname = $dir . '/' . $prefix . $key . $suffix;
-
-	if ( $keep && ! -f $fname ) {
-		open(F, "> $fname") or die "$fname: $!\n";
-		print F $header;
-	} else {
-		open(F, ">> $fname") or die "$fname: $!\n";
-	}
-	foreach my $l ( @{ $fdat{$key} } ){
-		print F $l;
-	}
-	close(F);
-}
+flush_data( \%fdat );
 
 exit(0);
 
 sub transform_splitfield {
     my $k = shift;
+
     $k =~ s/[\r\n]//g;
+    return '_blank_value' if ( ! length $k );
+
     $k =~ s/\s/_/g;
     $k =~ s/\//_/g;
 
@@ -108,6 +74,29 @@ sub transform_splitfield {
 
     return $k;
 }
+
+
+sub flush_data {
+	my $fdat = shift;
+	foreach my $key ( keys %{ $fdat } ){
+		my $fname = $dir . '/' . $prefix . $key . $suffix;
+
+		# if keeping the header and the file doesn't
+		# exist yet open it & print the header to it
+		if ( $keep && ! -f $fname ) {
+			open(F, "> $fname") or die "$0: $fname: $!\n";
+			print F $header;
+		} else {
+			open(F, ">> $fname") or die "$0: $fname: $!\n";
+		}
+		foreach my $l ( @{ $fdat->{$key} } ){
+			print F $l;
+		}
+		close(F);
+		delete $fdat->{$key}
+	}
+}
+
 
 sub usage {
 	print STDERR <<__USAGE__;
