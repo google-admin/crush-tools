@@ -13,7 +13,7 @@ my $wdir = $FindBin::Bin;
 my $exe  = "$wdir/fieldsplit";
 
 my %tests = (
-	'001' => { description => "preserve order when performing user-supplied transformations.",
+	'001' => { description => "preserve order when performing user-supplied transformations",
 		   params => [
 			'-f', '1',
 			'-s', '.actual',
@@ -24,7 +24,7 @@ my %tests = (
 			],
 		   expected_return => 0,
 		 },
-	'002' => { description => "fail when missing required params.",
+	'002' => { description => "fail when missing required params",
 		   params => [],
 		   expected_return => 1,
 		   discard_output => 1,
@@ -67,7 +67,7 @@ foreach my $test ( sort keys %tests ) {
 
 	print "running $exe @{ $tests{$test}->{params} }\n" if $verbose;
 
-	print "test $test:\t";
+	print "test $test - $tests{$test}->{description}:\n\t\t";
 
 	# build param string.
 	# just calling system($exe ...) doesn't allow discarding output
