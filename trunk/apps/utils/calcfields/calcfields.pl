@@ -1,11 +1,9 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
 use Getopt::Std;
 use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p $opt_b $opt_c $opt_r);
 use Date::Calc qw(Delta_DHMS);
-use DART::DateFormat;
-use Text::Trim;
 
 # Parse command line options
 getopts('hvprd:e:i:b:c:');
@@ -40,7 +38,7 @@ my $line = "";
 my @parts = ();
 my $i = 0;
 my $result = 0;
-my @header = ();
+my %header = ();
 
 # Check delimiter option. Set default if not provided.
 if(!defined($opt_d) || $opt_d eq "") {
@@ -81,13 +79,15 @@ if(defined($opt_p)) {
 	if(defined($line = <STDIN>)) {
 
 		# Remove blanks/new lines at the end of the row
-		$line = trim $line;	
+		$line = trim($line);	
 
 		# Split into parts
 		@parts = split(/$opt_d/, $line);
 		
 		# Keep header parts (we'll need in during the eval).
-		@header = @parts;		
+		for ( 0 .. $#parts ) {
+			$header{$parts[$_]} = $_;
+		}
 
 		# Build the new header from the original header and the column name for the calculated field.
         	print put_field($line, \@parts, $opt_d, $opt_c, $opt_i, $opt_r) . "\n";
@@ -95,17 +95,22 @@ if(defined($opt_p)) {
 
 }
 
+my $calc_func;
+
 # Read the lines from the standard input
 while(defined($line = <STDIN>)) {
 
 	# Remove blanks/new lines at the end of the row
-	$line = trim $line;
+	$line = trim($line);
 
         # Split the line
         @parts = split(/$opt_d/, $line, -1);
 
+	$calc_func = create_calc_func($opt_e, \@parts, $opt_b)
+		unless $calc_func;
+
 	# Calculate the result
-	$result = extended_eval($opt_e, \@parts, $opt_b);
+	$result = $calc_func->(\@parts, $opt_b);
 
 	# Build new line with the calculated result
 	print put_field($line, \@parts, $opt_d, $result, $opt_i, $opt_r) . "\n";
@@ -164,30 +169,54 @@ sub put_field {
 	return $line;
 }
 
-sub extended_eval {
+sub create_calc_func {
 	my($formula, $parts, $fallback) = @_;
 
-	my $result = 0, $i = 0;
+	my $i = 0;
 
 	$formula = "\$result = " . $formula;
-	for($i = 1; $i <= scalar @{$parts}; $i++) {
-		
-		# Look up indices.
-		$formula =~ s/\[$i\]/$parts->[$i - 1]/g;
-		
-		# Look up field names.			
-		if ($i <= scalar @header)
-		{
-			$formula =~ s/\[$header[$i-1]\]/$parts->[$i - 1]/g;
-		}
-	}
-	
-	eval($formula);
 
-	if($@) {
-		$result = $fallback;
+	# [ N ] -> $_[N-1]
+	$formula =~ s/\[\s*(\d+)\s*\]/\$parts->[$1 - 1]/g;
+
+	if ( %header ) {
+		# [ FieldName ] -> $_[ indexOf(FieldName) ]
+		while ( $formula =~ /\[\s*([-a-zA-Z]+)\s*\]/g ) {
+			my $label_idx = $header{$1};
+			if ( defined($label_idx) ) {
+				$formula =~ s/\[\s*[-a-zA-Z]+\s*\]/\$parts->[$label_idx]/;
+			}
+			else {
+				die "$0: undefined header label: $1\n";
+			}
+		}
+ 	}
+
+my $calc_func_txt = <<CALC_FUNC;
+\$calc_func = sub {
+	my(\$parts, \$fallback) = \@_;
+	my \$result;
+
+	eval { $formula };
+
+	if(\$@) {
+		\$result = \$fallback;
 	}
 	
-	return $result;
+	return \$result;
+}
+CALC_FUNC
+
+	my $calc_func;
+	eval($calc_func_txt);
+
+	return $calc_func;
 }
 
+sub trim {
+    my $text = shift;
+    $text =~ s/^\s+//;
+    $text =~ s/\s+$//;
+
+    return $text;
+}
