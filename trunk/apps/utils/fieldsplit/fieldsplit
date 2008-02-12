@@ -45,24 +45,19 @@ while(my $lstr = <>){
 
 	my @line = split(/\Q$d\E/, $lstr, -1);
 
+	my $split_key;
 	if( ! defined($line[$f]) || $line[$f] eq '' ){
-		$line[$f] = '_blank_value';
+		$split_key = '_blank_value';
+	}
+	else {
+		$split_key = transform_splitfield( $line[$f] );
 	}
 
-	my $split_key = transform_splitfield($line[$f]);
 	push @{ $fdat{$split_key} }, $lstr;
 
 	if( $lineno == $flush ){
 		foreach my $key ( keys %fdat ){
-			my $k = $key;
-			$k =~ s/\s/_/g;
-			$k =~ s/\//_/g;
-
-			if ( $xform_outnames ) {
-				eval "\$k =~ $xform_outnames;";
-			}
-
-			my $fname = $dir . '/' . $prefix . $k . $suffix;
+			my $fname = $dir . '/' . $prefix . $key . $suffix;
 
 		# if keeping the header and the file doesn't exist yet
 		# open it & print the header to it
