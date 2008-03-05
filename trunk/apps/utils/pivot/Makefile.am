@@ -4,7 +4,7 @@ main.c usage.c pivot_main.h : args.tab
 BUILT_SOURCES = main.c usage.c pivot_main.h
 
 bin_PROGRAMS = pivot
-pivot_SOURCES = pivot.c pivot.h $(BUILT_SOURCES)
+pivot_SOURCES = pivot.c $(BUILT_SOURCES)
 
 TESTS = tests.sh
 

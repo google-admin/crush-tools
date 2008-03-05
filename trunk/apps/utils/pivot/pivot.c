@@ -340,9 +340,12 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		llist_node_t *key_node;
 		llist_t *key_list;
 		char *empty_value_string;
-		/* construct string for empty value set */
-		empty_value_string = malloc(	( sizeof( char ) * n_pivot_keys ) +
-					( strlen( delim ) * n_pivot_keys ) );
+
+		/* construct string for empty value set.  this should be big enough for
+		   n_values worth of zeros (of the appropriate precision) and delimiters
+		   in between.  here we'll just guess that a precision of 8 is enough. */
+		empty_value_string = malloc( ( sizeof( char )  * n_values * 8 ) +
+					     ( strlen( delim ) * n_values ) );
 		empty_value_string[0] = 0x00;
 		for ( i = 0; i < n_values; i++ ) {
 			sprintf(empty_value_string, "%s%.*f", empty_value_string, value_precisions[i], 0.0F);

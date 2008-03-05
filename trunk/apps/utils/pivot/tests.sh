@@ -2,12 +2,12 @@
 
 wdir=`dirname $0`
 
-subtests=(00 01)
+subtests=(00 01 02)
 datadir=$wdir/tests
 export DELIMITER="\t"
 
-tests=("-k -f 1 -p 2 -v 3" "-k -f 1 -p 3,6 -v 4,5")
-test_names=("minimal" "multi-field pivot")
+tests=("-k -f 1 -p 2 -v 3" "-k -f 1 -p 3,6 -v 4,5" "-k -f 1-10 -p 20,21 -v 11,12,18,19")
+test_names=("minimal" "multi-field pivot" "segfault bugfix")
 errors=0
 
 for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
