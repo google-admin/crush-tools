@@ -143,9 +143,9 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 #ifdef DEBUG
 		for ( i = 0; i < n_headers; i++ ) {
-			printf("%s%s", headers[i], i < n_headers - 1 ? args->delim : "");
+			fprintf( stderr, "%s%s", headers[i], i < n_headers - 1 ? args->delim : "");
 		}
-		printf("\n");
+		fprintf( stderr, "\n");
 #endif
 	} else {
 		/* avoid compiler warnings */
@@ -178,7 +178,7 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 			chomp(inbuf);
 			if ( n_keys ) {
-				/* this could validly return NULL if the both sizes are 0 the first time thru,
+				/* this could validly return NULL if both sizes are 0 the first time thru,
 				   when keystr is still NULL, but that shouldn't happen */
 				if ( realloc_if_needed( &keystr, &keystr_sz, inbuf_sz ) == NULL ) {
 					fprintf(stderr, "out of memory.\n");
@@ -202,9 +202,9 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 #ifdef DEBUG
 			if ( n_keys )
-				printf("key string: %s\n", keystr);
+				fprintf( stderr, "key string: %s\n", keystr );
 			if ( n_pivots )
-				printf("pivot string: %s\n", pivstr);
+				fprintf( stderr, "pivot string: %s\n", pivstr );
 #endif
 
 
@@ -214,7 +214,6 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 				pivot_hash = malloc( sizeof(hashtbl_t) );
 				ht_init(pivot_hash, PIVOT_HASH_SZ, NULL, free);
 				pivot_in_hash = 0;
-				n_key_strings++;
 			}
 
 			line_values = ht_get( pivot_hash, pivstr );
@@ -250,17 +249,17 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			if ( ! pivot_in_hash ) {
 				ht_put(&key_hash, keystr, pivot_hash);
 			}
-			if ( ht_get( &uniq_pivots, pivstr ) == NULL ) {
-				/* store the pivot key string for later use */
-				ht_put( &uniq_pivots, pivstr, (void *) 1 );
-				n_pivot_keys++;
-			}
+
+			/* store the pivot key string for later use */
+			ht_put( &uniq_pivots, pivstr, (void *) 1 );
 		}
 
 		fclose(fin);
 		fin = nextfile( argc, argv, &optind, "r" );
 	}
 
+	n_key_strings = key_hash.nelems;
+	n_pivot_keys = uniq_pivots.nelems;
 
 	/* sort the collection of all pivot key strings */
 	{
@@ -352,11 +351,19 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		}
 
 		key_array = malloc(sizeof(char*) * n_key_strings);
+		if ( key_array == NULL ) {
+			warn("malloc key array");
+			return EXIT_MEM_ERR;
+		}
+
 		j = 0;
 		for ( i = 0; i < key_hash.arrsz; i++ ) {
 			key_list = key_hash.arr[i];
 			if ( key_list ) {
 				for ( key_node = key_list->head; key_node; key_node = key_node->next ) {
+#ifdef DEBUG
+					fprintf( stderr, "got key \"%s\" out of hash.\n", ((ht_elem_t *) key_node->data)->key );
+#endif
 					key_array[j] = ((ht_elem_t *) key_node->data)->key;
 					j++;
 				}
@@ -396,6 +403,7 @@ int pivot ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 		}
 		free(empty_value_string);
+		free(key_array);
 	}
 
 	/* CLEANUP SECTION */
