@@ -43,8 +43,12 @@ int mergekeys ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		fprintf(stderr, "missing file arguments.  see %s -h for usage information.\n", argv[0]);
 		return EXIT_HELP;
 	}
-	else if ( str_eq(argv[optind], "-") && str_eq(argv[optind+1], "-") ) {
-		fprintf(stderr, "standard output passed for both input files. see %s -h for usage information.\n", argv[0]);
+	else if ( str_eq(argv[optind], argv[optind + 1]) ) {
+		/* TODO: it would be safer to convert these to absolute
+		   paths first.  "mergekeys file ./file" would still
+		   go through.
+		 */
+		fprintf(stderr, "both input files are the same. see %s -h for usage information.\n", argv[0]);
                 return EXIT_HELP;
 	}
 
@@ -199,12 +203,19 @@ int merge_files( FILE *left, FILE *right, enum join_type_t join_type, FILE *out,
 	/* we need to have the buffers cleared before the first call to my_getline */
 	free(buffer_left);
 	buffer_left = NULL;
+	buffer_left_size = 0;
 	free(buffer_right);
 	buffer_right = NULL;
+	buffer_right_size = 0;
 
-	/* force a line-read from LEFT the first time around. */
+	/* force a line-read from RIGHT the first time around.
+	   if eof is reached here, we still need to process
+	   the left-hand file.
+	 */
 	keycmp = LEFT_RIGHT_EQUAL;
-	my_getline( &buffer_right, &buffer_right_size, &peek_buffer_right, &peek_buffer_right_size, right, &eof_right );
+	my_getline( &buffer_right, &buffer_right_size,
+		    &peek_buffer_right, &peek_buffer_right_size,
+		    right, &eof_right );
 
 left_file_loop :
 
@@ -316,6 +327,7 @@ int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_si
 		
 		/* first get the actual line to work with */
 		if ( getline( buffer, size, in ) <= 0 ) {
+			free(*buffer);
 			*buffer = NULL;
 			*eof_flag = 1;
 			return 0;
@@ -323,10 +335,13 @@ int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_si
 		chomp(*buffer);
 	
 		/* then get the peek line */
-		if ( getline( peek_buffer, peek_size, in ) <= 0 )
+		if ( getline( peek_buffer, peek_size, in ) <= 0 ) {
+			free(*peek_buffer);
 			*peek_buffer = NULL;
-		else
+		}
+		else {
 			chomp(*peek_buffer);
+		}
 
 		return 1;
 	}
@@ -335,32 +350,39 @@ int my_getline( char **buffer, size_t *size, char **peek_buffer, size_t *peek_si
 		
 		/* make sure we have enough memory for the copy */
 		if ( *size < *peek_size ) {
-			*buffer = (char *) realloc(*buffer, sizeof(char) * (strlen(*peek_buffer) + 1));
-			if ( *buffer == NULL ) {
+			char *tmp;
+			tmp = (char *) realloc(*buffer, *peek_size);
+			if ( tmp == NULL ) {
 				warn("not able to reallocate new memory to copy the peek buffer into the current buffer.");
 				exit(2);
 			}
+			*buffer = tmp;
+			*size   = *peek_size;
 		}
 
 		/* first copy the peek line into the actual line buffer */
-		*buffer = strcpy(*buffer, *peek_buffer);
-		*size   = *peek_size;
+		memcpy(*buffer, *peek_buffer, *peek_size);
 
 		/* then read a new peek line */
-		if ( getline( peek_buffer, peek_size, in ) <= 0 )
+		if ( getline( peek_buffer, peek_size, in ) <= 0 ) {
+			free( *peek_buffer );
                         *peek_buffer = NULL;
-		else
+		}
+		else {
 			chomp(*peek_buffer);
+		}
 
 		return 1;
 	}
 	/* here we are at the end of the file */
 	else {
-		*buffer = NULL;
+		if ( *buffer ) {
+			free(*buffer);
+			*buffer = NULL;
+		}
 		*eof_flag = 1;
+		return 0;
 	}
-
-	return 0;
 }
 
 
