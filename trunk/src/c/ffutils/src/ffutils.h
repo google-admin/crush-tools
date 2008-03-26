@@ -200,10 +200,12 @@ ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
   * @param ct the line buffer
   * @param i the field number (0-based)
   * @param d the field delimiter
-  * @param start the position of the start character
-  * @param end the position of the end character
+  * @param start the position of the start character, or -1 if the
+  *              field does not exist.
+  * @param end the position of the end character, or -1 if the field
+  *              does not exist.
   *
-  * @return 1 on success, 0 otherwise
+  * @return the length of the field, or -1 if the field does not exist.
   */
 int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
 
