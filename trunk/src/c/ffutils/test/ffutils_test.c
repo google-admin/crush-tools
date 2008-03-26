@@ -5,35 +5,43 @@
 #include "ffutils.h"
 #include "data_transfer.h"
 
-void test_fields_in_line(void);
-void test_get_line_field(void);
-void test_field_start(void);
-void test_mdyhms_datecmp(void);
-void test_chomp(void);
-void test_nextfile(void);
-void test_expand_chars(void);
-void test_expand_nums(void);
-void test_cut_field(void);
-void test_field_str(void);
+/* for output padding */
+#define FUNC_NAME_FMT "%16s"
 
-void test_get_spot_tag_attributes(void);
+int test_fields_in_line(void);
+int test_get_line_field(void);
+int test_get_line_pos(void);
+int test_field_start(void);
+int test_mdyhms_datecmp(void);
+int test_chomp(void);
+int test_nextfile(void);
+int test_expand_chars(void);
+int test_expand_nums(void);
+int test_cut_field(void);
+int test_field_str(void);
+
+/* void test_get_spot_tag_attributes(void); */
 
 int main ( int argc, char *argv[] ) {
-	test_fields_in_line();
-	test_get_line_field();
-	test_field_start();
-	test_mdyhms_datecmp();
-	test_chomp();
-	test_nextfile();
-	test_expand_chars();
-	test_expand_nums();
-	test_cut_field();
-	test_field_str();
-	test_get_spot_tag_attributes();
-	return 0;
+	int errs = 0;
+	errs += test_fields_in_line();
+	errs += test_get_line_field();
+	errs += test_get_line_pos();
+	errs += test_field_start();
+	errs += test_mdyhms_datecmp();
+	errs += test_chomp();
+	errs += test_nextfile();
+	errs += test_expand_chars();
+	errs += test_expand_nums();
+	errs += test_cut_field();
+	errs += test_field_str();
+	/* errs += test_get_spot_tag_attributes(); */
+	if ( errs )
+		return EXIT_FAILURE;
+	return EXIT_SUCCESS;
 }
 
-void test_fields_in_line () {
+int test_fields_in_line () {
 	int n_errors = 0;
 	size_t n;
 
@@ -56,110 +64,153 @@ void test_fields_in_line () {
 	n = fields_in_line( TL0, TD0 );
 	if ( n != TE0 ) {
 		fprintf(stderr,
-			"failure: fields_in_line( \"%s\", \"%s\" ) returned %u instead of %u\n",
-			TL0, TD0, n, TE0 );
+			FUNC_NAME_FMT
+			": failed (test 0)\n\treturned %u instead of %u\n",
+			"fields_in_line()", n, TE0 );
 		n_errors++;
 	}
 
 	n = fields_in_line( TL1, TD1 );
 	if ( n != TE1 ) {
 		fprintf(stderr,
-			"failure: fields_in_line( \"%s\", \"%s\" ) returned %u instead of %u\n",
-			TL1, TD1, n, TE1 );
+			FUNC_NAME_FMT
+			": failed (test 1)\n\treturned %u instead of %u\n",
+			"fields_in_line()", n, TE1 );
 		n_errors++;
 	}
 
 	n = fields_in_line( TL2, TD2 );
 	if ( n != TE2 ) {
 		fprintf(stderr,
-			"failure: fields_in_line( \"%s\", \"%s\" ) returned %u instead of %u\n",
-			TL2, TD2, n, TE2 );
+			FUNC_NAME_FMT
+			": failed (test 2)\n\treturned %u instead of %u\n",
+			"fields_in_line()", n, TE2 );
 		n_errors++;
 	}
 
 	n = fields_in_line( TL3, TD3 );
 	if ( n != TE3 ) {
 		fprintf(stderr,
-			"failure: fields_in_line( \"%s\", \"%s\" ) returned %u instead of %u\n",
-			TL3, TD3, n, TE3 );
+			FUNC_NAME_FMT
+			": failed (test 3)\n\treturned %u instead of %u\n",
+			"fields_in_line()", n, TE3 );
 		n_errors++;
 	}
 
 	if ( n_errors == 0 ) {
-		printf("fields_in_line(): ok\n");
+		printf( FUNC_NAME_FMT ": passed\n", "fields_in_line()" );
 	}
+	return n_errors;
 }
 
-void test_get_line_field ( void ) {
-	/* int n_errors = 0; */
-	printf("get_line_field(): test not implemented\n");
+int test_get_line_field ( void ) {
+	int n_errors = 0;
+	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "get_line_field()");
+	return n_errors;
 }
 
-void test_field_start ( void ) {
-	/* int n_errors = 0; */
-	printf("field_start(): test not implemented\n");
+int test_get_line_pos ( void ) {
+	int n_errors = 0;
+
+	char *TD0 = ",";
+	char *TL0 = "hello\n";
+	int  TF0 = 0;
+	int  TE0_ret = 1;
+	int  TE0_start = 0;
+	int  TE0_end = 4;
+
+	int n, start, end;
+
+	n = get_line_pos( TL0, TF0, TD0, &start, &end );
+	if ( n != TE0_ret || start != TE0_start || end != TE0_end ) {
+		fprintf(stderr,
+			FUNC_NAME_FMT
+			": failed (test 0)\n\treturned (%d, %d, %d) instead of (%d, %d, %d)\n",
+			"get_line_pos()",
+			n, start, end, TE0_ret, TE0_start, TE0_end );
+		n_errors++;
+	}
+
+	if ( n_errors == 0 ) {
+		printf( FUNC_NAME_FMT ": passed\n", "get_line_pos()");
+	}
+
+	return n_errors;
 }
 
-void test_mdyhms_datecmp ( void ) {
-	/* int n_errors = 0; */
-	printf("mdyhms_datecmp(): test not implemented\n");
+int test_field_start ( void ) {
+	int n_errors = 0;
+	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "field_start()");
+	return n_errors;
 }
 
-void test_chomp ( void ) {
-	/* int n_errors = 0; */
-	printf("chomp(): test not implemented\n");
+int test_mdyhms_datecmp ( void ) {
+	int n_errors = 0;
+	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "mdyhms_datecmp()");
+	return n_errors;
 }
 
-void test_nextfile ( void ) {
-	/* int n_errors = 0; */
-	printf("nextfile(): test not implemented\n");
+int test_chomp ( void ) {
+	int n_errors = 0;
+	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "chomp()");
+	return n_errors;
 }
 
-void test_expand_chars ( void ) {
+int test_nextfile ( void ) {
+	int n_errors = 0;
+	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "nextfile()");
+	return n_errors;
+}
+
+int test_expand_chars ( void ) {
 	int n_errors = 0;
 
 	char *TL0       = "\t";
-	char *TL0_orig  = "\t";
 	char TE0[]      = {0x09, 0x00};
 
 	char *TL1      = "no special chars";
-	char *TL1_orig = "no special chars";
 	char *TE1      = "no special chars";
 
 	char TL2[]      = {0x5c, 0x5c, 0x00}; /* \\ */
-	char TL2_orig[] = {0x5c, 0x5c, 0x00}; /* \\ */
 	char TE2[]      = {0x5c, 0x00};
 
 	expand_chars( TL0 );
 	if ( strcmp( TL0, TE0 ) != 0 ) {
 		fprintf(stderr,
-			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL0_orig, TL0, TE0);
+			FUNC_NAME_FMT
+			": failed\n\treturned \"%s\" instead of \"%s\"\n",
+			"expand_chars()",
+			TL0, TE0);
 		n_errors++;
 	}
 
 	expand_chars( TL1 );
 	if ( strcmp( TL1, TE1 ) != 0 ) {
 		fprintf(stderr,
-			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL1_orig, TL1, TE1);
+			FUNC_NAME_FMT
+			": failed\n\treturned \"%s\" instead of \"%s\"\n",
+			"expand_chars()",
+			TL1, TE1);
 		n_errors++;
 	}
 
 	expand_chars( TL2 );
 	if ( strcmp( TL2, TE2 ) != 0 ) {
 		fprintf(stderr,
-			"failure: expand_chars( \"%s\" ) resulted in  \"%s\" instead of \"%s\"\n",
-			TL2_orig, TL2, TE2);
+			FUNC_NAME_FMT
+			": failed\n\treturned \"%s\" instead of \"%s\"\n",
+			"expand_chars()",
+			TL2, TE2);
 		n_errors++;
 	}
 
 	if ( n_errors == 0 ) {
-		printf("expand_chars(): ok\n");
+		printf( FUNC_NAME_FMT ": passed\n", "expand_chars()");
 	}
+	return n_errors;
 }
 
-void test_expand_nums ( void ) {
+int test_expand_nums ( void ) {
 	int n_errors = 0;
 
 	ssize_t n;
@@ -187,8 +238,10 @@ void test_expand_nums ( void ) {
 	n = expand_nums( tmpstr, &target, &target_size );
 	if ( n != TE0 ) {
 		fprintf(stderr,
-			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			TL0, n, TE0);
+			FUNC_NAME_FMT
+			": failed (test 0)\n\treturned %u instead of %u\n",
+			"expand_nums()",
+			n, TE0);
 		n_errors++;
 	}
 
@@ -196,8 +249,10 @@ void test_expand_nums ( void ) {
 	n = expand_nums( tmpstr, &target, &target_size );
 	if ( n != TE1 ) {
 		fprintf(stderr,
-			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			TL1, n, TE1);
+			FUNC_NAME_FMT
+			": failed (test 1)\n\treturned %u instead of %u\n",
+			"expand_nums()",
+			n, TE1);
 		n_errors++;
 	}
 
@@ -205,8 +260,10 @@ void test_expand_nums ( void ) {
 	n = expand_nums( tmpstr, &target, &target_size );
 	if ( n != TE2 ) {
 		fprintf(stderr,
-			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			TL2, n, TE2);
+			FUNC_NAME_FMT
+			": failed (test 2)\n\treturned %u instead of %u\n",
+			"expand_nums()",
+			n, TE2);
 		n_errors++;
 	}
 
@@ -214,20 +271,24 @@ void test_expand_nums ( void ) {
 	n = expand_nums( TL3, &target, &target_size );
 	if ( n != TE3 ) {
 		fprintf(stderr,
-			"failure: expand_nums( \"%s\", &target, &target_size ) returned %u instead of %u\n",
-			TL3, n, TE3);
+			FUNC_NAME_FMT
+			": failed (test 3)\n\treturned %u instead of %u\n",
+			"expand_nums()",
+			n, TE3);
 		n_errors++;
 	}
 
 	if ( n_errors == 0 ) {
-		printf("expand_nums(): ok\n");
+		printf( FUNC_NAME_FMT ": passed\n", "expand_nums()" );
 	}
 
 	free(target);
 	free(tmpstr);
+
+	return n_errors;
 }
 
-void test_cut_field ( void ) {
+int test_cut_field ( void ) {
 	int n_errors = 0;
 	char result[32];
 	char *new_field;
@@ -241,35 +302,42 @@ void test_cut_field ( void ) {
 	new_field = cut_field(result, 0, ";");
 	if ( ! str_eq( new_field, TE0 ) ) {
 		fprintf(stderr,
-			"failure: cut_field( \"%s\", 0, \";\" ) returned %s instead of %s\n",
-			TL0, new_field, TE0);
+			FUNC_NAME_FMT
+			": failed (test 0)\n\treturned %s instead of %s\n",
+			"cut_field()",
+			new_field, TE0);
 		n_errors++;
 	}
 	free(new_field);
         new_field = cut_field(result, 4, ";");
         if ( ! str_eq( new_field, TE1 ) ) {
-                fprintf(stderr,
-                        "failure: cut_field( \"%s\", 4, \";\" ) returned %s instead of %s\n",
-                        TL0, new_field, TE1);
+		fprintf(stderr,
+			FUNC_NAME_FMT
+			": failed (test 1)\n\treturned %s instead of %s\n",
+			"cut_field()",
+			new_field, TE1);
                 n_errors++;
         }
 	free(new_field);
         new_field = cut_field(result, 2, ";");
         if ( ! str_eq( new_field, TE2 ) ) {
-                fprintf(stderr,
-                        "failure: cut_field( \"%s\", 2, \";\" ) returned %s instead of %s\n",
-                        TL0, new_field, TE2);
+		fprintf(stderr,
+			FUNC_NAME_FMT
+			": failed (test 2)\n\treturned %s instead of %s\n",
+			"cut_field()",
+			new_field, TE2);
                 n_errors++;
         }
 	free(new_field);
 
 	if ( n_errors == 0 ) {
-		printf("cut_field(): ok\n");
+		printf( FUNC_NAME_FMT ": passed\n", "cut_field()" );
 	}
 
+	return n_errors;
 }
 
-void test_field_str () {
+int test_field_str () {
 	int n_errors = 0;
 	int n;
 
@@ -335,89 +403,111 @@ void test_field_str () {
 	n = field_str( TV0, TL0, TD0 );
 	if ( n != TE0 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV0, TL0, TD0, n, TE0 );
+			FUNC_NAME_FMT
+			": failed (test 0)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE0 );
 		n_errors++;
 	}
 
 	n = field_str( TV1, TL1, TD1 );
 	if ( n != TE1 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV1, TL1, TD1, n, TE1 );
+			FUNC_NAME_FMT
+			": failed (test 1)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE1 );
 		n_errors++;
 	}
 
 	n = field_str( TV2, TL2, TD2 );
 	if ( n != TE2 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV2, TL2, TD2, n, TE2 );
+			FUNC_NAME_FMT
+			": failed (test 2)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE2 );
 		n_errors++;
 	}
 
 	n = field_str( TV3, TL3, TD3 );
 	if ( n != TE3 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV3, TL3, TD3, n, TE3 );
+			FUNC_NAME_FMT
+			": failed (test 3)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE3 );
 		n_errors++;
 	}
 
 	n = field_str( TV4, TL4, TD4 );
 	if ( n != TE4 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV4, TL4, TD4, n, TE4 );
+			FUNC_NAME_FMT
+			": failed (test 4)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE4 );
 		n_errors++;
 	}
 
 	n = field_str( TV5, TL5, TD5 );
 	if ( n != TE5 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV5, TL5, TD5, n, TE5 );
+			FUNC_NAME_FMT
+			": failed (test 5)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE5 );
 		n_errors++;
 	}
 
 	n = field_str( TV6, TL6, TD6 );
 	if ( n != TE6 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV6, TL6, TD6, n, TE6 );
+			FUNC_NAME_FMT
+			": failed (test 6)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE6 );
 		n_errors++;
 	}
 
 	n = field_str( TV7, TL7, TD7 );
 	if ( n != TE7 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV7, TL7, TD7, n, TE7 );
+			FUNC_NAME_FMT
+			": failed (test 7)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE7 );
 		n_errors++;
 	}
 
 	n = field_str( TV8, TL8, TD8 );
 	if ( n != TE8 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV8, TL8, TD8, n, TE8 );
+			FUNC_NAME_FMT
+			": failed (test 8)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE8 );
 		n_errors++;
 	}
 
 	n = field_str( TV9, TL9, TD9 );
 	if ( n != TE9 ) {
 		fprintf(stderr,
-			"failure: field_str( \"%s\", \"%s\", \"%s\" ) returned %d instead of %d\n",
-			TV9, TL9, TD9, n, TE9 );
+			FUNC_NAME_FMT
+			": failed (test 9)\n\treturned %d instead of %d\n",
+			"field_str()",
+			n, TE9 );
 		n_errors++;
 	}
 
 	if ( n_errors == 0 ) {
-		printf("field_str(): ok\n");
+		printf( FUNC_NAME_FMT ": passed\n", "field_str()" );
 	}
+	return n_errors;
 }
 
-void test_get_spot_tag_attributes ( void ) {
+/*
+int test_get_spot_tag_attributes ( void ) {
 	int spot_id = 673394;
 	char *db_name = "PROD";
 	char *db_uid  = getenv("DB_UID");
@@ -464,5 +554,7 @@ void test_get_spot_tag_attributes ( void ) {
 	}
 
 	ll_destroy(&tag_list);
-}
 
+	return 0;
+}
+*/

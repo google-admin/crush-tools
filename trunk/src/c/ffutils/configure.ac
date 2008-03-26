@@ -33,7 +33,7 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memset strchr strstr open64 getline])
+AC_CHECK_FUNCS([memset strchr strstr open64 getline fgetln])
 
 AC_CONFIG_FILES([
    Makefile

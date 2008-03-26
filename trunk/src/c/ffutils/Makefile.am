@@ -10,3 +10,9 @@
 
 EXTRA_DIST = reconf configure
 SUBDIRS = m4 src doc
+
+check_PROGRAMS = test/ffutils_test
+
+TESTS = $(check_PROGRAMS)
+
+test_ffutils_test_LDADD = src/libffutils.la
