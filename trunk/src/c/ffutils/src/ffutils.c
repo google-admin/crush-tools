@@ -456,3 +456,43 @@ ssize_t field_str( const char *value, const char *line, const char *delim){
 	return -1;
 }
 
+
+#if defined(HAVE_CONFIG_H) && \
+    defined(HAVE_FGETLN) && \
+  ! defined(HAVE_GETLINE)
+
+/* getline:  read a line, return length */
+ssize_t getline (       
+        char**   outbuf,
+        size_t*  outsize,
+        FILE*    fp       
+        ) 
+{
+	char   * buf;
+	size_t   len = 0;
+
+	buf = fgetln(fp, &len);
+	if (buf == NULL)
+		return (-1);
+
+	/* Don't assume realloc() accepts NULL for ptr (C99)
+	   [does not work on darwin] */
+	if (*outbuf == NULL || *outsize < len + 1) {
+		void *tmp;
+		if (*outbuf == NULL) {
+			tmp = malloc(len + 1);
+		} else {
+			tmp = realloc(*outbuf, len + 1);
+		}
+		if (tmp == NULL)
+			return (-1);
+		*outbuf = tmp;
+		*outsize = len + 1;
+	}
+	memcpy(*outbuf, buf, len);
+	(*outbuf)[len] = '\0';
+	return (len);
+}
+#endif
+
+

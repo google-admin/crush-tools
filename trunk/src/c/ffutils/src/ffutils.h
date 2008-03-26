@@ -3,6 +3,10 @@
   * @author jeremy hinds
   */
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -224,6 +228,15 @@ char * cut_field( char *ct, const int i, const char *d);
   * -1 if not found, or -2 on error.
   */
 ssize_t field_str( const char *value, const char *line, const char *delim);
+
+#if defined(HAVE_CONFIG_H) && \
+    defined(HAVE_FGETLN) && \
+  ! defined(HAVE_GETLINE)
+ssize_t getline (       
+        char**   outbuf,
+        size_t*  outsize,
+        FILE*    fp); 
+#endif
 
 #ifdef __GNUC__
 /* no __VA_ARGS__ in vc++, and the use of '##' is
