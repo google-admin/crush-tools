@@ -352,13 +352,37 @@ int get_line_pos( const char *ct, const int field_no, const char *d, int *start,
 		/* last field of line.  comparison against *start
 		   handles the case where the field is empty. */
 		*end = strlen(ct) - 1;
+		/* don't include linebreaks as field data. */
+		while ( ct[*end] == '\n' || ct[*end] == '\r' )
+			(*end)--;
 		if ( *end < *start )
 			*end = *start;
 	}
-	else
+	else if ( field_end == field ) {
+		/* empty field */
+		*end = field_end - ct;
+	}
+	else {
 		*end = field_end - ct - 1;
+	}
 
-	return 1;
+	/* if start & end indexes are the same, the field could
+	   either be empty or a single character */
+	if ( *start == *end ) {
+
+		/* if empty, start of field will either be a delimiter
+		   (if in the middle of the line) or an EOL or 
+		   null terminator (end of line) */
+		if ( ct[*start] == '\0'
+		  || ct[*start] == '\n' || ct[*start] == '\r' 
+		  || strncmp( ct + *start, d, strlen(d) ) == 0 )
+			return 0;
+
+		return 1;
+	}
+	else {
+		return *end - *start + 1;
+	}
 }
 
 

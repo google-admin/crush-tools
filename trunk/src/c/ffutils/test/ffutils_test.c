@@ -112,24 +112,68 @@ int test_get_line_field ( void ) {
 int test_get_line_pos ( void ) {
 	int n_errors = 0;
 
+	/* populated last field */
 	char *TD0 = ",";
 	char *TL0 = "hello\n";
 	int  TF0 = 0;
-	int  TE0_ret = 1;
+	int  TE0_ret = 5;
 	int  TE0_start = 0;
 	int  TE0_end = 4;
 
+	/* empty last field */
+	char *TD1 = ",";
+	char *TL1 = "hello,,\n";
+	int  TF1 = 2;
+	int  TE1_ret = 0;
+	int  TE1_start = 7;
+	int  TE1_end = 7;
+
+	/* empty middle field */
+	char *TD2 = ",";
+	char *TL2 = "hello,,\n";
+	int  TF2 = 1;
+	int  TE2_ret = 0;
+	int  TE2_start = 6;
+	int  TE2_end = 6;
+
+	/* single-char in last field */
+	char *TD3 = ",";
+	char *TL3 = "hello,i,i\n";
+	int  TF3 = 2;
+	int  TE3_ret = 1;
+	int  TE3_start = 8;
+	int  TE3_end = 8;
+
+	/* single-char in middle field */
+	char *TD4 = ",";
+	char *TL4 = "hello,i,i\n";
+	int  TF4 = 1;
+	int  TE4_ret = 1;
+	int  TE4_start = 6;
+	int  TE4_end = 6;
+
 	int n, start, end;
 
-	n = get_line_pos( TL0, TF0, TD0, &start, &end );
-	if ( n != TE0_ret || start != TE0_start || end != TE0_end ) {
-		fprintf(stderr,
-			FUNC_NAME_FMT
-			": failed (test 0)\n\treturned (%d, %d, %d) instead of (%d, %d, %d)\n",
-			"get_line_pos()",
-			n, start, end, TE0_ret, TE0_start, TE0_end );
-		n_errors++;
+#define RUN_TEST(testno) \
+	n = get_line_pos( TL##testno, TF##testno, TD##testno, &start, &end ); \
+	if ( n != TE##testno##_ret \
+	  || start != TE##testno##_start \
+	  || end != TE##testno##_end ) { \
+		fprintf(stderr, \
+			FUNC_NAME_FMT \
+			": failed (test " #testno ")\n\treturned (%d, %d, %d) instead of (%d, %d, %d)\n", \
+			"get_line_pos()", \
+			n, start, end, TE##testno##_ret, TE##testno##_start, TE##testno##_end ); \
+		n_errors++; \
 	}
+
+	RUN_TEST(0);
+	RUN_TEST(1);
+	RUN_TEST(2);
+	RUN_TEST(3);
+	RUN_TEST(4);
+
+#undef RUN_TEST
 
 	if ( n_errors == 0 ) {
 		printf( FUNC_NAME_FMT ": passed\n", "get_line_pos()");
