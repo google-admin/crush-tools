@@ -100,13 +100,15 @@ size_t fields_in_line(const char *l, const char *d);
   */
 int get_line_field(char *cs, const char *ct, const size_t n, const int i, const char *delim) ;
 
-/** @brief returns a pointer into a delimited string where a particular field begins.
+/** @brief returns a pointer into a delimited string where a particular
+  * field begins.
   * 
   * @param cs a delimited string
-  * @param fn the desired field number
+  * @param fn the desired field number (1-based)
   * @param delim the delimiting string
   * 
-  * @return a pointer into cs where the fn-th field begins
+  * @return a pointer into cs where the fn-th field begins, or NULL if
+  *  the field does not exist.
   */
 char * field_start(const char *cs, size_t fn, const char *delim) ;
 

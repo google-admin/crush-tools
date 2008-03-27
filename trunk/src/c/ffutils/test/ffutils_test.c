@@ -5,6 +5,12 @@
 #include "ffutils.h"
 #include "data_transfer.h"
 
+int XFAIL( int n ) {
+	if ( n == 0 )
+		return 1;
+	return 0;
+}
+
 /* for output padding */
 #define FUNC_NAME_FMT "%16s"
 
@@ -24,8 +30,9 @@ int test_field_str(void);
 
 int main ( int argc, char *argv[] ) {
 	int errs = 0;
+	printf("\n-------------\n");
 	errs += test_fields_in_line();
-	errs += test_get_line_field();
+	errs += XFAIL(test_get_line_field());
 	errs += test_get_line_pos();
 	errs += test_field_start();
 	errs += test_mdyhms_datecmp();
@@ -36,6 +43,7 @@ int main ( int argc, char *argv[] ) {
 	errs += test_cut_field();
 	errs += test_field_str();
 	/* errs += test_get_spot_tag_attributes(); */
+	printf("-------------\n");
 	if ( errs )
 		return EXIT_FAILURE;
 	return EXIT_SUCCESS;
@@ -105,7 +113,48 @@ int test_fields_in_line () {
 
 int test_get_line_field ( void ) {
 	int n_errors = 0;
-	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "get_line_field()");
+
+	char buffer[6];
+	size_t bufsz = 6;
+	int n;
+
+	char *TL = "this,is,a,test\n";
+	char *TD = ",";
+
+	int   TF0 = 0;
+	char *TE0_buffer = "this";
+	int   TE0_ret = 4;
+
+	int   TF1 = 1;
+	char *TE1_buffer = "is";
+	int   TE1_ret = 2;
+
+	int   TF2 = 3;
+	char *TE2_buffer = "test";
+	int   TE2_ret = 4;
+
+	int   TF3 = 4;
+	char *TE3_buffer = "";
+	int   TE3_ret = -1;
+
+#define RUN_TEST(testno) \
+	n = get_line_field( buffer, TL, bufsz, TF##testno, TD ); \
+	if ( n != TE##testno##_ret \
+	  || strcmp(buffer, TE##testno##_buffer) != 0 ) { \
+		fprintf(stderr, \
+			FUNC_NAME_FMT \
+			": failed (test " #testno ")\n\treturned (%d, \"%s\") instead of (%d, \"%s\")\n", \
+			"get_line_field()", \
+			n, buffer, TE##testno##_ret, TE##testno##_buffer ); \
+		n_errors++; \
+	}
+
+	RUN_TEST(0)
+	RUN_TEST(1)
+	RUN_TEST(2)
+	RUN_TEST(3)
+
+#undef RUN_TEST
 	return n_errors;
 }
 
@@ -184,19 +233,121 @@ int test_get_line_pos ( void ) {
 
 int test_field_start ( void ) {
 	int n_errors = 0;
-	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "field_start()");
+
+	char *TL = "this,is,a,test\n";
+	char *TD = ",";
+	char *ret;
+
+	int   TF0 = 1;
+	char *TE0 = TL;
+
+	int   TF1 = 2;
+	char *TE1 = TL + 5;
+
+	int   TF2 = 4;
+	char *TE2 = TL + 10;
+
+	int   TF3 = 5;
+	char *TE3 = NULL;
+
+#define RUN_TEST(testno) \
+	ret = field_start( TL, TF##testno, TD ); \
+	if ( ret != TE##testno ) { \
+		fprintf(stderr, \
+			FUNC_NAME_FMT \
+			": failed (test " #testno ")\n\treturned %s instead of %s\n", \
+			"field_start()", \
+			ret, TE##testno ); \
+		n_errors++; \
+	}
+
+	RUN_TEST(0)
+	RUN_TEST(1)
+	RUN_TEST(2)
+	RUN_TEST(3)
+
+#undef RUN_TEST
+
+	if ( n_errors == 0 ) {
+		printf( FUNC_NAME_FMT ": passed\n", "field_start()");
+	}
+
 	return n_errors;
 }
 
 int test_mdyhms_datecmp ( void ) {
 	int n_errors = 0;
-	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "mdyhms_datecmp()");
+	int ret;
+
+	char *TD0_a = "09-06-2008 11:59:59"; /* input date a */
+	char *TD0_b = "10-04-2008 11:59:59"; /* input date b */ 
+	int   TE0   = -1;                    /* expected return */
+
+	char *TD1_a = "09-06-2008 11:59:59";
+	char *TD1_b = "09-06-2008 11:59:59";
+	int   TE1   = 0;
+
+	char *TD2_a = "10-04-2008 11:59:59";
+	char *TD2_b = "09-06-2008 11:59:59";
+	int   TE2   = 1;
+
+#define RUN_TEST(testno) \
+	ret = mdyhms_datecmp( TD##testno##_a, TD##testno##_b ); \
+	if ( ret != TE##testno ) { \
+		fprintf(stderr, \
+			FUNC_NAME_FMT \
+			": failed (test " #testno ")\n\treturned %d instead of %d\n", \
+			"mdyhms_datecmp()", \
+			ret, TE##testno ); \
+		n_errors++; \
+	}
+
+	RUN_TEST(0)
+	RUN_TEST(1)
+	RUN_TEST(2)
+
+#undef RUN_TEST
+
+	if ( n_errors == 0 ) {
+		printf( FUNC_NAME_FMT ": passed\n", "mdyhms_datecmp()");
+	}
+
 	return n_errors;
 }
 
 int test_chomp ( void ) {
 	int n_errors = 0;
-	printf( FUNC_NAME_FMT ": skip (not implemented)\n", "chomp()");
+
+	char T0_pre[] = "hello world\n";
+	char T0_post[] = "hello world";
+
+	char T1_pre[] = "hello world\r\n";
+	char T1_post[] = "hello world";
+
+	char T2_pre[] = "hello world";
+	char T2_post[] = "hello world";
+
+#define RUN_TEST(testno) \
+	chomp( T##testno##_pre ); \
+	if ( strcmp( T##testno##_pre, T##testno##_post ) != 0 ) { \
+		fprintf(stderr, \
+			FUNC_NAME_FMT \
+			": failed (test " #testno ")\n\treturned \"%s\" instead of \"%s\"\n", \
+			"chomp()", \
+			T##testno##_pre, T##testno##_post ); \
+		n_errors++; \
+	}
+
+	RUN_TEST(0)
+	RUN_TEST(1)
+	RUN_TEST(2)
+
+#undef RUN_TEST
+
+	if ( n_errors == 0 ) {
+		printf( FUNC_NAME_FMT ": passed\n", "chomp()");
+	}
+
 	return n_errors;
 }
 
