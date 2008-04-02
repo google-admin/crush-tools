@@ -32,7 +32,7 @@ int main ( int argc, char *argv[] ) {
 	int errs = 0;
 	printf("\n-------------\n");
 	errs += test_fields_in_line();
-	errs += XFAIL(test_get_line_field());
+	errs += test_get_line_field();
 	errs += test_get_line_pos();
 	errs += test_field_start();
 	errs += test_mdyhms_datecmp();
@@ -118,7 +118,8 @@ int test_get_line_field ( void ) {
 	size_t bufsz = 6;
 	int n;
 
-	char *TL = "this,is,a,test\n";
+	char *TL0 = "this,is,a,test\n";
+	char *TL1 = "this,is,a,test";
 	char *TD = ",";
 
 	int   TF0 = 0;
@@ -137,8 +138,8 @@ int test_get_line_field ( void ) {
 	char *TE3_buffer = "";
 	int   TE3_ret = -1;
 
-#define RUN_TEST(testno) \
-	n = get_line_field( buffer, TL, bufsz, TF##testno, TD ); \
+#define RUN_TEST(testno, lnvar) \
+	n = get_line_field( buffer, (lnvar), bufsz, TF##testno, TD ); \
 	if ( n != TE##testno##_ret \
 	  || strcmp(buffer, TE##testno##_buffer) != 0 ) { \
 		fprintf(stderr, \
@@ -149,12 +150,15 @@ int test_get_line_field ( void ) {
 		n_errors++; \
 	}
 
-	RUN_TEST(0)
-	RUN_TEST(1)
-	RUN_TEST(2)
-	RUN_TEST(3)
+	RUN_TEST(0, TL0)
+	RUN_TEST(0, TL1)
+	RUN_TEST(1, TL0)
+	RUN_TEST(2, TL0)
+	RUN_TEST(3, TL0)
 
 #undef RUN_TEST
+
+
 	return n_errors;
 }
 

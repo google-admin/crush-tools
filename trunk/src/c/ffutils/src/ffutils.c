@@ -90,8 +90,6 @@ size_t fields_in_line(const char *l, const char *d){
 int get_line_field(char *cs, const char *ct, const size_t n, const int i, const char *delim) {
 	int cti, cn;
 	char *fstart, *fend;
-	
-	size_t dlen;
 
 	if ( ! (delim && delim[0]) ) {
 		strncpy( cs, ct, n );
@@ -99,20 +97,23 @@ int get_line_field(char *cs, const char *ct, const size_t n, const int i, const 
 		return (strlen(cs));
 	}
 
-	dlen = strlen(delim);
-	fstart = (char *) ct;
-	for(cti=0; cti<i; cti++){
-		fstart = strstr(fstart, delim);
-		if( fstart == NULL ){
-			cs[0] = 0x00;
-			return -1;
-		}
-		fstart += dlen;
+	fstart = field_start( ct, i + 1, delim );
+	if ( fstart == NULL ) {
+		cs[0] = 0x00;
+		return -1;
 	}
 
 	fend = strstr(fstart, delim);
-	if( fend == NULL )
-		fend = (char *)ct + strlen(ct);
+	if( fend == NULL ) {
+		/* cast away const-ness of ct */
+		fend = (char *)ct + strlen(ct) - 1;
+		while ( *fend == '\n' || *fend == '\r' )
+			fend--;
+		fend++;
+	}
+
+	/* fend is now pointing at the first char after the field */
+
 	cn = (fend - fstart > n-1 ? n-1 : fend - fstart);
 	strncpy( cs, fstart, cn );
 	cs[cn] = 0x00;
