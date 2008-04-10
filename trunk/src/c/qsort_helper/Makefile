@@ -1,4 +1,9 @@
+ifeq (,$(PREFIX))
 PATH_PREFIX = ~
+else
+PATH_PREFIX = $(PREFIX)
+endif
+
 HTML_DOC_PATH = $(PATH_PREFIX)/public_html/lib/c/qsort_helper/
 VERSION = 1.0
 
@@ -29,11 +34,11 @@ test : $(SHARED_LIB) qsort_helper_test.c
 	rm ./qsort_helper_test libqsort_helper.so )
 
 install : $(SHARED_LIB) libqsort_helper.a qsort_helper.h
-	cp libqsort_helper.a $(LIBDIR)
-	cp $(SHARED_LIB) $(LIBDIR)
+	install -D -c libqsort_helper.a $(LIBDIR)/libqsort_helper.a
+	install -D -c $(SHARED_LIB) $(LIBDIR)/$(SHARED_LIB)
 	if [ -e $(LIBDIR)/libqsort_helper.so ]; then rm $(LIBDIR)/libqsort_helper.so; fi
 	ln -s $(SHARED_LIB) $(LIBDIR)/libqsort_helper.so
-	cp qsort_helper.h $(INCDIR)
+	install -D -c qsort_helper.h $(INCDIR)/qsort_helper.h
 
 qsort_helper.o : qsort_helper.c qsort_helper.h
 	$(CC) $(CFLAGS) -c -o qsort_helper.o qsort_helper.c
