@@ -32,7 +32,7 @@ LINKFLAGS := -lffutils
 
 BINDIR	:= $(PATH_PREFIX)/bin
 
-.PHONY : debug deps clean dist
+.PHONY : debug deps clean dist install
 
 default : $(EXECUTABLE)
 
