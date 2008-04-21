@@ -1,3 +1,10 @@
+
+ifeq (,$(PREFIX))
+PATH_PREFIX = ~
+else
+PATH_PREFIX = $(PREFIX)
+endif
+
 EXECUTABLE := convdate
 DESCRIPTION := looks for patterns within a specific field of a flat-file
 VERSION = 0.2
@@ -23,6 +30,8 @@ OBJECTS := $(patsubst %.c,%.o,$(CFILES))
 DEPS := $(patsubst %.o,%.d,$(OBJECTS))
 LINKFLAGS := -lffutils
 
+BINDIR	:= $(PATH_PREFIX)/bin
+
 .PHONY : debug deps clean dist
 
 default : $(EXECUTABLE)
@@ -39,6 +48,10 @@ clean ::
 
 dist : $(DISTFILE)
 
+install : $(EXECUTABLE)
+	install -D -c $(EXECUTABLE) $(BINDIR)/$(EXECUTABLE)
+
+
 $(DISTFILE) : $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES)
 	@ls $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES) | sed s:^:$(EXECUTABLE)-$(VERSION)/: >MANIFEST
 	@(cd ..; ln -s $(WORKDIR) $(EXECUTABLE)-$(VERSION))
@@ -51,6 +64,6 @@ $(GEN_FILES) : $(ARGSTAB)
 	$(MAINGENERATOR) -a $(ARGSTAB)
 
 $(EXECUTABLE) : $(GEN_OBJECTS) $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(GEN_OBJECTS) $(OBJECTS) $(LINKFLAGS)
+	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(GEN_OBJECTS) $(OBJECTS) $(LINKFLAGS) $(LDFLAGS)
 
 
