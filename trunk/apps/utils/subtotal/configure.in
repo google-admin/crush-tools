@@ -1,0 +1,23 @@
+AC_INIT(subtotal.c)
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(subtotal, 1.0)
+AC_PROG_CC
+AC_PROG_INSTALL
+
+AC_CHECK_PROG(CGENER, [cgener], [cgener], [not found], [$PATH])
+
+if test "$CGENER" = "not found"; then
+	AC_MSG_ERROR([the cgener application is required to build this application], 1)
+fi
+
+AC_CHECK_HEADERS([hashtbl.h ffutils.h linklist.h locale.h sys/types.h sys/stat.h fcntl.h zlib.h])
+
+AC_CHECK_LIB(jdatastructs, ll_list_init, [], AC_MSG_ERROR([libjdatastructs is required to build this application], 1))
+AC_CHECK_LIB(ffutils, nextfile, [], AC_MSG_ERROR([libffutils is required to build this application], 1))
+dnl AC_CHECK_LIB(qsort_helper, qsort_strcmp, [], AC_MSG_ERROR([libqsort_helper is required to build this application], 1))
+AC_CHECK_LIB(splitter, splitnums, [], AC_MSG_ERROR([libspliter is required to build this application], 1))
+dnl AC_CHECK_LIB(z, gzread, [], AC_MSG_ERROR([libz is required to build this application], 1))
+
+AC_CHECK_FUNCS(open64)
+
+AC_OUTPUT(Makefile)
