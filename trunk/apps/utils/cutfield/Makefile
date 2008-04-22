@@ -1,11 +1,20 @@
+# -*- makefile -*-
+
+ifeq (,$(PREFIX))
+PATH_PREFIX = ~
+else
+PATH_PREFIX = $(PREFIX)
+endif
+
 EXECUTABLE := cutfield
 DESCRIPTION := removes specified fields from a string-delimited data stream
 VERSION = 0.1
-
-DISTFILE = $(EXECUTABLE)-$(VERSION).tgz
 # resources like README, COPYING, etc., which should be included in
 # the distribution file
 RESOURCES := 
+
+
+DISTFILE = $(EXECUTABLE)-$(VERSION).tgz
 
 WORKDIR := $(shell pwd)
 CC := $(shell which gcc)
@@ -23,7 +32,9 @@ CHEADERS :=$(wildcard *.h)
 OBJECTS := $(patsubst %.c,%.o,$(CFILES))
 DEPS := $(patsubst %.o,%.d,$(OBJECTS))
 
-.PHONY : debug deps clean dist
+BINDIR	:= $(PATH_PREFIX)/bin
+
+.PHONY : debug deps clean dist install
 
 default : $(EXECUTABLE)
 
@@ -39,6 +50,10 @@ clean ::
 
 dist : $(DISTFILE)
 
+install : $(EXECUTABLE)
+	install -D -c $(EXECUTABLE) $(BINDIR)/$(EXECUTABLE)
+
+
 $(DISTFILE) : $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES)
 	@ls $(CFILES) $(GEN_FILES) $(CHEADERS) $(RESOURCES) | sed s:^:$(EXECUTABLE)-$(VERSION)/: >MANIFEST
 	@(cd ..; ln -s $(WORKDIR) $(EXECUTABLE)-$(VERSION))
@@ -51,6 +66,6 @@ $(GEN_FILES) : $(ARGSTAB)
 	$(MAINGENERATOR) -a $(ARGSTAB)
 
 $(EXECUTABLE) : $(GEN_OBJECTS) $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(GEN_OBJECTS) $(OBJECTS) $(LINKFLAGS)
+	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(GEN_OBJECTS) $(OBJECTS) $(LINKFLAGS) $(LDFLAGS)
 
 
