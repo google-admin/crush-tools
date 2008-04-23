@@ -9,7 +9,7 @@ AC_CHECK_PROG(CGENER, [cgener], [cgener], [not found], [$PATH])
 if test "$CGENER" = "not found"; then
 	AC_MSG_ERROR([the cgener application is required to build this application], 1)
 fi
-
+ 
 AC_CHECK_HEADERS([hashtbl.h ffutils.h linklist.h locale.h])
 
 AC_CHECK_LIB(jdatastructs, ll_list_init, [], AC_MSG_ERROR([libjdatastructs is required to build this application], 1))
