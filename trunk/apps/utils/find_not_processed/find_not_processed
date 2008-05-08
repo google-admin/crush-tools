@@ -28,7 +28,7 @@ if ( ! $logfile ) {
 	die "$0: -l must be specified.\n";
 }
 elsif ( ! -f $logfile ) {
-	system("touch", "$logfile") or die "$0: error creating file $logfile\n";
+	system("touch", "$logfile") == 0 or die "$0: error creating file $logfile\n";
 }
 
 my @files_to_run;
