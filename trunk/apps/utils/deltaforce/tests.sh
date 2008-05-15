@@ -5,9 +5,9 @@ wdir=`dirname $0`
 datadir=$wdir/tests
 test_delim='\t'
 
-tests=(00 01 02)
-test_opts=( "" "" "-k 2" )
-test_names=( "defaults" "defaults" "key field" )
+tests=(00 01 02 03)
+test_opts=( "" "" "-k 2" "")
+test_names=( "defaults" "defaults" "key field" "longer full set")
 
 subtests=("files for both" "stdin on left" "stdin on right")
 files=(

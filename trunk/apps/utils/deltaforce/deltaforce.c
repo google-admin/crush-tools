@@ -169,6 +169,7 @@ int merge_files( FILE *left, FILE *right, FILE *out, struct cmdargs *args ) {
 			if ( feof( right ) ) {
 				/* no more delta data to merge in: just dump
 				   the rest of the full data set. */
+				Fputs( buffer_left, out );
 				while ( getline(&buffer_left, &buffer_left_size, left) > 0 )
 					Fputs( buffer_left, out );
 				continue;
