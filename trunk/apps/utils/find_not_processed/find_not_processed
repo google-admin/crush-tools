@@ -20,8 +20,10 @@ if ( $help ) {
 	exit(1);
 }
 
-if ( ! $dir || ! -d $dir ) {
+if ( ! $dir ) {
 	die "$0: -d must be specified.\n";
+} elsif ( ! -d $dir ) {
+	die "$0: invalid directory \"$dir\".\n";
 }
 
 if ( ! $logfile ) {
