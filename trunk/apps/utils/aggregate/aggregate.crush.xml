@@ -35,6 +35,12 @@
 			<description>fields of numeric values to be summed</description>
 		</option>
 		<option has_argument="1" required="0">
+			<name>averages</name>
+			<short>a</short>
+			<long>average-fields</long>
+			<description>fields of numeric values to be averaged</description>
+		</option>
+		<option has_argument="1" required="0">
 			<name>counts</name>
 			<short>c</short>
 			<long>count-fields</long>

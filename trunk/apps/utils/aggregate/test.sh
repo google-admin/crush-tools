@@ -5,8 +5,8 @@ wdir=`dirname $0`
 datadir=$wdir/test
 infile=$datadir/test.in
 
-tests=("-p -k 1 -s 3" "-p -k 1,2 -s 3,4")
-test_names=("one key, one sum (header preserved)" "multi-key, multi-sum (header preserved)")
+tests=("-p -k 1 -s 3" "-p -k 1,2 -s 3,4" "-p -k -a 3,4")
+test_names=("one key, one sum (header preserved)" "multi-key, multi-sum (header preserved)" "one key, multi-average (header preserved)")
 errors=0
 
 echo "" # just put an empty line for readability

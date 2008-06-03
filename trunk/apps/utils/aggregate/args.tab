@@ -58,6 +58,14 @@ END_COPYRIGHT
 	  description => 'fields of numeric values to be summed'
 	},
 	{
+	  name => 'averages',
+	  shortopt => 'a',
+	  longopt => 'average-fields',
+	  type => 'var',
+	  required => 0,
+	  description => 'fields of numeric values to be averaged'
+	},
+	{
 	  name => 'counts',
 	  shortopt => 'c',
 	  longopt => 'count-fields',

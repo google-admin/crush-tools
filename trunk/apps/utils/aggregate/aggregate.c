@@ -8,7 +8,9 @@
 
 int ncounts;		/* the number of count fields */
 int nsums;		/* the number of sum fields */
+int naverages;		/* the number of average fields */
 int *sum_precisions;	/* array of precisions for the sum fields */
+int *average_precisions;	/* array of precisions for the average fields */
 char *delim;
 
 
@@ -32,6 +34,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	int *key_fields;	/* array of key field indexes */
 	int *count_fields;	/* array of count field indexes */
 	int *sum_fields;	/* array of sum field indexes */
+	int *average_fields;	/* array of average field indexes */
 	size_t arsz = 0;	/* size of array allocated by expand_nums() */
 
 	size_t n_hash_elems;
@@ -54,8 +57,8 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	else
 		delim = default_delim;
 
-	nkeys = ncounts = nsums = 0;
-	key_fields = count_fields = sum_fields = NULL;
+	nkeys = ncounts = nsums = naverages = 0;
+	key_fields = count_fields = sum_fields = average_fields = NULL;
 
 	arsz = 0;
 	nkeys = expand_nums( args->keys, &key_fields, &arsz );
@@ -78,6 +81,14 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		decrement_values( count_fields, ncounts );
 	}
 
+	if ( args->averages ) {
+		arsz = 0;
+		naverages = expand_nums( args->averages, &average_fields, &arsz );
+		decrement_values( average_fields, naverages );
+		average_precisions = malloc(sizeof(int) * naverages);
+		memset(average_precisions, 0, sizeof(int) * naverages); 
+	}
+
 #ifdef DEBUG
 	printf("%d keys: ", nkeys);
 	for ( i = 0; i < nkeys; i++ )
@@ -85,6 +96,9 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	printf("\n%d sums: ", nsums);
 	for ( i = 0; i < nsums; i++ )
 		printf("%d ", sum_fields[i]);
+	printf("\n%d averages: ", naverages);
+	for ( i = 0; i < naverages; i++ )
+		printf("%d ", average_fields[i]);
 	printf("\n%d counts: ", ncounts);
 	for ( i = 0; i < ncounts; i++ )
 		printf("%d ", count_fields[i]);
@@ -151,6 +165,18 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 						  delim ) ;
 		}
 
+		/* I assume that averages have to be appended to the end of the fieldlist
+		   to maintain backwards compatibility with all existing scripts
+		*/
+		if ( naverages ) {
+			strcat(outbuf, delim);
+			str_len = strlen(outbuf);
+			extract_fields_to_string (inbuf, outbuf + str_len,
+						  outbuf_sz - str_len,
+						  average_fields, naverages, delim ) ;
+		}
+
+
 		puts(outbuf);
 
 	}
@@ -185,7 +211,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			value = (struct aggregation *) ht_get(&aggregations, outbuf);
 			if ( ! value ) {
 				in_hash = 0;
-				value = alloc_agg( nsums , ncounts );
+				value = alloc_agg( nsums , ncounts, naverages );
 				/* value = malloc(sizeof(struct aggregation));
 				   memset(value, 0, sizeof(struct aggregation)); */
 				if ( ! value ) {
@@ -196,6 +222,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 				in_hash = 1;
 			}
 
+                        /* sums */
 			for ( i = 0; i < nsums; i++ ) {
 				tmplen = get_line_field( tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, sum_fields[i], delim );
 				if ( tmplen > 0 ) {
@@ -206,6 +233,19 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 				}
 			}
 
+                        /* averages */
+			for ( i = 0; i < naverages; i++ ) {
+				tmplen = get_line_field( tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, average_fields[i], delim );
+				if ( tmplen > 0 ) {
+					n = float_str_precision(tmpbuf);
+					if ( average_precisions[i] < n )
+						average_precisions[i] = n;
+					value->average_sums[i] += atof(tmpbuf);
+                                        value->average_counts[i] += 1;
+				}
+			}
+
+                        /* counts */
 			for ( i = 0; i < ncounts; i++ ) {
 				tmplen = get_line_field( tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, count_fields[i], delim );
 				if ( tmplen > 0 ) {
@@ -231,7 +271,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		for ( i = 0; i < aggregations.arrsz; i++ ) {
 			hash_keys = aggregations.arr[i];
 			if ( hash_keys != NULL ) {
-				ll_call_for_each ( hash_keys, ht_print_keys_sums_counts );
+				ll_call_for_each ( hash_keys, ht_print_keys_sums_counts_avgs );
 			}
 		}
 	} else {
@@ -260,7 +300,7 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 		/* print everything out */
 		for ( i = 0; i < n_hash_elems; i++ ) {
 			val = (struct aggregation *) ht_get(&aggregations, key_array[i]);
-			print_keys_sums_counts ( key_array[i], val );
+			print_keys_sums_counts_avgs ( key_array[i], val );
 		}
 
 		free(key_array);
@@ -325,7 +365,7 @@ int float_str_precision ( char *d ) {
 	return ( strlen(d) - after_dot );
 }
 
-int print_keys_sums_counts ( char * key, struct aggregation * val ) {
+int print_keys_sums_counts_avgs ( char * key, struct aggregation * val ) {
 	int i;
 	fputs(key, stdout);
 	for ( i = 0; i < nsums; i++ ) {
@@ -334,16 +374,19 @@ int print_keys_sums_counts ( char * key, struct aggregation * val ) {
 	for ( i = 0; i < ncounts; i++ ) {
 		printf ( "%s%d", delim, val->counts[i] );
 	}
+	for ( i = 0; i < naverages; i++ ) {
+		printf ( "%s%.2f", delim, val->average_sums[i]/val->average_counts[i] );
+	}
 	fputs("\n", stdout);
 	return 0;
 }
 
-int ht_print_keys_sums_counts ( void * htelem ) {
+int ht_print_keys_sums_counts_avgs ( void * htelem ) {
 	char *key;
 	struct aggregation *val;
 	key = ((ht_elem_t *) htelem)->key;
 	val = ((ht_elem_t *) htelem)->data;
-	return print_keys_sums_counts ( key, val );
+	return print_keys_sums_counts_avgs ( key, val );
 }
 
 void extract_fields_to_string (char *line, char *destbuf, size_t destbuf_sz, int *fields, size_t nfields, char *delim ) {
@@ -373,7 +416,7 @@ void decrement_values ( int *array, size_t sz ) {
 	}
 }
 
-struct aggregation * alloc_agg ( int nsum, int ncount ) {
+struct aggregation * alloc_agg ( int nsum, int ncount, int naverage ) {
 	struct aggregation *agg;
 
 	agg = malloc(sizeof(struct aggregation));
@@ -382,6 +425,8 @@ struct aggregation * alloc_agg ( int nsum, int ncount ) {
 
 	agg->counts = NULL;
 	agg->sums = NULL;
+	agg->average_sums = NULL;
+	agg->average_counts = NULL;
 
 	if ( nsum > 0 ) {
 		agg->sums = malloc( sizeof(double) * nsum );
@@ -397,6 +442,18 @@ struct aggregation * alloc_agg ( int nsum, int ncount ) {
 		memset(agg->counts, 0, sizeof(u_int32_t) * ncount);
 	}
 
+	if ( naverage > 0 ) {
+		agg->average_sums = malloc( sizeof(double) * naverage );
+		if ( ! agg->average_sums )
+			goto alloc_agg_error;
+		memset(agg->average_sums, 0, sizeof(double) * naverage);
+
+		agg->average_counts = malloc( sizeof(u_int32_t) * naverage );
+		if ( ! agg->average_counts )
+			goto alloc_agg_error;
+		memset(agg->average_counts, 0, sizeof(u_int32_t) * naverage);
+	}
+
 	return agg;
 
 alloc_agg_error:
@@ -405,6 +462,10 @@ alloc_agg_error:
 			free(agg->sums);
 		if ( agg->counts )
 			free(agg->counts);
+		if ( agg->average_sums )
+			free(agg->average_sums);
+		if ( agg->average_counts )
+			free(agg->average_counts);
 		free(agg);
 	}
 	return NULL;
@@ -417,6 +478,10 @@ void free_agg( struct aggregation *agg ) {
 		free(agg->counts);
 	if ( agg->sums )
 		free(agg->sums);
+	if ( agg->average_sums )
+		free(agg->average_sums);
+	if ( agg->average_counts )
+		free(agg->average_counts);
 	free(agg);
 }
 
