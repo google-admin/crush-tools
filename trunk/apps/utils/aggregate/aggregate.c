@@ -375,7 +375,7 @@ int print_keys_sums_counts_avgs ( char * key, struct aggregation * val ) {
 		printf ( "%s%d", delim, val->counts[i] );
 	}
 	for ( i = 0; i < naverages; i++ ) {
-		printf ( "%s%.2f", delim, val->average_sums[i]/val->average_counts[i] );
+		printf ( "%s%.*f", delim, average_precisions[i]+2, val->average_sums[i]/val->average_counts[i] );
 	}
 	fputs("\n", stdout);
 	return 0;
