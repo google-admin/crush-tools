@@ -165,9 +165,6 @@ int aggregate ( struct cmdargs *args, int argc, char *argv[], int optind ){
 						  delim ) ;
 		}
 
-		/* I assume that averages have to be appended to the end of the fieldlist
-		   to maintain backwards compatibility with all existing scripts
-		*/
 		if ( naverages ) {
 			strcat(outbuf, delim);
 			str_len = strlen(outbuf);
