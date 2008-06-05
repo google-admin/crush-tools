@@ -31,7 +31,7 @@ int ht2_init(	hashtbl2_t *tbl,
 	tbl->free = memfree;	/* NULL ok here */
 
 	/* set a default hash function if none specified */
-	if ( hash )	
+	if ( hash )
 		tbl->hash = hash;
 	else
 		tbl->hash = ht2_BKDRHash;
@@ -78,13 +78,13 @@ int ht2_put( hashtbl2_t *tbl, void *key, void *data ) {
 		free(elem);
 		return -1;
 	}
-	memcpy(&(elem->key), &(key), tbl->keysz);
+	memcpy(elem->key, key, tbl->keysz);
 	elem->data = data;
 
 	/** @todo get rid of the modulo for better performance (if it matters) */
 	h = tbl->hash(elem->key, tbl->keysz) % tbl->arrsz;
 
-	
+
 	if ( ! tbl->arr[h] ) {
 		tbl->arr[h] = malloc(sizeof(llist_t));
 		ll_list_init( tbl->arr[h], free, NULL );
