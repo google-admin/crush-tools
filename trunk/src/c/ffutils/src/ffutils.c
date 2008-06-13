@@ -126,14 +126,12 @@ char * field_start(const char *cs, size_t fn, const char *delim) {
 	size_t dl;	/* delimiter length */
 	int i;
 
-	if ( fn > fields_in_line(cs, delim) )
-		return NULL;
-
 	dl = strlen(delim);
 	p = (char *) cs;
 
 	for ( i = 1; i < fn; i++ ) {
 		p = strstr(p, delim);
+		if ( ! p ) return NULL;
 		p += dl;
 	}
 	return p;
