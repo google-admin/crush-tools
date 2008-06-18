@@ -1,3 +1,26 @@
+/*
+ **************************************************************************
+ *                                                                        *
+ *          General Purpose Hash Function Algorithms Library              *
+ *                                                                        *
+ * Author: Arash Partow - 2002                                            *
+ * URL: http://www.partow.net                                             *
+ * URL: http://www.partow.net/programming/hashfunctions/index.html        *
+ *                                                                        *
+ * Copyright notice:                                                      *
+ * Free use of the General Purpose Hash Function Algorithms Library is    *
+ * permitted under the guidelines and in accordance with the most current *
+ * version of the Common Public License.                                  *
+ * http://www.opensource.org/licenses/cpl.php                             *
+ *                                                                        *
+ **************************************************************************
+*/
+
+/* modified by jeremy hinds <jhinds@doubleclick.net> 2006-12-20
+   to use void* input instead of char*, renamed functions to avoid
+   namespace collisions.
+ */
+
 #include "ht2_GeneralHashFunctions.h"
 
 size_t ht2_RSHash(void* key, size_t len)
