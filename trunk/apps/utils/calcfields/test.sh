@@ -5,8 +5,8 @@ wdir=`dirname $0`
 tests=(00 01 02)
 
 test_opts=(	"-d ';' -e '[3] / [2]' -b '0.0'" 
-		"-p -d ';' -e '[Clicks] / [Impressions]' -b '0.0'"
-		"-p -e 'sprintf \"%.3f\", [Clicks]/[Impressions] * 100' -b 'N/A'"
+		"-p -d ';' -e '[Metric-0] / [Metric-1]' -b '0.0'"
+		"-p -e 'sprintf \"%.3f\", [Metric-0] / [Metric-1] * 100' -b 'N/A'"
 	  )
 
 test_inputs=(	"$wdir/test/test.txt"

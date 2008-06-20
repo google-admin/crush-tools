@@ -19,8 +19,8 @@ my %tests = (
 			'-s', '.actual',
 			'-x', '\'s/^(\d+)-(\d+)-\d+/$1-$2/\'',
 			'-d', "\"\t\"",
-			'-p', "$wdir/test/001",
-			"$wdir/test/001-transform-key.txt"
+			'-p', "\"$wdir/test/001\"",
+			"\"$wdir/test/001-transform-key.txt\""
 			],
 		   expected_return => 0,
 		 },
@@ -33,29 +33,29 @@ my %tests = (
 		   params => [
 			 '-f', '1',
 			 '-d', "\"\t\"",
-			 '-p', "$wdir/test/003",
+			 '-p', "\"$wdir/test/003\"",
 			 '-s', '.actual',
-			 "$wdir/test/001-transform-key.txt"
+			 "\"$wdir/test/001-transform-key.txt\""
 			 ],
 		   expected_return => 0,
 	},
 	'004' => { description => "preserve header, use default delimiter",
 		   params => [
-			 '-f', '6',
-			 '-p', "$wdir/test/004",
+			 '-f', '3',
+			 '-p', "\"$wdir/test/004\"",
 			 '-s', '.actual',
 			 '-k',
-			 "$wdir/test/002-data.txt"
+			 "\"$wdir/test/002-data.txt\""
 			 ],
 		   expected_return => 0,
 	},
 	'005' => { description => "properly split on last field in line (with blank values)",
 		   params => [
-			 '-f', '11',
-			 '-p', "$wdir/test/005",
+			 '-f', '4',
+			 '-p', "\"$wdir/test/005\"",
 			 '-s', '.actual',
 			 '-k',
-			 "$wdir/test/002-data.txt"
+			 "\"$wdir/test/002-data.txt\""
 			 ],
 		   expected_return => 0,
 	},

@@ -8,7 +8,7 @@ $(BUILT_SOURCES) : args.tab
 bin_PROGRAMS = foreach_parallel
 foreach_parallel_SOURCES = foreach_parallel.c foreach_parallel.h $(BUILT_SOURCES)
 
-TESTS = tests.sh
+# TESTS = tests.sh
 CLEANFILES = $(BUILT_SOURCES)
 
 
