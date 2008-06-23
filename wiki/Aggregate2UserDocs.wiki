@@ -1,0 +1,18 @@
+#summary aggregate2 - aggregates data which has been pre-sorted by key(s)
+
+= Usage =
+`aggregate2 <options> [file ...]`
+
+= Options =
+||*Short Opt*||*Long Opt*||Arugment||Description||
+||-h||--help|| ||print this message and exit||
+||-V||--version|| ||print version info and exit||
+||-v||--verbose|| ||print verbose messages during execution||
+||-d||--delim||<delim> ||field separator string||
+||-p||--preserve-header|| ||do not treat first line as data||
+||-k||--keys||<keys> ||list of aggregation keys||
+||-s||--sums||<sums> ||list of fields to sum||
+||-c||--counts||<counts> ||list of aggregation count||
+||-o||--outfile||<outfile> ||file to which output should be written (default: stdout)||
+----
+back to UserDocs

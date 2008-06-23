@@ -1,0 +1,17 @@
+#summary indexof - prints the column number matching a given header, or 0 if not found.
+
+= Usage =
+`indexof <options> `
+
+= Options =
+||*Short Opt*||*Long Opt*||Arugment||Description||
+||-h||--help|| ||print this message and exit||
+||-V||--version|| ||print version info and exit||
+||-v||--verbose|| ||print verbose messages during execution||
+||-d||--delim||<delim> ||field separator string||
+||-l||--label||<label> ||the header label to look for (required)||
+||-f||--file||<file> ||specifies file to read (default = stdin)||
+||-s||--string||<string> ||use <string> instead of a header from a file||
+||-r||--row||<row> ||header line number in file (default = 1)||
+----
+back to UserDocs

@@ -1,5 +1,18 @@
 #summary CRUSH User Documentation
 
-= Introduction =
+= Applications =
 
-This will be a list of links to per-application documentation pages.
+  * AggregateUserDocs
+  * Aggregate2UserDocs
+  * ConvdateUserDocs
+  * CutfieldUserDocs
+  * DeltaforceUserDocs
+  * Foreach_parallelUserDocs
+  * FuniqUserDocs
+  * GrepfieldUserDocs
+  * IndexofUserDocs
+  * MergekeysUserDocs
+  * PivotUserDocs
+  * ReorderUserDocs
+  * SubtotalUserDocs
+  * TruncfieldUserDocs

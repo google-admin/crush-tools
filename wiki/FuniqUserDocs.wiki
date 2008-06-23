@@ -1,0 +1,15 @@
+#summary funiq - deduplicates adjacent rows of data having common field values
+
+= Usage =
+`funiq <options> [file ...]`
+
+= Options =
+||*Short Opt*||*Long Opt*||Arugment||Description||
+||-h||--help|| ||print this message and exit||
+||-V||--version|| ||print version info and exit||
+||-v||--verbose|| ||print verbose messages during execution||
+||-d||--delimiter||<delim> ||field separator (default: 0xfe)||
+||-f||--fields||<fields> ||fields to consider in the deduplication||
+||-c||--count|| ||produce a count of duplicated lines||
+----
+back to UserDocs

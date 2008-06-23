@@ -1,0 +1,14 @@
+#summary foreach_parallel - processes a block of shell in parallel for multiple inputs
+
+= Usage =
+`foreach_parallel <options> <input ...>`
+
+= Options =
+||*Short Opt*||*Long Opt*||Arugment||Description||
+||-h||--help|| ||print this message and exit||
+||-V||--verbose|| ||print verbose runtime messages.||
+||-v||--variable||<variable> ||the variable name to hold the input value||
+||-l||--limit||<max_procs> ||the maximum number of processes to spawn at one time||
+||-f||--file||<file> ||execute code read from <file> (default: stdin)||
+----
+back to UserDocs

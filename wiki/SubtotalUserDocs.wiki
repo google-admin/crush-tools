@@ -1,0 +1,18 @@
+#summary subtotal - adds subtotal lines to a flat-file
+
+= Usage =
+`subtotal <options> `
+
+= Options =
+||*Short Opt*||*Long Opt*||Arugment||Description||
+||-h||--help|| ||print this message and exit||
+||-V||--version|| ||print version info and exit||
+||-v||--verbose|| ||print verbose messages during execution||
+||-i||--input||<infile> ||name of input file (stdin if not specified)||
+||-d||--delim||<delim> ||input delimiter (ascii 0xfe if not specified)||
+||-o||--output||<outfile> ||name of output file (stdout if not specified)||
+||-l||--start-line||<start_line> ||the first line of data - everything before it is printed as-is.||
+||-k||--key||<key> ||1-based column number for subtotal key||
+||-s||--sum||<sum> ||list of 1-based column numbers to be subtotaled||
+----
+back to UserDocs
