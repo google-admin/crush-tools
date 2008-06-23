@@ -1,8 +1,11 @@
 #summary pivot - pivots flat-file data from rows to columns
 
 = Usage =
+
 `pivot <options> [file ...]`
+
 -f, -p, and -v values are comma-separated numbers or ranges.  for example:\n\n1,2-5,7
+
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
 ||-h||--help|| ||print this message and exit||
@@ -12,5 +15,6 @@
 ||-f||--output-fields||<keys> ||fields to output||
 ||-p||--pivot-fields||<pivots> ||fields to pivot on||
 ||-v||--value-fields||<values> ||fields to put into the pivoted cells||
+
 ----
 back to UserDocs

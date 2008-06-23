@@ -1,7 +1,10 @@
 #summary aggregate2 - aggregates data which has been pre-sorted by key(s)
 
 = Usage =
+
 `aggregate2 <options> [file ...]`
+
+
 
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
@@ -14,5 +17,6 @@
 ||-s||--sums||<sums> ||list of fields to sum||
 ||-c||--counts||<counts> ||list of aggregation count||
 ||-o||--outfile||<outfile> ||file to which output should be written (default: stdout)||
+
 ----
 back to UserDocs

@@ -1,8 +1,11 @@
 #summary aggregate - aggregates data from delimited files
 
 = Usage =
+
 `aggregate <options> [file ...]`
+
 all column indexes are 1-based.
+
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
 ||-h||--help|| ||print this message and exit||
@@ -16,5 +19,6 @@ all column indexes are 1-based.
 ||-p||--preserve-header|| ||specifies that the first line of input should not be included in the aggregation||
 ||-r||--no-sort|| ||specifies that the output need not be sorted.||
 ||-l||--labels||<labels> ||how to label the aggregation fields (default: unchanged)||
+
 ----
 back to UserDocs

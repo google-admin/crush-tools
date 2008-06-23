@@ -1,8 +1,11 @@
 #summary convdate - converts a date within a field of a dt file into a different format.
 
 = Usage =
+
 `convdate <options> `
+
 the file is read from the stdin and written to stdout
+
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
 ||-h||--help|| ||print this message and exit||
@@ -13,5 +16,6 @@ the file is read from the stdin and written to stdout
 ||-i||--input_format||<input_format> ||date format in the input file - see strptime (default: %%m-%%d-%%Y-%%T)||
 ||-o||--output_format||<output_format> ||date format in the output file - see strftime (default: %%Y-%%m-%%d-%%T)||
 ||-p||--preserve_header|| ||preserve the header line (default: do not preserve the header)||
+
 ----
 back to UserDocs

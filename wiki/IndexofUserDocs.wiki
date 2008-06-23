@@ -1,7 +1,10 @@
 #summary indexof - prints the column number matching a given header, or 0 if not found.
 
 = Usage =
+
 `indexof <options> `
+
+
 
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
@@ -13,5 +16,6 @@
 ||-f||--file||<file> ||specifies file to read (default = stdin)||
 ||-s||--string||<string> ||use <string> instead of a header from a file||
 ||-r||--row||<row> ||header line number in file (default = 1)||
+
 ----
 back to UserDocs

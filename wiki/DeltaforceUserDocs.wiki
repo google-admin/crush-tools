@@ -1,8 +1,11 @@
 #summary deltaforce - applies any updates from a delta extract onto a full extract
 
 = Usage =
+
 `deltaforce <options> file1 file2`
+
 if one of file1 or file2 is specified as \"-\", stdin will be used for that input stream.
+
 = Options =
 ||*Short Opt*||*Long Opt*||Arugment||Description||
 ||-h||--help|| ||print this message and exit||
@@ -11,5 +14,6 @@ if one of file1 or file2 is specified as \"-\", stdin will be used for that inpu
 ||-d||--delim||<delim> ||delimiting string for both input files||
 ||-o||--outfile||<outfile> ||name of file for output||
 ||-k||--keys||<keys> ||primary key field(s) in both input files (default: 1)||
+
 ----
 back to UserDocs
