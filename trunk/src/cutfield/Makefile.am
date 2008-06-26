@@ -10,4 +10,4 @@ cutfield_SOURCES = cutfield.c cutfield.h $(BUILT_SOURCES)
 
 TESTS = tests.sh
 
-
+cutfield_LDADD = ../libcrush/libcrush.la

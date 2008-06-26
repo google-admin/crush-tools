@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-#include <splitter.h>
 #include <ffutils.h>
 #include "subtotal_main.h"
 
@@ -68,7 +67,7 @@ int subtotal ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	sums = NULL;
 	sum_cols = NULL;
 	nsums = 0;
-	nsums = splitnums(args->sum, &sum_cols, 0);
+	nsums = expand_nums(args->sum, &sum_cols, 0);
 
 	if ( ! nsums )
 		return EXIT_HELP;

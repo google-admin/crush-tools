@@ -5,6 +5,7 @@ BUILT_SOURCES = main.c usage.c reorder_main.h
 
 bin_PROGRAMS = reorder
 reorder_SOURCES = reorder.c reorder.h $(BUILT_SOURCES)
+reorder_LDADD = ../libcrush/libcrush.la
 
 TESTS = reorder.test.sh
 

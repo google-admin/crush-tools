@@ -22,12 +22,15 @@
 # include <regex.h>
 #endif
 
-#include <stdlib.h>
-#include <sys/types.h>
-
-#if HAVE_FFUTILS_H
-# include <ffutils.h>
+#if HAVE_SYS_TYPES_H
+# include <sys/types.h>
 #endif
+
+#if HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
+
+#include <ffutils.h>
 
 #ifndef GREPFIELD_H
 #define GREPFIELD_H

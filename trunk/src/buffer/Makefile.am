@@ -1,4 +1,4 @@
 
 bin_PROGRAMS = buffer
-subtotal_SOURCES = buffer.c
+buffer_SOURCES = buffer.c
 

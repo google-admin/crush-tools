@@ -26,9 +26,7 @@
 # include <assert.h>
 #endif
 
-#if HAVE_FFUTILS_H
-# include <ffutils.h>
-#endif
+#include <ffutils.h>
 
 #ifndef REORDER_H
 #define REORDER_H

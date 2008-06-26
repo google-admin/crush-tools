@@ -12,3 +12,4 @@ TESTS = tests.sh
 CLEANFILES = $(BUILT_SOURCES)
 
 
+funiq_LDADD = ../libcrush/libcrush.la

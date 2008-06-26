@@ -5,6 +5,7 @@ BUILT_SOURCES = main.c usage.c mergekeys_main.h
 
 bin_PROGRAMS = mergekeys
 mergekeys_SOURCES = mergekeys.c mergekeys.h $(BUILT_SOURCES)
+mergekeys_LDADD = ../libcrush/libcrush.la
 
 TESTS = tests.sh
 

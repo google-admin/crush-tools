@@ -11,3 +11,4 @@ indexof_SOURCES = indexof.c indexof.h $(BUILT_SOURCES)
 TESTS = tests.sh
 CLEANFILES = $(BUILT_SOURCES)
 
+indexof_LDADD = ../libcrush/libcrush.la

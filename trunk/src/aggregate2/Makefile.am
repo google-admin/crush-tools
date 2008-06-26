@@ -6,5 +6,6 @@ BUILT_SOURCES = main.c usage.c aggregate2_main.h
 bin_PROGRAMS = aggregate2
 aggregate2_SOURCES = aggregate2.c $(BUILT_SOURCES)
 
+aggregate2_LDADD = ../libcrush/libcrush.la
+
 TESTS = test.sh
-# aggregate_LDADD = -lffutils -ljdatastructs

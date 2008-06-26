@@ -1,9 +1,0 @@
-/** @mainpage
-
-  <table border=0 width="600"><tr><td>
-    ffutils is a collection of utility functions to make it easier to work with
-    flat-file data.  To use it, just \#include <ffutils.h> and add -lffutils
-    to your gcc command.
-  </td></tr></table>
-
-  */

@@ -18,12 +18,12 @@
 # include <config.h>
 #endif
 
-#ifdef HAVE_FFUTILS_H
-# include <ffutils.h>
-#endif
+#include <ffutils.h>
 
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>	/* open64() */
+#elif HAVE_SYS_FCNTL_H
+# include <sys/fcntl.h>	/* open64() */
 #endif
 
 #ifdef HAVE_UNISTD_H

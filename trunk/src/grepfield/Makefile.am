@@ -8,3 +8,4 @@ grepfield_SOURCES = grepfield.c grepfield.h $(BUILT_SOURCES)
 
 TESTS = test.sh
 
+grepfield_LDADD = ../libcrush/libcrush.la

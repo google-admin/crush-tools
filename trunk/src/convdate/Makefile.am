@@ -10,4 +10,5 @@ convdate_SOURCES = convdate.c convdate.h $(BUILT_SOURCES)
 
 TESTS = tests.sh
 
+convdate_LDADD = ../libcrush/libcrush.la
 

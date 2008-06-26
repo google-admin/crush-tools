@@ -1,4 +1,4 @@
 
 bin_PROGRAMS = tochar
-subtotal_SOURCES = tochar.c
+tochar_SOURCES = tochar.c
 

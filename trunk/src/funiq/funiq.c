@@ -16,7 +16,6 @@
 #include "funiq_main.h"
 
 #include <ffutils.h>
-#include <splitter.h>
 
 
 #define FIELD_LEN_LIMIT 255
@@ -62,7 +61,7 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ) {
 		fprintf(stderr, "out of memory\n");
 		return ( EXIT_MEM_ERR );
 	}
-	n_fields = splitnums( args->fields, &fields, 32 );
+	n_fields = expand_nums( args->fields, &fields, 32 );
 
 	/* prepare the array of previous field values */
 	prev_line = malloc ( sizeof( char* ) * n_fields );

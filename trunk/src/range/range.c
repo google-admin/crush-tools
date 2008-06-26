@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <splitter.h>
+#include <ffutils.h>
 
 void usage(char *bin);
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
 		return(1);
 	}
 
-	n = splitnums(argv[1], &array, 0);
+	n = expand_nums(argv[1], &array, 0);
 	for(i=0; i<n; i++){
 		printf("%d ", array[i]);
 	}

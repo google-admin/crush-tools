@@ -1,6 +1,0 @@
-this is a simple memory-pooling library intended to decrease the number of
-malloc() calls that an application has to make.  a memory pool can be created,
-after which things can be stored in that memory.  the entire pool can be
-cleared out for reuse, but freeing individual items in the pool is not
-supported.
-

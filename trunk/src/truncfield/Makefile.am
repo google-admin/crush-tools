@@ -7,6 +7,7 @@ $(BUILT_SOURCES) : args.tab
 
 bin_PROGRAMS = truncfield
 truncfield_SOURCES = truncfield.c truncfield.h $(BUILT_SOURCES)
+truncfield_LDADD = ../libcrush/libcrush.la
 
 TESTS = tests.sh
 CLEANFILES = $(BUILT_SOURCES)
