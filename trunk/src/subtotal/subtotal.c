@@ -42,6 +42,7 @@ int subtotal ( struct cmdargs *args, int argc, char *argv[], int optind ){
 	size_t nsums;	/* the number of columns to be subtotaled */
 	int *sum_cols,	/* array of column indexes to subtotal */
 	    *sums;	/* array to hold the sums */
+  size_t sum_cols_sz /* capacity of sums_cols */;
 
 	char *inbuf;	/* input buffer and buffer size */
 	ssize_t inbuf_sz;
@@ -66,8 +67,9 @@ int subtotal ( struct cmdargs *args, int argc, char *argv[], int optind ){
 
 	sums = NULL;
 	sum_cols = NULL;
+	sum_cols_sz = 0;
 	nsums = 0;
-	nsums = expand_nums(args->sum, &sum_cols, 0);
+	nsums = expand_nums(args->sum, &sum_cols, &sum_cols_sz);
 
 	if ( ! nsums )
 		return EXIT_HELP;

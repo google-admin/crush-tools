@@ -23,13 +23,14 @@ void usage(char *bin);
 
 int main(int argc, char *argv[]){
 	int i, n, *array = NULL;
+	size_t array_sz = 0;
 
 	if(argc < 2 || strncmp(argv[1], "-h", 2) == 0){
 		usage(argv[0]);
 		return(1);
 	}
 
-	n = expand_nums(argv[1], &array, 0);
+	n = expand_nums(argv[1], &array, &array_sz);
 	for(i=0; i<n; i++){
 		printf("%d ", array[i]);
 	}

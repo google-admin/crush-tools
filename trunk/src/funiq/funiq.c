@@ -34,7 +34,9 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ) {
 
 	char delim[] = { 0xfe , 0x00 };	/* the delimiter */
 	int *fields;			/* array of field indexes */
-	size_t n_fields;		/* the size of the array */
+	size_t fields_sz;	/* the size of the array */
+	size_t n_fields;	/* the number of things in the array */
+
 	FILE *in;			/* input file pointer */
 	char **prev_line;		/* fields from previous line of input */
 	char cur_field[FIELD_LEN_LIMIT];
@@ -61,7 +63,8 @@ int funiq ( struct cmdargs *args, int argc, char *argv[], int optind ) {
 		fprintf(stderr, "out of memory\n");
 		return ( EXIT_MEM_ERR );
 	}
-	n_fields = expand_nums( args->fields, &fields, 32 );
+	fields_sz = 32;
+	n_fields = expand_nums( args->fields, &fields, &fields_sz);
 
 	/* prepare the array of previous field values */
 	prev_line = malloc ( sizeof( char* ) * n_fields );
