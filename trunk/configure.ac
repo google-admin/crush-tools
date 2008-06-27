@@ -15,6 +15,7 @@ AC_SUBST([LIBTOOL_DEPS])
 AC_SUBST(ac_aux_dir)
 AC_SUBST([abs_srcdir], ["`cd $srcdir && pwd`"])
 AC_SUBST([abs_builddir], ["`pwd`"])
+AC_SUBST([CGENER], [$abs_srcdir/cgener])
 
 AC_PROG_CC
 AC_PATH_PROG(PERL, perl, none)
@@ -25,14 +26,6 @@ if test "$INSTALL" = "build/install-sh -c"; then
 fi
 
 AC_SUBST([MKDIR], ["$INSTALL -d"])
-
-AC_CHECK_PROG(CGENER, [cgener], [cgener], [not found], [$PATH])
-
-if test "$CGENER" = "not found"; then
-	AC_MSG_ERROR(
-    [The cgener application is required to build this application.
-     It is available from http://code.google.com/p/cgener/], 1)
-fi
 
 AC_PROG_LIBTOOL
 
