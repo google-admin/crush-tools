@@ -1,0 +1,45 @@
+-- Compilation --
+
+To build CRUSH from a repository checkout...
+
+1) install cgener (http://code.google.com/p/cgener/) at /usr/local/bin
+2) ./bootstrap
+3) ./configure && make
+4) "make install" if desired.
+
+To build from a distribution tarball, only steps 3 and 4 are necessary.
+
+
+-- Coding Standards --
+
+CRUSH uses the same coding standard as the Linux kernel. (ref:
+http://www.linuxfromscratch.org/alfs/view/hacker/part2/hacker/coding-style.html)
+Namely
+
+* Tabs are really tabs, and tabstop is 8 characters
+* For function definitions, opening braces go in the first column of their
+  own line.
+* For all other code blocks, opening braces go at the end of the line.
+* Use concise, descriptive symbol names.
+  o Prefer all_lower_case symbol names with underscores.
+  o Do not use Hungarian notation.
+* Comments should describe what the code does and why it does it.  Avoid
+  comments describing how the code works.
+  o In C files do not use "//" comments.
+  o Files, data types, and functions should be documented using Doxygen-style
+    descriptions.
+
+Additionally,
+
+* No lines longer than 80 columns.
+* Be as consistent as possible with commandline options.
+* Be absolutely consistent with delimiter handling.  I.e., use environment's
+  $DELIMITER value if present; allow escape-sequences like '\t'.
+* No author names should appear in the source files.
+
+
+-- Source Repository --
+
+Log messages in follow the convention used by the Subversion project.  See
+http://subversion.tigris.org/hacking.html#log-messages
+

@@ -1,0 +1,24 @@
+$LastChangedDate$ by $Author$
+
+(All Perl applications):
+
+Have autoconf insert the correct local Perl path into the shebang line.
+Include these scripts in the "make install".  
+
+
+./bootstrap:
+
+Only certain versions of libtoolize require adding file content to aclocal.m4.
+v 2.2.2 requires it (tested on cygwin).  v. 1.5.24 does not (tested on linux).
+Need to figure out a) if the "cat >> aclocal.m4" can be avoided altogether; and
+b) if not, exactly which versions of libtoolize need it.
+
+
+*/Makefile.am:
+
+Get test execution working.
+
+
+*.c, *.h:
+
+Make coding style consistent.
