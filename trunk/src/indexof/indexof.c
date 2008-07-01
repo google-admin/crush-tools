@@ -55,6 +55,8 @@ int indexof ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			curline++;
 		} while ( lineno > curline && ! feof(in) );
 
+    chomp(buf);
+
 		if ( feof(in) ) {
 			fprintf(stderr, "invalid line number: %d\n", lineno);
 			exit(EXIT_HELP);
