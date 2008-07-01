@@ -90,7 +90,7 @@ int truncfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
 			for ( i = 0; i < n_fields; i++ ) {
 				if ( field_list[next_field_to_trunc] == i + 1 ) {
 					++next_field_to_trunc;
-					if ( ! first_field_printed )
+					if ( i > 0 )
 						printf("%s", args->delim);
 					first_field_printed = 1;
 					continue;
