@@ -1,4 +1,4 @@
-$LastChangedDate$ by $Author$
+$LastChangedDate: $ by $Author: $
 
 (All Perl applications):
 
@@ -14,11 +14,10 @@ Need to figure out a) if the "cat >> aclocal.m4" can be avoided altogether; and
 b) if not, exactly which versions of libtoolize need it.
 
 
-*/Makefile.am:
-
-Get test execution working.
-
 
 *.c, *.h:
 
 Make coding style consistent.
+
+
+mergekeys, pivot: tests failing.
