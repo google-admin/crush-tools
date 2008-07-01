@@ -67,3 +67,8 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 done
 
 echo -e "\n$errors errors\n"
+
+if [ $errors -gt 0 ]; then
+  exit 1
+fi
+exit 0

@@ -49,11 +49,11 @@ done <<"ENDTESTS"
 # no input
 echo -n '' | ./reorder -f 1 => ''
 # stdin
-cat test.in0 test.in1 | ./reorder -m 2,3 -d , | tr '\\n' ' ' | trim => 01,03,02,04,05 11,13,12,14,15
+cat test.in0 test.in1 | ./reorder -m 2,3 -d , | tr '\\n' ' ' | sed -e 's/^ *//; s/ *$//;' => 01,03,02,04,05 11,13,12,14,15
 ./reorder -s 1,2 -d , < test.in0 => 02,01,03,04,05
 # one and two trailing input files
 ./reorder -f 1,3-5 -d , test.in0 => 01,03,04,05
-./reorder -f 3-5 -d , test.in0 test.in1 | tr '\\n' ' ' | trim => 03,04,05 13,14,15
+./reorder -f 3-5 -d , test.in0 test.in1 | tr '\\n' ' ' | sed -e 's/^ *//; s/ *$//;' => 03,04,05 13,14,15
 # valid input field boundaries
 ./reorder -s 1,5 -d , test.in0 => 05,02,03,04,01
 ./reorder -m 1,5 -d , test.in0 => 02,03,04,05,01

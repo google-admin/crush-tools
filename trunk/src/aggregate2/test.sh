@@ -16,7 +16,7 @@ errors=0
 maxlen=0
 for i in `seq 0 $(( ${#test_names[*]} - 1 ))`; do
 	curlen=`echo -n "${test_names[$i]}" | wc -m`
-	if [ $curlen > $maxlen ]; then maxlen=$curlen; fi
+	if [ $curlen \> $maxlen ]; then maxlen=$curlen; fi
 done
 
 echo "" # just put an empty line for readability
@@ -45,6 +45,9 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 			echo "passed"
 			rm $actual
 		fi
+  else
+    echo "skipped"
+			echo "		$infile.$optstring.expected does not exist"
 	fi
 done
 

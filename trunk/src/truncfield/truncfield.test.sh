@@ -49,11 +49,11 @@ done <<"ENDTESTS"
 # no input
 echo -n '' | ./truncfield -f 1 => ''
 # stdin
-cat test.in0 test.in1 | ./truncfield -f 1,3 -d , | tr '\\n' ' ' | trim => ,02,,04,05 ,12,,14,15
+cat test.in0 test.in1 | ./truncfield -f 1,3 -d , | tr '\\n' ' ' | sed -e 's/^ *//; s/ *$//;' => ,02,,04,05 ,12,,14,15
 ./truncfield -f 2,4 -d , < test.in0 => 01,,03,,05
 # one and two trailing input files, using env variable for delimiter
 DELIMITER=',' ./truncfield -f 3-5 test.in0 => 01,02,,,
-./truncfield -f 3-5 -d , test.in0 test.in1 | tr '\\n' ' ' | trim => 01,02,,, 11,12,,,
+./truncfield -f 3-5 -d , test.in0 test.in1 | tr '\\n' ' ' | sed -e 's/^ *//; s/ *$//;' => 01,02,,, 11,12,,,
 # valid input field boundaries
 ./truncfield -f 1,5 -d , test.in0 => ,02,03,04,
 # test the default delimiter
