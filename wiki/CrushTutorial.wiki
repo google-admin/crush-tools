@@ -54,7 +54,7 @@ Let's say we want to know how many hits we're getting from each logged-in user. 
 aal2d /var/log/httpd/access_log | aggregate -p -k 2 -c 1
 }}}
 
-Refer to the AggregationUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
+Refer to the AggregateUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
 
 If we wanted to get that broken out by day, we can convert the time format using convdate (ConvdateUserDocs) to contain only the date and add that as a key field.
 
