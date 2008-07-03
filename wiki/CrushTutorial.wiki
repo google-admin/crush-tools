@@ -1,0 +1,79 @@
+#summary A quick introduction to using CRUSH for data processing
+
+= CRUSH Tutorial =
+
+Here we will demonstrate some of the data-processing capabilities of the CRUSH toolkit.  We will primarily focus on processing access logs from an Apache web server, since such a data source is commonly available.
+
+
+== Reading the log file ==
+
+It is common to need to write a small amount of custom code for a processing task using CRUSH.  In this case, the need arises almost immediately for dealing with the Apache access logs due to the fact that the default format of the files is not really character-delimited.  A simple Perl script will transform that data into something that's easier to handle with CRUSH.
+
+For an Apache httpd configuration of
+
+{{{
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %b" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+}}}
+
+This script, named `aal2d` ("Apache access log to delimited") does the trick:
+
+{{{
+#!/usr/bin/perl -w
+use strict;
+my $output_delim = $ENV{DELIMITER} || chr(0xfe);
+
+# (dropping the RFC 1413 identity field)
+print join($output_delim,
+           qw(IP Auth-User Time Request Response Size Referrer User-Agent)),
+      qq(\n);
+
+while (<>) {
+  /([\d\.]+) - ([^ ]+) \[([^\]]+)\] "([^"]+)" (\d+) (\d+|-) "([^"]+)" "([^"]+)"/;
+  print join($output_delim,
+             ($1, $2, $3, $4, $5,
+              $6 eq '-' ? 0 : $6,
+              $7 eq '-' ? '' : $7,
+              $8)),
+        qq(\n);
+}
+
+exit(0);
+}}}
+
+The default delimiter 'þ' is used here for its low probability of collision with actual data.  Now that we've gotten that out of the way, we can start doing interesting things with the data.
+
+
+== Simple aggregations ==
+
+Let's say we want to know how many hits we're getting from each logged-in user.  The aggregate (AggregateUserDocs) utility is designed for this purpose.
+
+{{{
+aal2d /var/log/httpd/access_log | aggregate -p -k 2 -c 1
+}}}
+
+Refer to the AggregationUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
+
+If we wanted to get that broken out by day, we can convert the time format using convdate (ConvdateUserDocs) to contain only the date and add that as a key field.
+
+{{{
+aal2d /var/log/httpd/access_log |
+  convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  aggregate -p -k 3,2 -c 1
+}}}
+
+The convdate call takes strings like "29/Jun/2008:04:27:26 -0600" and turns them into strings like "2008-06-29".
+
+
+== More formatting ==
+
+In the example of login-page-hits by day, if you have a small number of users you may wish to have a column for each user and a row for each date.  The pivot (PivotUserDocs) utility handles this:
+
+{{{
+aal2d /var/log/httpd/access_log |
+  convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  aggregate -p -k 3,2 -c 1 |
+  pivot -k -f 1 -p 2 -v 3
+}}}
