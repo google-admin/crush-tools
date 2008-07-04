@@ -12,6 +12,14 @@
 
 wdir=`dirname $0`
 
+# only run locale-sensitive tests when they can be expected to work
+if [ "`which locale 2>/dev/null`" ] &&
+   [ "`locale -a | grep en_US.iso88591`" ]; then
+  export LC_ALL="en_US.iso88591"
+  export LC_COLLATE="en_US.iso88591"
+  locale_works=1
+fi
+
 subtests=(00 01 02 03 04 05 06 07 08)
 datadir=$wdir/tests
 test_delim='\t'
@@ -36,6 +44,11 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 		if [ -e $expected ]; then
 
 			echo -n "test $i - \"${test_names[$i]}\" (sub test ${t}): "
+
+			if [ "$t" = "06" ] && [ ! "$locale_works" ]; then
+				echo "skipped"
+				continue
+			fi
 
 			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $out.1
                         cat $left | $wdir/mergekeys -d "$test_delim" $optstring - $right > $out.2
