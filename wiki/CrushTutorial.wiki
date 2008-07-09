@@ -56,6 +56,19 @@ aal2d /var/log/httpd/access_log | aggregate -p -k 2 -c 1
 
 Refer to the AggregateUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
 
+The output is something like
+
+{{{
+Auth-UserþIP
+-þ1105
+bvanhornþ103
+hoofoosþ303
+hotshotþ3
+shadrackþ13
+snimþ34
+sunnyjimþ141
+}}}
+
 If we wanted to get that broken out by day, we can convert the time format using convdate (ConvdateUserDocs) to contain only the date and add that as a key field.
 
 {{{
@@ -64,7 +77,29 @@ aal2d /var/log/httpd/access_log |
   aggregate -p -k 3,2 -c 1
 }}}
 
-The convdate call takes strings like "29/Jun/2008:04:27:26 -0600" and turns them into strings like "2008-06-29".
+The convdate call takes strings like "08/Jul/2008:04:27:26 -0600" and turns them into strings like "2008-07-08", giving us
+
+{{{
+TimeþAuth-UserþIP
+2008-07-06þ-þ28
+2008-07-06þhoofoosþ78
+2008-07-06þsunnyjimþ17
+2008-07-07þ-þ547
+2008-07-07þhoofoosþ93
+2008-07-07þshadrackþ6
+2008-07-07þsnimþ33
+2008-07-08þ-þ188
+2008-07-08þbvanhornþ59
+2008-07-08þhoofoosþ21
+2008-07-08þshadrackþ7
+2008-07-08þsunnyjimþ45
+2008-07-09þ-þ342
+2008-07-09þbvanhornþ44
+2008-07-09þhoofoosþ111
+2008-07-09þhotshotþ3
+2008-07-09þsnimþ1
+2008-07-09þsunnyjimþ79
+}}}
 
 
 == More formatting ==
@@ -77,3 +112,15 @@ aal2d /var/log/httpd/access_log |
   aggregate -p -k 3,2 -c 1 |
   pivot -k -f 1 -p 2 -v 3
 }}}
+
+Now we get an output of
+
+{{{
+Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsunnyjim: IP
+2008-07-06þ28þ0þ78þ0þ0þ0þ17
+2008-07-07þ547þ0þ93þ0þ6þ33þ0
+2008-07-08þ188þ59þ21þ0þ7þ0þ45
+2008-07-09þ342þ44þ111þ3þ0þ1þ79
+}}}
+
+Piping the same command to `csvformat` will produce a CSV file suitable for viewing in your favorite spreadsheet application.
