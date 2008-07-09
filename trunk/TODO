@@ -1,4 +1,4 @@
-$LastChangedDate: $ by $Author: $
+$LastChangedDate$ by $Author$
 
 (All Perl applications):
 
@@ -20,4 +20,4 @@ b) if not, exactly which versions of libtoolize need it.
 Make coding style consistent.
 
 
-mergekeys, pivot: tests failing.
+pivot: tests failing.
