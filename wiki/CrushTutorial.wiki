@@ -123,4 +123,28 @@ Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsun
 2008-07-09þ342þ44þ111þ3þ0þ1þ79
 }}}
 
-Piping the same command to `csvformat` will produce a CSV file suitable for viewing in your favorite spreadsheet application.
+Piping the same command to `csvformat` will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we'll use the standard `sed(1)` utility on just the header line.
+
+{{{
+aal2d /var/log/httpd/access_log |
+  (read header;
+   echo "$header" | sed -e 's/IP/Page-Views/';
+   cat -) |
+  convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  translate_field -f 2 -m '-=Anonymous' |
+  aggregate -p -k 3,2 -c 1 |
+  pivot -k -f 1 -p 2 -v 3 |
+  csvformat 
+}}}
+
+Output:
+
+{{{
+"Time","Anonymous: Page-Views","bvanhorn: Page-Views","hoofoos: Page-Views","hotshot: Page-Views","shadrack: Page-Views","snim: Page-Views","sunnyjim: Page-Views"
+"2008-07-06","28","0","78","0","0","0","17"
+"2008-07-07","547","0","93","0","6","33","0"
+"2008-07-08","188","59","21","0","7","0","45"
+"2008-07-09","342","44","111","3","0","1","79"
+}}}
+
+In this way, complicated transformations and formatting can be accomplished with straight-forward shell scripting.
