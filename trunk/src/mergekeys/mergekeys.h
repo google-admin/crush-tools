@@ -21,17 +21,17 @@
 #include <ffutils.h>
 
 #ifdef HAVE_FCNTL_H
-# include <fcntl.h>	/* open64() */
+# include <fcntl.h>             /* open64() */
 #elif HAVE_SYS_FCNTL_H
-# include <sys/fcntl.h>	/* open64() */
+# include <sys/fcntl.h>         /* open64() */
 #endif
 
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>	/* off64_t & close() */
+# include <unistd.h>            /* off64_t & close() */
 #endif
 
 #ifdef HAVE_ERR_H
-# include <err.h>	/* warn() */
+# include <err.h>               /* warn() */
 #endif
 
 #ifdef HAVE_LOCALE_H
@@ -68,17 +68,18 @@
 
 
 enum join_type_t {
-	join_type_outer,
-	join_type_inner,
-	join_type_left_outer,
-	join_type_right_outer,
+  join_type_outer,
+  join_type_inner,
+  join_type_left_outer,
+  join_type_right_outer,
 };
 
-int merge_files( FILE *a, FILE *b, enum join_type_t join_type, FILE *out, struct cmdargs *args ) ;
+int merge_files(FILE * a, FILE * b, enum join_type_t join_type, FILE * out,
+                struct cmdargs *args);
 
-void classify_fields ( char   *left_header, char *right_header );
-int compare_keys ( char *buffer_left, char *buffer_right );
-void join_lines ( char *left_line, char *right_line, FILE *out );
-int peek_keys ( char *peek_line, char *current_line ) ;
+void classify_fields(char *left_header, char *right_header);
+int compare_keys(char *buffer_left, char *buffer_right);
+void join_lines(char *left_line, char *right_line, FILE * out);
+int peek_keys(char *peek_line, char *current_line);
 
 #endif /* MERGEKEYS_H */

@@ -27,7 +27,7 @@
   */
 
 #include <stdlib.h>
-#include <string.h>	/* strcmp(), strlen() */
+#include <string.h>             /* strcmp(), strlen() */
 #include <linklist.h>
 #include <hashfuncs.h>
 
@@ -37,17 +37,17 @@
 
 /** @brief the hashtable data type. */
 typedef struct _hashtbl {
-	size_t nelems;				/**< number of elements in the hashtable */
-	size_t arrsz;				/**< size of the array */
-	llist_t **arr;				/**< array of linked lists */
-	unsigned int (* hash)(unsigned char *);	/**< hash function to use - see hashfuncs.h */
-	void (* free)(void *);			/**< memory freeing function to call against an entry's data */
+  size_t nelems;        /**< number of elements in the hashtable */
+  size_t arrsz;       /**< size of the array */
+  llist_t **arr;        /**< array of linked lists */
+  unsigned int (*hash) (unsigned char *); /**< hash function to use - see hashfuncs.h */
+  void (*free) (void *);      /**< memory freeing function to call against an entry's data */
 } hashtbl_t;
 
 /** @brief a key/value pair within the hashtable */
 typedef struct _ht_elem {
-	char *key;	/**< string lookup key for the element */
-	void *data;	/**< data to store in this element */
+  char *key;  /**< string lookup key for the element */
+  void *data; /**< data to store in this element */
 } ht_elem_t;
 
 /** @brief initializes a new hashtable.  the memfree function should be
@@ -63,14 +63,15 @@ typedef struct _ht_elem {
   * @return 0 on success, -1 on memory error, 1 if table is NULL, required
   * function is NULL or size is 0
   */
-int ht_init( hashtbl_t *tbl, size_t sz, unsigned int (* hash)(unsigned char *), void (* memfree)(void *) );
+int ht_init(hashtbl_t * tbl, size_t sz, unsigned int (*hash) (unsigned char *),
+            void (*memfree) (void *));
 
 
 /** @brief deallocates memory for all elements and destroys a hashtable.
   * 
   * @param tbl the table to be deallocated.
   */
-void ht_destroy( hashtbl_t *tbl );
+void ht_destroy(hashtbl_t * tbl);
 
 /** @brief adds an entry to the hashtable.  if an entry with the specified key
   * already exists, the value is overwritten.
@@ -81,7 +82,7 @@ void ht_destroy( hashtbl_t *tbl );
   * 
   * @return -1 on memory or 0 on success
   */
-int ht_put( hashtbl_t *tbl, char *key, void *data );
+int ht_put(hashtbl_t * tbl, char *key, void *data);
 
 /** @brief retrieves an entry's data from a hashtable.
   * 
@@ -91,14 +92,14 @@ int ht_put( hashtbl_t *tbl, char *key, void *data );
   * @return NULL if an element with the specified key does not exist, else
   * the data in the entry.
   */
-void * ht_get( hashtbl_t *tbl, char *key );
+void *ht_get(hashtbl_t * tbl, char *key);
 
 /** @brief removes an entry from a hashtable
   * 
   * @param tbl table in which the data is stored
   * @param key string lookup key
   */
-void ht_delete( hashtbl_t *tbl, char *key );
+void ht_delete(hashtbl_t * tbl, char *key);
 
 /** @brief executes a function for the data in each hashtable entry
   * 
@@ -106,7 +107,7 @@ void ht_delete( hashtbl_t *tbl, char *key );
   * @param func function to call which takes the entry's data as its
   * only argument.
   */
-void ht_call_for_each( hashtbl_t *tbl, int (* func)( void * ) ) ;
+void ht_call_for_each(hashtbl_t * tbl, int (*func) (void *));
 
 /** @brief prints some statistics for a hashtable useful for judging
   * hash algorithm performance.
@@ -118,6 +119,6 @@ void ht_call_for_each( hashtbl_t *tbl, int (* func)( void * ) ) ;
   * 
   * @param tbl a hashtable
   */
-void ht_dump_stats( hashtbl_t *tbl );
+void ht_dump_stats(hashtbl_t * tbl);
 
 #endif /* HASHTBL_H */

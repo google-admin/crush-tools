@@ -28,93 +28,90 @@
   * 
   * @return exit status for main() to return.
   */
-int cutfield ( struct cmdargs *args, int argc, char *argv[], int optind ){
+int cutfield(struct cmdargs *args, int argc, char *argv[], int optind) {
 
-	char   default_delim[] = { 0xfe, 0x00 };
+  char default_delim[] = { 0xfe, 0x00 };
 
-	int   *field_list = NULL;	/* list of fields to remove */
-	size_t field_list_sz = 0;
+  int *field_list = NULL;       /* list of fields to remove */
+  size_t field_list_sz = 0;
 
-	char  *in_buffer = NULL;	/* holds a line of input */
-	size_t in_buffer_sz = 0;	/* the size of the input buffer */
-	size_t n_fields = 0;		/* the number of fields from input
-					   file */
+  char *in_buffer = NULL;       /* holds a line of input */
+  size_t in_buffer_sz = 0;      /* the size of the input buffer */
+  size_t n_fields = 0;          /* the number of fields from input
+                                   file */
 
-	if ( args->output_fname ) {
-		if ( ! freopen( args->output_fname, "w", stdout ) ) {
-			warn(args->output_fname);
-			return EXIT_FILE_ERR;
-		}
-	}
-	else if ( args->append_fname ) {
-		if ( ! freopen( args->append_fname, "a", stdout ) ) {
-			warn(args->append_fname);
-			return EXIT_FILE_ERR;
-		}
-	}
+  if (args->output_fname) {
+    if (!freopen(args->output_fname, "w", stdout)) {
+      warn(args->output_fname);
+      return EXIT_FILE_ERR;
+    }
+  } else if (args->append_fname) {
+    if (!freopen(args->append_fname, "a", stdout)) {
+      warn(args->append_fname);
+      return EXIT_FILE_ERR;
+    }
+  }
 
-	field_list_sz = expand_nums( args->fields, &field_list, &field_list_sz );
-	if ( field_list_sz < 1 ) {
-		fprintf(stderr, "%s: error expanding field list.\n",
-				argv[0]);
-		return EXIT_HELP;
-	}
-	qsort( field_list, field_list_sz, sizeof(field_list[0]),
-			(qsort_cmp_func_t) qsort_intcmp );
+  field_list_sz = expand_nums(args->fields, &field_list, &field_list_sz);
+  if (field_list_sz < 1) {
+    fprintf(stderr, "%s: error expanding field list.\n", argv[0]);
+    return EXIT_HELP;
+  }
+  qsort(field_list, field_list_sz, sizeof(field_list[0]),
+        (qsort_cmp_func_t) qsort_intcmp);
 
-	if ( ! args->delim ) {
-		args->delim = getenv("DELIMITER");
-		if ( ! args->delim )
-			args->delim = default_delim;
-	}
-	expand_chars(args->delim);
+  if (!args->delim) {
+    args->delim = getenv("DELIMITER");
+    if (!args->delim)
+      args->delim = default_delim;
+  }
+  expand_chars(args->delim);
 
-	if ( optind < argc ) {
-		fclose(stdin);
-		stdin = nextfile(argc, argv, &optind, "r");
-	}
+  if (optind < argc) {
+    fclose(stdin);
+    stdin = nextfile(argc, argv, &optind, "r");
+  }
 
-	while ( stdin ) {
-		
-		int next_field_to_skip;	/* index into field_list */
-		int i;			/* index of current input field */
-		int f_first, f_last;	/* position of first and last char
-					   in a field */
-		int first_field_printed;/* used to control delimiter output */
+  while (stdin) {
 
-		while ( getline(&in_buffer, &in_buffer_sz, stdin) > 0 ) {
-			next_field_to_skip = 0;
-			n_fields = fields_in_line(in_buffer, args->delim);
-			first_field_printed = 0;
+    int next_field_to_skip;     /* index into field_list */
+    int i;                      /* index of current input field */
+    int f_first, f_last;        /* position of first and last char
+                                   in a field */
+    int first_field_printed;    /* used to control delimiter output */
 
-			for ( i = 0; i < n_fields; i++ ) {
-				if ( field_list[next_field_to_skip] == i + 1 ) {
-					++next_field_to_skip;
-					continue;
-				}
-				if ( ! get_line_pos ( in_buffer, i, args->delim, &f_first, &f_last ) )
-					continue;
+    while (getline(&in_buffer, &in_buffer_sz, stdin) > 0) {
+      next_field_to_skip = 0;
+      n_fields = fields_in_line(in_buffer, args->delim);
+      first_field_printed = 0;
 
-				if ( first_field_printed )
-					printf("%s", args->delim);
+      for (i = 0; i < n_fields; i++) {
+        if (field_list[next_field_to_skip] == i + 1) {
+          ++next_field_to_skip;
+          continue;
+        }
+        if (!get_line_pos(in_buffer, i, args->delim, &f_first, &f_last))
+          continue;
 
-				printf("%.*s", f_last - f_first + 1, &(in_buffer[f_first]));
-				first_field_printed = 1;
-			}
+        if (first_field_printed)
+          printf("%s", args->delim);
 
-			/* print everything after the last field in the
-			 * line (preserves input line-break style) */
-			get_line_pos ( in_buffer, n_fields - 1, args->delim, &f_first, &f_last );
-			printf("%s", &(in_buffer[f_last + 1]));
+        printf("%.*s", f_last - f_first + 1, &(in_buffer[f_first]));
+        first_field_printed = 1;
+      }
 
-		}
+      /* print everything after the last field in the
+       * line (preserves input line-break style) */
+      get_line_pos(in_buffer, n_fields - 1, args->delim, &f_first, &f_last);
+      printf("%s", &(in_buffer[f_last + 1]));
 
-		stdin = nextfile(argc, argv, &optind, "r");
-	}
+    }
 
-	free(field_list);
-	free(in_buffer);
+    stdin = nextfile(argc, argv, &optind, "r");
+  }
 
-	return EXIT_OKAY;
+  free(field_list);
+  free(in_buffer);
+
+  return EXIT_OKAY;
 }
-

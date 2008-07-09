@@ -19,11 +19,10 @@
 #ifndef MEMPOOL_H
 #define MEMPOOL_H
 
-typedef struct _mempool
-{
-	size_t capacity;
-	size_t next;
-	void  *buffer;
+typedef struct _mempool {
+  size_t capacity;
+  size_t next;
+  void *buffer;
 } mempool_t;
 
 #define mempool_capacity( p ) \
@@ -37,7 +36,7 @@ typedef struct _mempool
   * 
   * @return a newly-allocated memory pool
   */
-mempool_t * mempool_create ( size_t capacity );
+mempool_t *mempool_create(size_t capacity);
 
 /** @brief tells how much space is left in a memory pool.
   * 
@@ -45,7 +44,7 @@ mempool_t * mempool_create ( size_t capacity );
   * 
   * @return the number of unused bytes in the memory pool
   */
-size_t mempool_available ( mempool_t *pool );
+size_t mempool_available(mempool_t * pool);
 
 /** @brief adds something to the memory pool.
   * 
@@ -56,7 +55,7 @@ size_t mempool_available ( mempool_t *pool );
   * @return the address in the memory pool where the thing was stored,
   * or NULL if there wasn't enough room for the thing.
   */
-void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size );
+void *mempool_add(mempool_t * pool, const void *thing, size_t thing_size);
 
 /** @brief reserves space within a memory pool
   * 
@@ -66,7 +65,7 @@ void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size );
   * @return the address in the memory pool where the thing was stored,
   * or NULL if n_bytes was zero or there wasn't enough room.
   */
-void * mempool_alloc ( mempool_t *pool, size_t n_bytes );
+void *mempool_alloc(mempool_t * pool, size_t n_bytes);
 
 /** @brief zeroes out pool usage.
   * although they may not be immediately cleared out, existing references
@@ -76,13 +75,12 @@ void * mempool_alloc ( mempool_t *pool, size_t n_bytes );
   * 
   * @param pool the pool to be cleared.
   */
-void mempool_reset ( mempool_t *pool );
+void mempool_reset(mempool_t * pool);
 
 /** @brief frees resources associated with a memory pool.
   * 
   * @param pool 
   */
-void mempool_destroy ( mempool_t *pool );
+void mempool_destroy(mempool_t * pool);
 
 #endif /* MEMPOOL_H */
-

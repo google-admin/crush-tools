@@ -37,21 +37,22 @@
 
 void usage(char *);
 
-int main(int argc, char *argv[]){
-	short nascii = 0;
-	if(argc != 2 || strncmp(argv[1],"-h",2) == 0 ){
-		usage(argv[0]);
-		return 1;
-	}
-	sscanf(argv[1],"%hi",&nascii);
-	printf("%c",nascii);
-	return 0;
+int main(int argc, char *argv[]) {
+  short nascii = 0;
+  if (argc != 2 || strncmp(argv[1], "-h", 2) == 0) {
+    usage(argv[0]);
+    return 1;
+  }
+  sscanf(argv[1], "%hi", &nascii);
+  printf("%c", nascii);
+  return 0;
 }
 
-void usage(char *exe){
-	printf("tochar - turns numbers into characters\n");
-	printf("usage: %s <number>\n",exe);
-	printf("\twhere <number> is the numeric ascii value of the character you want.\n");
-	printf("\taccepts decimal (NNN), hexidecimal (0xNN), or octal (0NNN)\n");
-	return;
+void usage(char *exe) {
+  printf("tochar - turns numbers into characters\n");
+  printf("usage: %s <number>\n", exe);
+  printf
+    ("\twhere <number> is the numeric ascii value of the character you want.\n");
+  printf("\taccepts decimal (NNN), hexidecimal (0xNN), or octal (0NNN)\n");
+  return;
 }

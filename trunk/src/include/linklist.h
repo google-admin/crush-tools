@@ -20,32 +20,32 @@
 
 #include <stdlib.h>
 #include <fcntl.h>
-#include <string.h>	/* memcmp() */
-#include <stdio.h>	/* printf() in ll_dump() */
+#include <string.h>             /* memcmp() */
+#include <stdio.h>              /* printf() in ll_dump() */
 
 #ifndef LINKLIST_H
 #define LINKLIST_H
 
 /** @brief indicator used by ll_add_elem for where in the list to put the new
   * member. */
-typedef enum {beginning, end, sorted} insert_point_t;
+typedef enum { beginning, end, sorted } insert_point_t;
 
 /** @brief a node in a linked list. */
 typedef struct _llist_node_t {
-	struct _llist_node_t *next;	/**< next node in the list */
-	struct _llist_node_t *prev;	/**< previous node in the list */
-	void *data;			/**< the payload */
+  struct _llist_node_t *next; /**< next node in the list */
+  struct _llist_node_t *prev; /**< previous node in the list */
+  void *data;     /**< the payload */
 } llist_node_t;
 
 
 /** @brief a linked list handle. */
 typedef struct _llist_t {
-	llist_node_t *head;			/**< head of the list */
-	llist_node_t *tail;			/**< tail of the list */
-	size_t nnodes;				/**< number of nodes in list */
-	void (* free)(void *);			/**< function to free data from the list */
-	int (* cmp)(	const void *,
-			const void *);		/**< function to compare two nodes */
+  llist_node_t *head;     /**< head of the list */
+  llist_node_t *tail;     /**< tail of the list */
+  size_t nnodes;        /**< number of nodes in list */
+  void (*free) (void *);      /**< function to free data from the list */
+  int (*cmp) (const void *, const void *);
+                        /**< function to compare two nodes */
 } llist_t;
 
 /** @brief returns the number of elements in a linked list
@@ -83,9 +83,9 @@ typedef struct _llist_t {
   * 
   * @return 0 on success
   */
-int ll_list_init( llist_t *list,
-			void (* data_free)(void *),
-			int (* data_cmp)(const void *, const void *)) ;
+int ll_list_init(llist_t * list,
+                 void (*data_free) (void *),
+                 int (*data_cmp) (const void *, const void *));
 
 /** @brief allocates a node and initializes its fields
   * 
@@ -94,7 +94,7 @@ int ll_list_init( llist_t *list,
   *
   * @return 0 on success, -1 on memory error
   */
-int ll_init_node( llist_node_t **node, void *data ) ;
+int ll_init_node(llist_node_t ** node, void *data);
 
 
 /** @brief frees all of the nodes in a linked list
@@ -103,7 +103,7 @@ int ll_init_node( llist_node_t **node, void *data ) ;
   * 
   * @return 
   */
-int ll_destroy( llist_t *head ) ;
+int ll_destroy(llist_t * head);
 
 
 /** @brief  
@@ -114,7 +114,7 @@ int ll_destroy( llist_t *head ) ;
   * 
   * @return 0 on success, -1 on memory error
   */
-int ll_add_elem( llist_t *list, void *data, insert_point_t at ) ;
+int ll_add_elem(llist_t * list, void *data, insert_point_t at);
 
 
 /** @brief removes a node from a list
@@ -124,7 +124,7 @@ int ll_add_elem( llist_t *list, void *data, insert_point_t at ) ;
   * 
   * @return 0 on success, nonzero on error freeing memory
   */
-int ll_rm_elem( llist_t *list, llist_node_t *node ) ;
+int ll_rm_elem(llist_t * list, llist_node_t * node);
 
 /** @brief puts node pointers into an (already allocated) array.  (this
   * function isn't currently used in the phonebk application.)
@@ -132,7 +132,7 @@ int ll_rm_elem( llist_t *list, llist_node_t *node ) ;
   * @param list the list
   * @param array array with at least ll_list_size(list) elements allocated
   */
-void ll_to_array ( llist_t *list, llist_node_t **array ) ;
+void ll_to_array(llist_t * list, llist_node_t ** array);
 
 /** @brief call a function for the data in each element in a linked list.
   * the function will be passed the data in each node of the list.
@@ -143,8 +143,7 @@ void ll_to_array ( llist_t *list, llist_node_t **array ) ;
   * @return the last return value of the executed function, or -1 if
   * the list or the function pointer were NULL.
   */
-int ll_call_for_each ( llist_t *list, int (* func)( void * ) ) ;
+int ll_call_for_each(llist_t * list, int (*func) (void *));
 
 
 #endif /* LINKLIST_H */
-

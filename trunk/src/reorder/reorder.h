@@ -39,4 +39,3 @@
 int pushswap(char *s, int action_type);
 
 #endif /* REORDER_H */
-

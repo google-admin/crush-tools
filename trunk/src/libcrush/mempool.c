@@ -15,7 +15,7 @@
  *****************************************/
 
 #include <mempool.h>
-#include <string.h>	/* memcpy() */
+#include <string.h>             /* memcpy() */
 
 /** @brief creates a memory pool of the given size.
   * 
@@ -23,24 +23,24 @@
   * 
   * @return a newly-allocated memory pool
   */
-mempool_t * mempool_create ( size_t capacity ) {
-	mempool_t *pool;
+mempool_t *mempool_create(size_t capacity) {
+  mempool_t *pool;
 
-	pool = malloc( sizeof ( mempool_t ) );
-	if ( ! pool ) {
-		return NULL;
-	}
+  pool = malloc(sizeof(mempool_t));
+  if (!pool) {
+    return NULL;
+  }
 
-	pool->buffer = malloc( capacity );
-	if ( ! pool->buffer ) {
-		free(pool);
-		return NULL;
-	}
+  pool->buffer = malloc(capacity);
+  if (!pool->buffer) {
+    free(pool);
+    return NULL;
+  }
 
-	pool->next = 0;
-	pool->capacity = capacity;
+  pool->next = 0;
+  pool->capacity = capacity;
 
-	return pool;
+  return pool;
 }
 
 /** @brief tells how much space is left in a memory pool.
@@ -49,11 +49,11 @@ mempool_t * mempool_create ( size_t capacity ) {
   * 
   * @return the number of unused bytes in the memory pool
   */
-size_t mempool_available ( mempool_t *pool ) {
-	if ( ! pool )
-		return 0;
+size_t mempool_available(mempool_t * pool) {
+  if (!pool)
+    return 0;
 
-	return pool->capacity - pool->next;
+  return pool->capacity - pool->next;
 }
 
 /** @brief adds something to the memory pool.
@@ -65,30 +65,30 @@ size_t mempool_available ( mempool_t *pool ) {
   * @return the address in the memory pool where the thing was stored,
   * or NULL if there wasn't enough room for the thing.
   */
-void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size ) {
-	void *location;
+void *mempool_add(mempool_t * pool, const void *thing, size_t thing_size) {
+  void *location;
 
-	if ( ! pool )
-		return NULL;
+  if (!pool)
+    return NULL;
 
-	if ( ! thing || thing_size == 0 )
-		return NULL;
+  if (!thing || thing_size == 0)
+    return NULL;
 
-	if ( mempool_available( pool ) < thing_size )
-		return NULL;
+  if (mempool_available(pool) < thing_size)
+    return NULL;
 
-	/* calculate the offset into the buffer where the thing should be
-	   stored.
-	 */
-	location = pool->buffer + pool->next;
+  /* calculate the offset into the buffer where the thing should be
+     stored.
+   */
+  location = pool->buffer + pool->next;
 
-	if ( memcpy( location, thing, thing_size ) != location ) {
-		return NULL;
-	}
+  if (memcpy(location, thing, thing_size) != location) {
+    return NULL;
+  }
 
-	pool->next += thing_size;
+  pool->next += thing_size;
 
-	return location;
+  return location;
 }
 
 /** @brief reserves space within a memory pool
@@ -99,42 +99,41 @@ void * mempool_add ( mempool_t *pool, const void *thing, size_t thing_size ) {
   * @return the address in the memory pool where the thing was stored,
   * or NULL if there wasn't enough room.
   */
-void * mempool_alloc ( mempool_t *pool, size_t n_bytes ) {
-	void *location;
+void *mempool_alloc(mempool_t * pool, size_t n_bytes) {
+  void *location;
 
-	if ( ! pool )
-		return NULL;
-	if ( ! n_bytes || n_bytes > pool->capacity - pool->next )
-		return NULL;
+  if (!pool)
+    return NULL;
+  if (!n_bytes || n_bytes > pool->capacity - pool->next)
+    return NULL;
 
-	location = pool->buffer + pool->next;
+  location = pool->buffer + pool->next;
 
-	pool->next += n_bytes;
-	return location;
+  pool->next += n_bytes;
+  return location;
 }
 
 /** @brief zeroes out pool usage.
   * 
   * @param pool the pool to be cleared.
   */
-void mempool_reset ( mempool_t *pool ) {
-	if ( ! pool )
-		return;
-	/* waste of time to zero out the buffer */
-	pool->next = 0;
+void mempool_reset(mempool_t * pool) {
+  if (!pool)
+    return;
+  /* waste of time to zero out the buffer */
+  pool->next = 0;
 }
 
 /** @brief frees resources associated with a memory pool.
   * 
   * @param pool 
   */
-void mempool_destroy ( mempool_t *pool ) {
-	if ( ! pool )
-		return;
+void mempool_destroy(mempool_t * pool) {
+  if (!pool)
+    return;
 
-	if ( pool->buffer )
-		free(pool->buffer);
+  if (pool->buffer)
+    free(pool->buffer);
 
-	free(pool);
+  free(pool);
 }
-

@@ -29,18 +29,18 @@
 #include <stdio.h>
 
 
-typedef size_t (*hash_function_t)(void*, size_t len);
+typedef size_t(*hash_function_t) (void *, size_t len);
 
 
-size_t ht2_RSHash  (void* key, size_t len);
-size_t ht2_JSHash  (void* key, size_t len);
-size_t ht2_PJWHash (void* key, size_t len);
-size_t ht2_ELFHash (void* key, size_t len);
-size_t ht2_BKDRHash(void* key, size_t len);
-size_t ht2_SDBMHash(void* key, size_t len);
-size_t ht2_DJBHash (void* key, size_t len);
-size_t ht2_DEKHash (void* key, size_t len);
-size_t ht2_APHash  (void* key, size_t len);
+size_t ht2_RSHash(void *key, size_t len);
+size_t ht2_JSHash(void *key, size_t len);
+size_t ht2_PJWHash(void *key, size_t len);
+size_t ht2_ELFHash(void *key, size_t len);
+size_t ht2_BKDRHash(void *key, size_t len);
+size_t ht2_SDBMHash(void *key, size_t len);
+size_t ht2_DJBHash(void *key, size_t len);
+size_t ht2_DEKHash(void *key, size_t len);
+size_t ht2_APHash(void *key, size_t len);
 
 
 #endif

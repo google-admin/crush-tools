@@ -21,17 +21,17 @@
 #include <ffutils.h>
 
 #if HAVE_FCNTL_H
-# include <fcntl.h>	/* open64(), O_RDONLY, etc. */
+# include <fcntl.h>             /* open64(), O_RDONLY, etc. */
 #elif HAVE_SYS_FCNTL_H
 # include <sys/fcntl.h>
 #endif
 
 #if HAVE_UNISTD_H
-# include <unistd.h>	/* off64_t & close() */
+# include <unistd.h>            /* off64_t & close() */
 #endif
 
 #if HAVE_ERR_H
-# include <err.h>	/* warn() */
+# include <err.h>               /* warn() */
 #endif
 
 #if HAVE_LOCALE_H
@@ -67,7 +67,7 @@
 #define LEFT_RIGHT_EQUAL   0
 
 
-int merge_files( FILE *a, FILE *b, FILE *out, struct cmdargs *args ) ;
-int compare_keys ( char *buffer_left, char *buffer_right );
+int merge_files(FILE * a, FILE * b, FILE * out, struct cmdargs *args);
+int compare_keys(char *buffer_left, char *buffer_right);
 
 #endif /* DELTAFORCE_H */

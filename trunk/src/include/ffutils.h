@@ -114,7 +114,8 @@ size_t fields_in_line(const char *l, const char *d);
   * @return number of chars copied into buffer, or -1 if i is greater
   * than the number of fields in ct
   */
-int get_line_field(char *cs, const char *ct, const size_t n, const int i, const char *delim) ;
+int get_line_field(char *cs, const char *ct, const size_t n, const int i,
+                   const char *delim);
 
 /** @brief returns a pointer into a delimited string where a particular
   * field begins.
@@ -126,7 +127,7 @@ int get_line_field(char *cs, const char *ct, const size_t n, const int i, const 
   * @return a pointer into cs where the fn-th field begins, or NULL if
   *  the field does not exist.
   */
-char * field_start(const char *cs, size_t fn, const char *delim) ;
+char *field_start(const char *cs, size_t fn, const char *delim);
 
 /** @brief compares two date strings in the format MM-DD-YYYY_HH24:MI:SS
   * 
@@ -168,7 +169,7 @@ void trim(char *str);
   * 
   * @return the next successfully opened file or NULL
   */
-FILE * nextfile( int argc, char *argv[], int *optind, const char *mode );
+FILE *nextfile(int argc, char *argv[], int *optind, const char *mode);
 
 /** @brief expands escaped special characters within a string, modifying
   * the original string.
@@ -210,7 +211,7 @@ void expand_chars(char *s);
   *     -1 on memory allocation error,
   * 	-2 if arg has invalid syntax
   */
-ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
+ssize_t expand_nums(char *arg, int **array, size_t * array_size);
 
 /** @brief determines the position of the first and the last character
   * of the given field.
@@ -225,7 +226,8 @@ ssize_t expand_nums ( char *arg, int **array, size_t *array_size );
   *
   * @return the length of the field, or -1 if the field does not exist.
   */
-int get_line_pos( const char *ct, const int i, const char *d, int *start, int *end);
+int get_line_pos(const char *ct, const int i, const char *d, int *start,
+                 int *end);
 
 /** @brief removes a field from a line.
   *
@@ -235,7 +237,7 @@ int get_line_pos( const char *ct, const int i, const char *d, int *start, int *e
   *
   * @return pointer to ct
   */
-char * cut_field( char *ct, const int i, const char *d);
+char *cut_field(char *ct, const int i, const char *d);
 
 /** @brief locates the index of the first field in a delimited string
   * having a specific value.
@@ -247,15 +249,12 @@ char * cut_field( char *ct, const int i, const char *d);
   * @return 0-based index of the first field having the specified value,
   * -1 if not found, or -2 on error.
   */
-ssize_t field_str( const char *value, const char *line, const char *delim);
+ssize_t field_str(const char *value, const char *line, const char *delim);
 
 #if defined(HAVE_CONFIG_H) && \
     defined(HAVE_FGETLN) && \
   ! defined(HAVE_GETLINE)
-ssize_t getline (       
-        char**   outbuf,
-        size_t*  outsize,
-        FILE*    fp); 
+ssize_t getline(char **outbuf, size_t * outsize, FILE * fp);
 #endif
 
 #ifdef __GNUC__
@@ -272,7 +271,7 @@ ssize_t getline (
   */
 #define WARN(s, a) \
 	fprintf(stderr, "%s:%d: " s, __FILE__, __LINE__, a)
-		
+
 /** @brief emit an error message and exit.
   *
   * the message will include the file and line number.  the
@@ -286,7 +285,7 @@ ssize_t getline (
 		WARN((s), (a)); \
 		exit(-1); \
 	} while ( 0 )
-		
+
 #else
 
 /** @brief emit an error message.

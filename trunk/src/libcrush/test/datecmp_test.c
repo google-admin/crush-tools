@@ -18,29 +18,29 @@
 
 #include "ffutils.h"
 
-int main ( int argc, char *argv[] ) {
+int main(int argc, char *argv[]) {
 
-	char *date_a, *date_b;
-	char line[64];
+  char *date_a, *date_b;
+  char line[64];
 
-	int cmp;
+  int cmp;
 
-	while ( fgets(line, 64, stdin) ) {
+  while (fgets(line, 64, stdin)) {
 
-		line[19] = '\0';
-		line[39] = '\0';
+    line[19] = '\0';
+    line[39] = '\0';
 
-		date_a = line;
-		date_b = &(line[20]);
+    date_a = line;
+    date_b = &(line[20]);
 
-		cmp = mdyhms_datecmp(date_a, date_b);
-		/*
-		printf("%s %s %s\n",
-			date_a,
-			cmp == 0 ? "=" : (cmp > 0 ? ">" : "<"),
-			date_b );
-		*/
-	}
+    cmp = mdyhms_datecmp(date_a, date_b);
+    /*
+       printf("%s %s %s\n",
+       date_a,
+       cmp == 0 ? "=" : (cmp > 0 ? ">" : "<"),
+       date_b );
+     */
+  }
 
-	return 0;
+  return 0;
 }
