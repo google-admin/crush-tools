@@ -74,14 +74,14 @@ int ll_rm_elem(llist_t * list, llist_node_t * node) {
   if (node->next)
     node->next->prev = node->prev;
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
   fprintf(stderr, "freeing node data \"%s\" at %p\n", node->data, node->data);
 #endif
 
   if (list->free)               /* free the payload if a function was given */
     list->free(node->data);
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
   fprintf(stderr, "freeing node at %p\n", node);
 #endif
 

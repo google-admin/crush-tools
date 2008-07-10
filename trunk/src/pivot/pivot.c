@@ -21,7 +21,6 @@
 #include <locale.h>
 #include <assert.h>
 
-/* #define DEBUG */
 #define KEY_HASH_SZ 1024
 #define PIVOT_HASH_SZ 32
 #define MAX_FIELD_LEN 1024
@@ -154,7 +153,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       strcpy(headers[i], fieldbuf);
     }
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
     for (i = 0; i < n_headers; i++) {
       fprintf(stderr, "%s%s", headers[i], i < n_headers - 1 ? args->delim : "");
     }
@@ -215,7 +214,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       extract_fields_to_string(inbuf, pivstr, pivstr_sz, pivots, n_pivots,
                                args->delim);
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       if (n_keys)
         fprintf(stderr, "key string: %s\n", keystr);
       if (n_pivots)
@@ -250,7 +249,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
           /* remember the greatest input floating-point precision for each field */
           tmplen = float_str_precision(fieldbuf);
           if (value_precisions[i] < tmplen) {
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
             fprintf(stderr, "setting precision to %d for field %d\n", tmplen,
                     i);
 #endif
@@ -296,7 +295,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
     qsort(pivot_array, n_pivot_keys, sizeof(char *),
           (int (*)(const void *, const void *)) key_strcmp);
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
     printf("sorted pivot strings:\n");
     for (i = 0; i < n_pivot_keys; i++) {
       printf("\t%s\n", pivot_array[i]);
@@ -383,7 +382,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       key_list = key_hash.arr[i];
       if (key_list) {
         for (key_node = key_list->head; key_node; key_node = key_node->next) {
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
           fprintf(stderr, "got key \"%s\" out of hash.\n",
                   ((ht_elem_t *) key_node->data)->key);
 #endif

@@ -100,20 +100,20 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     average_precisions = malloc(sizeof(int) * naverages);
     memset(average_precisions, 0, sizeof(int) * naverages);
   }
-#ifdef DEBUG
-  printf("%d keys: ", nkeys);
+#ifdef CRUSH_DEBUG
+  fprintf(stderr, "%d keys: ", nkeys);
   for (i = 0; i < nkeys; i++)
-    printf("%d ", key_fields[i]);
-  printf("\n%d sums: ", nsums);
+    fprintf(stderr, "%d ", key_fields[i]);
+  fprintf(stderr, "\n%d sums: ", nsums);
   for (i = 0; i < nsums; i++)
-    printf("%d ", sum_fields[i]);
-  printf("\n%d averages: ", naverages);
+    fprintf(stderr, "%d ", sum_fields[i]);
+  fprintf(stderr, "\n%d averages: ", naverages);
   for (i = 0; i < naverages; i++)
-    printf("%d ", average_fields[i]);
-  printf("\n%d counts: ", ncounts);
+    fprintf(stderr, "%d ", average_fields[i]);
+  fprintf(stderr, "\n%d counts: ", ncounts);
   for (i = 0; i < ncounts; i++)
-    printf("%d ", count_fields[i]);
-  printf("\n\n");
+    fprintf(stderr, "%d ", count_fields[i]);
+  fprintf(stderr, "\n\n");
 #endif
 
   if (optind == argc)

@@ -28,7 +28,7 @@
 
 #define DEFAULT_MAX_PROCS 10
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
 #define DEBUG_PRINT(s) \
 	fprintf(stderr, "%s" "\n", (s))
 #else
@@ -245,7 +245,7 @@ static int run_in_parallel(char *script, struct cmdargs *args, int argc,
         /* just check to see if any children are
            waiting to be reaped. */
         ret = wait_for_child(WNOHANG);
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
         if (ret >= 0) {
           DEBUG_PRINT("a child has been reaped.");
         }

@@ -62,7 +62,7 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   char default_delim[] = { 0xfe, 0x00 };
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
   int i;
   for (i = 0; i < n_swap; i++) {
     if (swap[i][2] == REORDER_TYPE_SWAP)
@@ -227,7 +227,7 @@ void doswap(char *s, char *ct, const char *d) {
     else if (swap[i][2] == REORDER_TYPE_MOVE)
       be += dl;
 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
     fprintf(stderr, "doswap: beginning of A is at %d, A is %d long\n", as - ct,
             ae - as);
     fprintf(stderr, "doswap: beginning of B is at %d, B is %d long\n", bs - ct,

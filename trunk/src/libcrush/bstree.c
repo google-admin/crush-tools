@@ -21,7 +21,7 @@
   
 #include <bstree.h>
   
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
 #include <stdio.h>	/* only needed for debug prints */
 #endif  /* 
  */
@@ -117,7 +117,7 @@ if (parent) {
 if (cmp > 0 && parent->r != NULL) {
       
         /* new data greater than parent's data */ 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
         fprintf(stderr, "parent already has right node.");
       
 #endif  /* 
@@ -127,7 +127,7 @@ if (cmp > 0 && parent->r != NULL) {
 } else if (cmp <= 0 && parent->l != NULL) {
       
         /* new data less than/equal to parent's data */ 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
         fprintf(stderr, "parent already has left node.");
       
 #endif  /* 
@@ -139,7 +139,7 @@ if (cmp > 0 && parent->r != NULL) {
 } else if (tree->root) {
     
       /* no parent, but the tree already has a root! */ 
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       fprintf(stderr, "tree already has a root - parent must be specified.");
     
 #endif  /* 
@@ -256,7 +256,7 @@ cur = bst_find(tree, data);
   
 if (!cur) {
     
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       fprintf(stderr, "node not found\n");
     
 #endif  /* 
@@ -405,7 +405,7 @@ right = node->r;
   
 if (right->balance == rightheavy) {
     
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       printf("rotating right-right\n");
     
 #endif  /* 
@@ -444,7 +444,7 @@ right->balance = balanced;
     /** @bug in the right-left rotation, grandchild may be NULL, causing a segfault.
 		  * likely due to the circumstances in which this type of rotation is performed. */ 
       
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       printf("rotating right-left\n");
     
 #endif  /* 
@@ -510,7 +510,7 @@ left = node->l;
   
 if (left->balance == leftheavy) {
     
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       printf("rotating left-left\n");
     
 #endif  /* 
@@ -549,7 +549,7 @@ left->balance = balanced;
     /** @bug in the left-right rotation, grandchild may be NULL, causing a segfault.
 		  * likely due to the circumstances in which this type of rotation is performed. */ 
       
-#ifdef DEBUG
+#ifdef CRUSH_DEBUG
       printf("rotating left-right\n");
     
 #endif  /* 
