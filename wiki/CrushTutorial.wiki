@@ -48,7 +48,7 @@ The default delimiter 'þ' is used here for its low probability of collision wit
 
 == Simple aggregations ==
 
-Let's say we want to know how many hits we're getting from each logged-in user.  The aggregate (AggregateUserDocs) utility is designed for this purpose.
+Let's say we want to know how many hits we're getting from each logged-in user.  The `aggregate` (AggregateUserDocs) utility is designed for this purpose.
 
 {{{
 aal2d /var/log/httpd/access_log | aggregate -p -k 2 -c 1
@@ -69,7 +69,7 @@ snimþ34
 sunnyjimþ141
 }}}
 
-If we wanted to get that broken out by day, we can convert the time format using convdate (ConvdateUserDocs) to contain only the date and add that as a key field.
+If we wanted to get that broken out by day, we can convert the time format using `convdate` (ConvdateUserDocs) to contain only the date and add that as a key field.
 
 {{{
 aal2d /var/log/httpd/access_log |
@@ -77,7 +77,7 @@ aal2d /var/log/httpd/access_log |
   aggregate -p -k 3,2 -c 1
 }}}
 
-The convdate call takes strings like "08/Jul/2008:04:27:26 -0600" and turns them into strings like "2008-07-08", giving us
+The `convdate` call takes strings like "08/Jul/2008:04:27:26 -0600" and turns them into strings like "2008-07-08", giving us
 
 {{{
 TimeþAuth-UserþIP
@@ -104,7 +104,7 @@ TimeþAuth-UserþIP
 
 == More formatting ==
 
-In the example of login-page-hits by day, if you have a small number of users you may wish to have a column for each user and a row for each date.  The pivot (PivotUserDocs) utility handles this:
+In the example of login-page-hits by day, if you have a small number of users you may wish to have a column for each user and a row for each date.  The `pivot` (PivotUserDocs) utility handles this:
 
 {{{
 aal2d /var/log/httpd/access_log |
@@ -123,7 +123,7 @@ Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsun
 2008-07-09þ342þ44þ111þ3þ0þ1þ79
 }}}
 
-Piping the same command to `csvformat` will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we'll use the standard `sed(1)` utility on just the header line.
+Piping the same command to `csvformat` (CsvformatUserDocs) will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` (Translate_fieldUserDocs) to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we'll use the standard `sed(1)` utility on just the header line, though `translate_field` would work as well.
 
 {{{
 aal2d /var/log/httpd/access_log |
