@@ -20,7 +20,7 @@ for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 	expected_out=$wdir/test/test_${tests[$i]}.expected
 	actual_out=$wdir/test/test_${tests[$i]}.out
 
-	eval "$wdir/calcfields.pl ${test_opts[$i]} < ${test_inputs[$i]} > $actual_out"
+	eval "$wdir/calcfield ${test_opts[$i]} < ${test_inputs[$i]} > $actual_out"
 
 	has_diff=`diff -q $expected_out $actual_out`
 	if [ $? -eq 2 ]; then
