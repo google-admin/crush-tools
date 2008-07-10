@@ -17,94 +17,87 @@
 use strict;
 use Getopt::Long;
 
-Getopt::Long::Configure( "no_ignore_case" );
+Getopt::Long::Configure("no_ignore_case");
 
-my ( $help, $debug, $field, $delim, $replace, $append, $prepend, %mapping,
-     $external );
+my($help, $debug, $field, $delim, $replace, $append, $prepend, %mapping,
+   $external);
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
-GetOptions (	"help"		=> \$help,
-		"Debug"		=> \$debug,
-		"field=n"	=> \$field,
-		"delim=s"	=> \$delim,
-		"append"	=> \$append,
-		"prepend"	=> \$prepend,
-		"replace"	=> \$replace,
-		"map=s"		=> \%mapping,
-		"external=s"	=> \$external,
-	);
+GetOptions("help" => \$help,
+           "Debug" => \$debug,
+           "field=n" => \$field,
+           "delim=s" => \$delim,
+           "append" => \$append,
+           "prepend" => \$prepend,
+           "replace" => \$replace,
+           "map=s" => \%mapping,
+           "external=s" => \$external);
 
-if ( $help ) {
-	usage();
-	exit(1);
+if ($help) {
+  usage();
+  exit(1);
 }
 
-if ( ! defined($field) ) {
-	print STDERR "-f must be specified.\n";
-	exit(1);
+if (! defined($field)) {
+  print STDERR "-f must be specified.\n";
+  exit(1);
 }
 
 $field--;
 
-if ( $external ) {
-	print STDERR "sourcing $external\n" if ( $debug );
-	eval `cat $external` or die;
-	if ( $@ ) { die }
+if ($external) {
+  print STDERR "sourcing $external\n" if ($debug);
+  eval `cat $external` or die;
+  if ($@) { die }
 }
 
 # default to replace, but only if -a or -p weren't specified
-if ( ! ($append || $prepend) ) {
-	$replace = 1;
+if (! ($append || $prepend)) {
+  $replace = 1;
 }
 
-
-if ( $debug ) {
-	while ( my ($k, $v) = each %mapping ) {
-		print STDERR "$k => $v\n";
-	}
+if ($debug) {
+  while (my ($k, $v) = each %mapping) {
+    print STDERR "$k => $v\n";
+  }
 }
 
 my ($line_str, @line, $field_val, $trans_val, $local_field);
-while ( $line_str = <> ) {
-	$line_str =~ s/([\r\n]+)//m;
+while ($line_str = <>) {
+  $line_str =~ s/([\r\n]+)//m;
 
-	@line = split(/\Q$delim\E/, $line_str, -1);
+  @line = split(/\Q$delim\E/, $line_str, -1);
 
-	# when prepending, the field may shift
-	$local_field = $field;
-	$field_val = $line[$local_field];
+  # when prepending, the field may shift
+  $local_field = $field;
+  $field_val = $line[$local_field];
 
-	if ( defined($mapping{$field_val}) ) {
-		$trans_val = $mapping{$field_val};
-	}
-	else {
-		$trans_val = $line[$local_field];
-	}
+  if (defined($mapping{$field_val})) {
+    $trans_val = $mapping{$field_val};
+  } else {
+    $trans_val = $line[$local_field];
+  }
 
-	# if no mapping defined, the field value is passed through unchanged
-	if ( $prepend ) {
-		splice(@line, $local_field, 1,
-			$trans_val,
-			$field_val);
-		$local_field++;
-	}
-	if ( $append ) {
-		splice(@line, $local_field, 1,
-			$field_val,
-			$trans_val);
-	}
-	if ( $replace ) {
-		$line[$local_field] = $trans_val;
-	}
+  # if no mapping defined, the field value is passed through unchanged
+  if ($prepend) {
+    splice(@line, $local_field, 1, $trans_val, $field_val);
+    $local_field++;
+  }
+  if ($append) {
+    splice(@line, $local_field, 1, $field_val, $trans_val);
+  }
+  if ($replace) {
+    $line[$local_field] = $trans_val;
+  }
 
-	print join($delim, @line), $1;
+  print join($delim, @line), $1;
 }
 
 exit(0);
 
 sub usage {
-	print STDERR << "END_USAGE";
+  print STDERR << "END_USAGE";
 
 convert field values based on user-supplied mappings.
 
@@ -119,7 +112,7 @@ usage: $0 <-f <N>> [options] [file ...]
   -m, --map <K=V>  specifies a translation mapping for a possible
                    field value
   -e, --external <F> specifies a file containing perl expressions which
-		  define mappings in the hashtable "\%mapping"
+      define mappings in the hashtable "\%mapping"
 
 see `perldoc $0` for more details.
 
@@ -141,7 +134,7 @@ usage: $0 <-f <N>> [options] [file ...]
   -m, --map <K=V>  specifies a translation mapping for a possible
                    field value
   -e, --external <F> specifies a file containing perl expressions which
-		  define mappings in the hashtable "\%mapping"
+      define mappings in the hashtable "\%mapping"
 
 =head1 DETAILS
 
@@ -167,12 +160,12 @@ value).
 
 The file specified by -e may have statements like
 
-	$mapping{hello} = 'salve';
-	$mapping{world} = 'orbis terrae';
+  $mapping{hello} = 'salve';
+  $mapping{world} = 'orbis terrae';
 
 or
 
-	%mapping = ( "hello" => "salve", "world" => "orbis terrae" );
+  %mapping = ("hello" => "salve", "world" => "orbis terrae");
 
 The latter will nullify any -m parameters passed on the commandline.
 

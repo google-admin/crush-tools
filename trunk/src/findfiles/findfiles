@@ -21,138 +21,131 @@ my($help, $debug, $filedir, $startdate, $enddate, $pattern, $fileglob);
 $pattern = '\d\d-\d\d-\d\d\d\d';
 $debug = 0;
 
-&GetOptions(	"help"		=> \$help,
-		"directory:s"	=> \$filedir,
-		"startdate:s"	=> \$startdate,
-		"enddate:s"	=> \$enddate,
-		"pattern:s"	=> \$pattern,
-		"glob:s"	=> \$fileglob,
-	   );
+&GetOptions("help" => \$help,
+            "directory:s" => \$filedir,
+            "startdate:s" => \$startdate,
+            "enddate:s" => \$enddate,
+            "pattern:s" => \$pattern,
+            "glob:s" => \$fileglob);
 
-if( $help ) {
-	usage();
-	exit(1);
+if ($help) {
+  usage();
+  exit(1);
 }
 
-if ( (! defined($filedir))
-  || (! defined($startdate) && scalar(@ARGV) < 3 )
-  || (! defined($enddate)   && scalar(@ARGV) < 3 )  ) {
-	print STDERR "directory, startdate, and enddate args are required.\n";
-	exit(1);
+if ((! defined($filedir)) ||
+    (! defined($startdate) && scalar(@ARGV) < 3) ||
+    (! defined($enddate)   && scalar(@ARGV) < 3)) {
+  print STDERR "directory, startdate, and enddate args are required.\n";
+  exit(1);
 }
 
-$filedir =~ s#/$##;
+$filedir =~ s:/$::;
 
-if ( ! -d $filedir ){
-	print STDERR "findfiles: $filedir: not a directory\n";
-	exit(2);
+if (! -d $filedir){
+  print STDERR "findfiles: $filedir: not a directory\n";
+  exit(2);
 }
 
 opendir(DIR, $filedir) or die ("findfiles: $filedir: $!\n");
 closedir(DIR);
 
-my ($sy, $sm, $sd, $ey, $em, $ed);
-if( ! defined($startdate) ){
-	($sy, $sm, $sd) = splice(@ARGV, 0, 3);
+my($sy, $sm, $sd, $ey, $em, $ed);
+if (! defined($startdate)){
+  ($sy, $sm, $sd) = splice(@ARGV, 0, 3);
 } else {
-	($sy, $sm, $sd) = split(/-/, $startdate);
+  ($sy, $sm, $sd) = split(/-/, $startdate);
 }
-if( ! defined($enddate) ){
-	($ey, $em, $ed) = splice(@ARGV, 0, 3);
+if (! defined($enddate)){
+  ($ey, $em, $ed) = splice(@ARGV, 0, 3);
 } else {
-	($ey, $em, $ed) = split(/-/, $enddate);
+  ($ey, $em, $ed) = split(/-/, $enddate);
 }
-if( ! ( defined($sy) && defined($sm) && defined($sd) &&
-	defined($ey) && defined($em) && defined($ed) )) {
-	usage();
-	exit(1);
-
+if (!(defined($sy) && defined($sm) && defined($sd) &&
+      defined($ey) && defined($em) && defined($ed))) {
+  usage();
+  exit(1);
 }
 
 my @files;
-if ( $fileglob ) {
-	@files = <$filedir/$fileglob>;
-	# make sure the files have a time stamp
-	@files = grep /$pattern/ , @files;
-}
-else {
-	opendir (FDIR, $filedir) or die "$filedir: $!\n";
-	@files = grep /$pattern/ , readdir(FDIR);
+if ($fileglob) {
+  @files = <$filedir/$fileglob>;
+  # make sure the files have a time stamp
+  @files = grep /$pattern/ , @files;
+} else {
+  opendir (FDIR, $filedir) or die "$filedir: $!\n";
+  @files = grep /$pattern/ , readdir(FDIR);
 }
 
-if ( $debug ){
-	print "looking through " , scalar(@files) , " files.\n";
+if ($debug){
+  print "looking through " , scalar(@files) , " files.\n";
 }
 
 foreach my $file (sort datestamp_sort @files) {
-	if( in_range($file) ){
-		# files from a glob match will have the dir in them already
-		if ( $file =~ m#\Q$filedir\E# ) {
-			print $file, qq(\n);
-		}
-		else {
-			print "$filedir/$file" , qq(\n);
-		}
-	}
+  if(in_range($file)){
+    # files from a glob match will have the dir in them already
+    if ($file =~ m#\Q$filedir\E#) {
+      print $file, qq(\n);
+    } else {
+      print "$filedir/$file" , qq(\n);
+    }
+  }
 }
 
 sub in_range {
+  my $fname = shift;
+  $fname =~ /(\d\d)-(\d\d)-(\d\d\d\d)/;
+  my ($fy, $fm, $fd) = ($3, $1, $2);
 
-	my $fname = shift;
-	$fname =~ /(\d\d)-(\d\d)-(\d\d\d\d)/;
-	my ($fy, $fm, $fd) = ($3, $1, $2);
-
-	if ( date_equal($sy, $sm, $sd, $fy, $fm, $fd) ||
-	     date_equal($ey, $em, $ed, $fy, $fm, $fd) ||
-	     (   date_before($fy, $fm, $fd, $ey, $em, $ed) &&
-	       ! date_before($fy, $fm, $fd, $sy, $sm, $sd) )
-	) {
-		return 1;
-	}
-	return 0;
-
+  if (date_equal($sy, $sm, $sd, $fy, $fm, $fd) ||
+      date_equal($ey, $em, $ed, $fy, $fm, $fd) ||
+      (date_before($fy, $fm, $fd, $ey, $em, $ed) &&
+       ! date_before($fy, $fm, $fd, $sy, $sm, $sd))) {
+    return 1;
+  }
+  return 0;
 }
 
 # returns true if 1st date is before the 2nd date
 sub date_before {
-	my ($y1, $m1, $d1, $y2, $m2, $d2) = @_;
-	return 1 if ($y1 < $y2);
-	return 1 if ($y1 == $y2 && $m1 < $m2);
-	return 1 if ($y1 == $y2 && $m1 == $m2 && $d1 < $d2);
-	return 0;
+  my ($y1, $m1, $d1, $y2, $m2, $d2) = @_;
+  return 1 if ($y1 < $y2);
+  return 1 if ($y1 == $y2 && $m1 < $m2);
+  return 1 if ($y1 == $y2 && $m1 == $m2 && $d1 < $d2);
+  return 0;
 }
 
 
 sub date_equal {
-	my ($y1, $m1, $d1, $y2, $m2, $d2) = @_;
-	return 1 if ($y1 == $y2 && $m1 == $m2 && $d1 == $d2);
-	return 0;
+  my ($y1, $m1, $d1, $y2, $m2, $d2) = @_;
+  return 1 if ($y1 == $y2 && $m1 == $m2 && $d1 == $d2);
+  return 0;
 }
 
 
 sub datestamp_sort {
-	$a =~ /(\d\d)-(\d\d)-(\d{4})/;
-	my ($ay, $am, $ad) = ($3, $1, $2);
-	$b =~ /(\d\d)-(\d\d)-(\d{4})/;
-	my ($by, $bm, $bd) = ($3, $1, $2);
-	return $ay <=> $by || $am <=> $bm || $ad <=> $bd;
+  $a =~ /(\d\d)-(\d\d)-(\d{4})/;
+  my ($ay, $am, $ad) = ($3, $1, $2);
+  $b =~ /(\d\d)-(\d\d)-(\d{4})/;
+  my ($by, $bm, $bd) = ($3, $1, $2);
+  return $ay <=> $by || $am <=> $bm || $ad <=> $bd;
 }
 
 
 sub usage {
-	print STDERR <<"ENDUSAGE";
+  print STDERR <<"ENDUSAGE";
 
 finds files in a directory with MM-DD-YYYY date stamps within a given range.
 
 Usage: $0 <options>
 
 Options:
-	-h, --help
-	-d, --directory <dir>     directory containing files (required)
-	-g, --glob <GLOB>         file pattern to look for
-	-p, --pattern <REGEX>     filter (default: \\d\\d-\\d\\d-\\d\\d\\d\\d)
-	-s, --start <YYYY-MM-DD>  beginning of date range to include (required)
-	-e, --end <YYYY-MM-DD>    end of date range to include (required)
+  -h, --help
+  -d, --directory <dir>     directory containing files (required)
+  -g, --glob <GLOB>         file pattern to look for
+  -p, --pattern <REGEX>     filter (default: \\d\\d-\\d\\d-\\d\\d\\d\\d)
+  -s, --start <YYYY-MM-DD>  beginning of date range to include (required)
+  -e, --end <YYYY-MM-DD>    end of date range to include (required)
 
 if --pattern is not specified, any file with a MM-DD-YYYY date stamp will be
 included.  note that the pattern is applied even if -g is specified.

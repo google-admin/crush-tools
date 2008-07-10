@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w -I/home/jhinds/lib/perl
+#!/usr/bin/perl -w
 
 #  Copyright 2008 Google Inc.
 #
@@ -19,50 +19,46 @@ use DART::FileChecker;
 use Getopt::Long;
 
 my ($help, $dir, $logfile, $print_dir, $file_regex, $file_glob);
-# $file_glob = '*';
 
-GetOptions (	"help"		=> \$help,
-		"directory=s"	=> \$dir,
-		"logfile=s"	=> \$logfile,
-		"print-dir"	=> \$print_dir,
-		"glob=s"	=> \$file_glob,
-		"regex=s"	=> \$file_regex,
-	);
+GetOptions("help" => \$help,
+           "directory=s" => \$dir,
+           "logfile=s" => \$logfile,
+           "print-dir" => \$print_dir,
+           "glob=s" => \$file_glob,
+           "regex=s" => \$file_regex);
 
-if ( $help ) {
-	usage();
-	exit(1);
+if ($help) {
+  usage();
+  exit(1);
 }
 
-if ( ! $dir ) {
-	die "$0: -d must be specified.\n";
-} elsif ( ! -d $dir ) {
-	die "$0: invalid directory \"$dir\".\n";
+if (! $dir) {
+  die "$0: -d must be specified.\n";
+} elsif (! -d $dir) {
+  die "$0: invalid directory \"$dir\".\n";
 }
 
-if ( ! $logfile ) {
-	die "$0: -l must be specified.\n";
-}
-elsif ( ! -f $logfile ) {
-	system("touch", "$logfile") == 0 or die "$0: error creating file $logfile\n";
+if (! $logfile) {
+  die "$0: -l must be specified.\n";
+} elsif (! -f $logfile) {
+  system("touch", "$logfile") == 0 or die "$0: error creating file $logfile\n";
 }
 
 my @files_to_run;
-if ( $file_regex ) {
-	@files_to_run = DART::FileChecker->dir_file_diff($logfile, $dir, $file_regex);
-}
-else {
-	@files_to_run = DART::FileChecker->dir_file_glob_diff($logfile, $dir, $file_glob);
+if ($file_regex) {
+  @files_to_run = DART::FileChecker->dir_file_diff($logfile, $dir, $file_regex);
+} else {
+  @files_to_run = DART::FileChecker->dir_file_glob_diff($logfile,
+                                                        $dir, $file_glob);
 }
 
-if ( $print_dir ) {
-	if ( $dir !~ m#/$# ) { $dir .= '/' }
-	foreach my $f ( @files_to_run ) {
-		print $dir, $f , q( );
-	}
-}
-else {
-	print join(' ', @files_to_run);
+if ($print_dir) {
+  if ($dir !~ m#/$#) { $dir .= '/' }
+  foreach my $f (@files_to_run) {
+    print $dir, $f , q();
+  }
+} else {
+  print join(' ', @files_to_run);
 }
 print qq(\n);
 
@@ -71,7 +67,7 @@ exit(0);
 
 sub usage {
 
-	print STDERR << "ENDUSAGE";
+  print STDERR << "ENDUSAGE";
 finds files in a directory which are not listed in a log file
 
 usage: $0 <options>

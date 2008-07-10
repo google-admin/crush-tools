@@ -34,82 +34,82 @@ $pwd = $ENV{'DB_PWD'};
 my ($help, $sqlfile, $sql, $infile, $outfile, $d);
 $d = $ENV{"DELIMITER"} || chr(0xfe);
 
-GetOptions(	'help'		=> \$help,
-		'file:s'	=> \$sqlfile,
-		'sql:s'		=> \$sql,
-		'input:s'	=> \$infile,
-		'output:s'	=> \$outfile,
-		'delimiter:s'	=> \$d,
-		'dsn:s'		=> \$dsn,
-		'uid:s'		=> \$uid,
-		'pwd:s'		=> \$pwd,
-	);
+GetOptions('help' => \$help,
+           'file=s' => \$sqlfile,
+           'sql=s' => \$sql,
+           'input=s' => \$infile,
+           'output=s' => \$outfile,
+           'delimiter=s' => \$d,
+           'dsn=s' => \$dsn,
+           'uid=s' => \$uid,
+           'pwd=s' => \$pwd);
+  
 
 
 if ($help) {
-	usage();
-	exit(1);
+  usage();
+  exit(1);
 }
 
-if( ! (defined($dsn) && defined($uid) && defined($pwd) ) ){
-	print STDERR "need db connect info in environment vars DB_[DSN|UID|PWD]\n";
-	exit(1);
+if (! (defined($dsn) && defined($uid) && defined($pwd) )) {
+  print STDERR "need db connect info in environment vars DB_[DSN|UID|PWD]\n";
+  exit(1);
 }
 
 my $query;
-if( defined($sql) ){
-	$query = $sql;
-}elsif( defined($sqlfile) ){
-	open(SFILE,$sqlfile) or die "$sqlfile: $!\n";
-	$query = join '', <SFILE>;
-	close(SFILE);
+if (defined($sql)) {
+  $query = $sql;
+} elsif (defined($sqlfile)) {
+  open(SFILE, $sqlfile) or die "$sqlfile: $!\n";
+  $query = join '', <SFILE>;
+  close(SFILE);
 } else {
-	usage();
-	print STDERR "-s or -f must be specified.";
-	exit(1);
+  usage();
+  print STDERR "-s or -f must be specified.";
+  exit(1);
 }
 
 my $dbh = DBI->connect($dsn, $uid, $pwd, {RaiseError => 1, AutoCommit => 1} );
 my $dbq = $dbh->prepare($query);
 
-if( $query =~ /^\(*\s*select/mi ){
-	my $fhout;
-	if( defined($outfile) ){
-		$fhout = new FileHandle ($outfile, "w");
-		die "$outfile: $!\n" unless $fhout;
-	} else {
-		$fhout = new FileHandle;
-		$fhout->fdopen("STDOUT", "w");
-		die "stdout: $!\n" unless $fhout;
-	}
-	$dbq->execute();
-	while(my $results = $dbq->fetchrow_arrayref()){
-		for ( my $ri = 0; $ri < scalar(@{ $results }); $ri++ ) {
-			if ( ! defined($results->[$ri]) ) {
-				$results->[$ri] = '';
-			}
-		}
-		print $fhout join($d, @{ $results }) , qq(\n);
-	}
-	$fhout->close;
-} elsif( $query =~ /^(insert|update)/i ){
-	my $fhin;
-	if( defined($infile) ){
-		$fhin = new FileHandle ($infile, "r");
-		die "$infile: $!\n" unless $fhin;
-	} else {
-		$fhin = new FileHandle;
-		$fhin->fdopen ( "STDIN", "r");
-		die "stdin: $!\n" unless $fhin;
-	}
-	while(<$fhin>){
-		chomp( my @vals = split(/\Q$d\E/) );
-		$dbq->execute(@vals);
-	}
-	$fhin->close;
+if ($query =~ /^\(*\s*select/mi) {
+  my $fhout;
+  if (defined($outfile)) {
+    $fhout = new FileHandle($outfile, "w");
+    die "$outfile: $!\n" unless $fhout;
+  } else {
+    $fhout = new FileHandle;
+    $fhout->fdopen("STDOUT", "w");
+    die "stdout: $!\n" unless $fhout;
+  }
+  $dbq->execute();
+  while (my $results = $dbq->fetchrow_arrayref()) {
+    for (my $ri = 0; $ri < scalar(@{ $results }); $ri++) {
+      if (! defined($results->[$ri])) {
+        $results->[$ri] = '';
+      }
+    }
+    print $fhout join($d, @{ $results }) , qq(\n);
+  }
+  $fhout->close;
+} elsif ($query =~ /^(insert|update)/i) {
+  my $fhin;
+  if (defined($infile)) {
+    $fhin = new FileHandle($infile, "r");
+    die "$infile: $!\n" unless $fhin;
+  } else {
+    $fhin = new FileHandle;
+    $fhin->fdopen("STDIN", "r");
+    die "stdin: $!\n" unless $fhin;
+  }
+  while (<$fhin>) {
+    chomp(my @vals = split(/\Q$d\E/));
+    $dbq->execute(@vals);
+  }
+  $fhin->close;
 } else {
-	print STDERR "invalid query syntax\n";
-	exit(1);
+  print STDERR "invalid query syntax\n";
+  exit(1);
 }
 
 $dbh->disconnect();
@@ -118,7 +118,7 @@ exit(0);
 
 
 sub usage {
-	print STDERR <<"ENDUSAGE";
+  print STDERR << "ENDUSAGE";
 
 runs a query.
 
@@ -126,15 +126,15 @@ usage: $0 <-f <sql-file> | -s <query>> [options]
 
 options:
 
-	-h, --help		print this message and exit
-	-f, --file   <file>	take sql from specified file
-	-s, --sql    <query>	take sql on the commandline
-	-i, --input  <file>	input of placeholder values
-	-o, --output <file>	write to specified file instead of stdout
-	--delimiter  <delim>	use specified field separator
-	--dsn        <dsn>	use DBI-style data-source name
-	--uid        <username>	database username
-	--pwd        <password>	database password
+  -h, --help           print this message and exit
+  -f, --file <file>    take sql from specified file
+  -s, --sql <query>    take sql on the commandline
+  -i, --input <file>   input of placeholder values
+  -o, --output <file>  write to specified file instead of stdout
+  --delimiter <delim>  use specified field separator
+  --dsn <dsn>          use DBI-style data-source name
+  --uid <username>     database username
+  --pwd <password>     database password
 
 if --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN,
 DB_UID, and DB_PWD will be used for the unprovided values.
