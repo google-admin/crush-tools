@@ -296,9 +296,9 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     qsort(pivot_array, n_pivot_keys, sizeof(char *),
           (int (*)(const void *, const void *)) key_strcmp);
 #ifdef CRUSH_DEBUG
-    printf("sorted pivot strings:\n");
+    fprintf(stderr, "sorted pivot strings:\n");
     for (i = 0; i < n_pivot_keys; i++) {
-      printf("\t%s\n", pivot_array[i]);
+      fprintf(stderr, "\t%s\n", pivot_array[i]);
     }
 #endif
   }
@@ -314,11 +314,14 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
        separator.  safe assumption?  probably not if every input field
        is used as a pivot field. */
     pivot_label = malloc(inbuf_sz);
+    if (! pivot_label) {
+      warn("allocating memory for the labels");
+      exit(EXIT_MEM_ERR);
+    }
 
     if (n_keys) {
       for (i = 0; i < n_keys; i++)
         printf("%s%s", headers[keys[i]], delim);
-
     }
     for (i = 0; i < n_pivot_keys; i++) {
       pivot_label[0] = 0x00;
@@ -337,6 +340,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
         if (j != n_values - 1)
           fputs(delim, stdout);
       }
+      /* TODO: segfault is happening around here */
       if (i != n_pivot_keys - 1)
         fputs(delim, stdout);
 
