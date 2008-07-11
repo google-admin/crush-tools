@@ -15,7 +15,6 @@
 #  limitations under the License.
 
 use strict;
-use DART::FileChecker;
 use Getopt::Long;
 
 my ($help, $dir, $logfile, $print_dir, $file_regex, $file_glob);
@@ -44,13 +43,27 @@ if (! $logfile) {
   system("touch", "$logfile") == 0 or die "$0: error creating file $logfile\n";
 }
 
-my @files_to_run;
-if ($file_regex) {
-  @files_to_run = DART::FileChecker->dir_file_diff($logfile, $dir, $file_regex);
+my (@files_in_log, @files_in_dir);
+
+open(LOG, $logfile) or die "$logfile: $!\n";
+# chomp() assumes consistency in linebreak style
+@files_in_log = <LOG>;
+map { s/[\r\n]//g; } @files_in_log;
+close(LOG);
+
+if ($file_glob) {
+  @files_in_dir = <$dir/$file_glob>;
+  map { s:.*/:: } @files_in_dir;
 } else {
-  @files_to_run = DART::FileChecker->dir_file_glob_diff($logfile,
-                                                        $dir, $file_glob);
+  if (! $file_regex) {
+    $file_regex = '^[^.]';
+  }
+  opendir(DIR, $dir) || die "$dir: $!\n";
+  @files_in_dir = grep /$file_regex/, readdir(DIR);
+  closedir(DIR);
 }
+
+my @files_to_run = array_diff(\@files_in_log, \@files_in_dir);
 
 if ($print_dir) {
   if ($dir !~ m#/$#) { $dir .= '/' }
@@ -83,3 +96,23 @@ options:
 
 ENDUSAGE
 }
+
+
+
+# return a list of all the things in $b which are not in $a
+sub array_diff {
+  my $a = shift; 
+  my $b = shift;
+
+  my (%ha, %hb);
+  foreach (@{$a}) { $ha{$_} = 1; }
+  foreach (@{$b}) { $hb{$_} = 1; }
+
+  my @diff = ();
+  foreach (keys %hb) {
+    push @diff, $_ unless $ha{$_};
+  }
+
+  return @diff;
+}
+
