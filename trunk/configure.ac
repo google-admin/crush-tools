@@ -60,12 +60,21 @@ dnl TODO: add enable-profiling - requires a static build
 AC_CONFIG_FILES([Makefile
 src/Makefile
 src/libcrush/Makefile
+src/add_field/Makefile
 src/aggregate/Makefile
 src/aggregate2/Makefile
 src/buffer/Makefile
+src/calcfield/Makefile
 src/convdate/Makefile
+src/csvformat/Makefile
 src/cutfield/Makefile
+src/dates_in_range/Makefile
+src/dbstream/Makefile
+src/deltadays/Makefile
 src/deltaforce/Makefile
+src/fieldsplit/Makefile
+src/find_not_processed/Makefile
+src/findfiles/Makefile
 src/foreach_parallel/Makefile
 src/funiq/Makefile
 src/grepfield/Makefile
@@ -76,18 +85,8 @@ src/range/Makefile
 src/reorder/Makefile
 src/subtotal/Makefile
 src/tochar/Makefile
+src/translate_field/Makefile
 src/truncfield/Makefile
 ])
-
-dnl src/add_field/Makefile
-dnl src/dbstream/Makefile
-dnl src/calcfields/Makefile
-dnl src/csvformat/Makefile
-dnl src/dates_in_range/Makefile
-dnl src/deltadays/Makefile
-dnl src/fieldsplit/Makefile
-dnl src/find_not_processed/Makefile
-dnl src/findfiles/Makefile
-dnl src/translate_field/Makefile
 
 AC_OUTPUT

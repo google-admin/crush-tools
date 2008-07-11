@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!CRUSH_PERL_PATH -w
 
 #  Copyright 2008 Google Inc.
 #
