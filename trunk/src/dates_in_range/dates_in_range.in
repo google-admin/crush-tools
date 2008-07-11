@@ -16,7 +16,6 @@
 
 use strict;
 use Date::Calc qw(Add_Delta_Days);
-use DART::DateFormat;
 use Getopt::Long;
 
 my ($help, $s, $e, $f, $inc);
@@ -39,11 +38,10 @@ if ($help ||                       # user asked for it
 }
 
 my $c = $s;
-my $df = DART::DateFormat->new($f);
 
 do {
   my @a = split(/-/, $c);
-  print $df->format(@a), qq(\n);
+  print date_format($f, @a), qq(\n);
   $c = sprintf("%.4d-%.2d-%.2d", Add_Delta_Days(@a, $inc));
 } while ($c le $e);
 
@@ -67,3 +65,5 @@ ISO 8601.
 
 ENDUSAGE
 }
+
+m4_include(date_parse_format.pl)

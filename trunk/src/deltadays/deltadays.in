@@ -18,9 +18,7 @@
 use strict;
 
 use Date::Calc qw(Delta_DHMS);
-use DART::DateFormat;
 use Getopt::Long;
-
 
 my( $dfs, $start, $end, $help );
 $dfs = 'YYYY-MM-DD';
@@ -41,8 +39,7 @@ if ($help || !(defined($start) && defined($end))) {
   exit(1);
 }
 
-my $df = DART::DateFormat->new($dfs);
-my @dhms = Delta_DHMS($df->parse($start), $df->parse($end));
+my @dhms = Delta_DHMS(date_parse($dfs, $start), date_parse($dfs, $end));
 print abs($dhms[0]) + 1, qq(\n);
 exit(0);
 
@@ -60,3 +57,5 @@ usage: $0 [-s <date>] [-e <date>] [-f <format>] [start] [end]
 
 ENDUSAGE
 }
+
+m4_include(date_parse_format.pl)
