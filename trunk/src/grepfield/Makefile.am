@@ -1,5 +1,5 @@
 main.c usage.c grepfield_main.h : args.tab
-	$(CGENER) -a ./args.tab
+	"$(CGENER)" -a ./args.tab
 
 BUILT_SOURCES = main.c usage.c grepfield_main.h
 
@@ -9,3 +9,5 @@ grepfield_SOURCES = grepfield.c grepfield.h $(BUILT_SOURCES)
 TESTS = test.sh
 
 grepfield_LDADD = ../libcrush/libcrush.la
+CLEANFILES = $(BUILT_SOURCES)
+
