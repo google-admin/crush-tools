@@ -8,9 +8,9 @@ fi
 
 if [ "$*" ]; then
   argstabs="$*"
-  regen_index=1
 else
   argstabs="`find src -name 'args.tab'`"
+  regen_index=1
 fi
 
 for argstab in $argstabs; do
@@ -19,7 +19,7 @@ for argstab in $argstabs; do
   dev_tools/argstab2wiki.pl "$argstab" \
     > ../wiki/${app_name}UserDocs.wiki
 
-  if [[ "`svn stat ../wiki/${app_name}UserDocs.wiki`" =~ "^?" ]]; then
+  if [[ "`svn stat ../wiki/${app_name}UserDocs.wiki`" =~ "?" ]]; then
     svn add ../wiki/${app_name}UserDocs.wiki
   fi
 
