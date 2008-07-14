@@ -1,0 +1,80 @@
+# this is a dummy file used only for generating documentation.
+
+# data relevant to the application as a whole
+%global = (
+	name => "find_not_processed",
+	description => "finds files in a directory which are not listed in a log file",
+	version => "0.1",
+	trailing_opts => "",
+	usage_extra => "",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name        => 'directory',
+	  shortopt    => 'd',
+	  longopt     => 'directory',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'directory to look for files in (required)'
+	},
+	{
+	  name        => 'logfile',
+	  shortopt    => 'l',
+	  longopt     => 'logfile',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'file containing names of already-processed files (required)'
+	},
+	{
+	  name        => 'print_dir',
+	  shortopt    => 'p',
+	  longopt     => 'print-dir',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'print the full file path (default: just the name)'
+	},
+	{
+	  name        => 'glob',
+	  shortopt    => 'g',
+	  longopt     => 'glob',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'only look for files matching this shell-style pattern'
+	},
+	{
+	  name        => 'regex',
+	  shortopt    => 'r',
+	  longopt     => 'regex',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'only look for files matching this regular expression'
+	},
+);
+
