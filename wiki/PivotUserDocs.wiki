@@ -4,10 +4,12 @@
 
 `pivot <options> [file ...]`
 
--f, -p, and -v values are comma-separated numbers or ranges.  for example:\n\n1,2-5,7
+-f, -p, and -v values are comma-separated numbers or ranges.  for example:
+
+1,2-5,7
 
 = Options =
-||*Short Opt*||*Long Opt*||Arugment||Description||
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-d||--delimiter||<delim> ||field separator string||

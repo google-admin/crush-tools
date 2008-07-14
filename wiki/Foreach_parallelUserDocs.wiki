@@ -7,7 +7,7 @@
 
 
 = Options =
-||*Short Opt*||*Long Opt*||Arugment||Description||
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-V||--verbose|| ||print verbose runtime messages.||
 ||-v||--variable||<variable> ||the variable name to hold the input value||

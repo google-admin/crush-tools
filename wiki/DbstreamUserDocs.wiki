@@ -1,0 +1,22 @@
+#summary dbstream - streams data to or from a database.
+
+= Usage =
+
+`dbstream <options> `
+
+if --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN, DB_UID, and DB_PWD will be used for the unprovided values.
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+|| ||--delimiter||<delim> ||field separator string (default: 0xfe)||
+||-f||--file||<sql_file> ||run sql specified in this file||
+||-s||--sql||<sql> ||run sql specified here||
+||-i||--input||<input_file> ||file containing placeholder values for insert/update statements||
+||-o||--output||<output_file> ||write to specified file instead of stdout||
+|| ||--dsn||<dsn> ||DBI-style data source name||
+|| ||--uid||<uid> ||database username||
+|| ||--pwd||<pwd> ||database password||
+
+----
+back to UserDocs

@@ -7,7 +7,7 @@
 if no field is specified, the entire input line is scanned.
 
 = Options =
-||*Short Opt*||*Long Opt*||Arugment||Description||
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-d||--delim||<delim> ||field separator string (default: 0xfe)||

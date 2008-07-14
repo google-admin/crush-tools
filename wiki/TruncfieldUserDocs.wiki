@@ -7,7 +7,7 @@
 if -d is not specified and DELIMITER enviroment variable is defined, that value will be used.
 
 = Options =
-||*Short Opt*||*Long Opt*||Arugment||Description||
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-d||--delimiter||<delim> ||field-separator string||

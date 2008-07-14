@@ -1,0 +1,18 @@
+#summary dates_in_range - prints all of the dates within a range
+
+= Usage =
+
+`dates_in_range <options> <-s YYYY-MM-DD> <-e YYYY-MM-DD>`
+
+Date format strings consist of YYYY, MM, DD, HH, MI, and SS
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-s||--start||<start> ||beginning of the range||
+||-e||--end||<end> ||end of the range||
+||-f||--format||<format> ||alternate output date format||
+||-i||--increment||<increment> ||specifies the number of days by which to increment||
+
+----
+back to UserDocs

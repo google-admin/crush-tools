@@ -1,0 +1,18 @@
+#summary csvformat - converts a delimited file to csv format.
+
+= Usage =
+
+`csvformat <options> [file ...]`
+
+
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-d||--delim||<delim> ||input field separator string (default: 0xfe)||
+||-i||--input||<input> ||input file (default: stdin)||
+||-o||--output||<output> ||output file (default: stdout)||
+||-n||--no-escape|| ||do not escape internal quotes||
+
+----
+back to UserDocs

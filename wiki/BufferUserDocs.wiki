@@ -1,0 +1,20 @@
+#summary buffer - buffers all input and prints it out all at once.
+
+= Usage =
+
+`buffer <options> [input-file(s)]`
+
+This is useful if the output should go to one of the input files.
+
+ * If no files are specified, stdin is used for input, and stdout for output.
+ * Warning: this has potential to consume large amounts of memory.
+
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-o|| ||<output> ||specifies output file for writing||
+||-a|| ||<append> ||specifies output file for appending||
+
+----
+back to UserDocs

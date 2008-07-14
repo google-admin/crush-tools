@@ -1,0 +1,17 @@
+#summary deltadays - calculates the number of days in a range
+
+= Usage =
+
+`deltadays <options> [start] [end]`
+
+
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-s||--start||<start> ||start date of range||
+||-e||--end||<end> ||end date of range||
+||-f||--format||<format> ||date format to use (default: YYYY-MM-DD)||
+
+----
+back to UserDocs

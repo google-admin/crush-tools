@@ -1,0 +1,21 @@
+#summary findfiles - finds files in a directory with MM-DD-YYYY date stamps in the name within a given range.
+
+= Usage =
+
+`findfiles <options> `
+
+ * if `--pattern` is not specified, any file with a MM-DD-YYYY date stamp will be included.  note that the pattern is applied even if -g is specified.
+
+ * files are printed to stdout, sorted by the datestamp in the filename.
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-d||--directory||<directory> ||directory containing files (required)||
+||-g||--glob||<glob> ||shell-style file pattern to look for||
+||-p||--pattern||<pattern> ||regular expression for filtering files (default: \d\d-\d\d-\d\d\d\d)||
+||-s||--start||<start> ||beginning of date range to include (required)||
+||-e||--end||<end> ||end of date range to include (required)||
+
+----
+back to UserDocs

@@ -7,7 +7,7 @@
 if one of file1 or file2 is specified as \"-\", stdin will be used for that input stream.
 
 = Options =
-||*Short Opt*||*Long Opt*||Arugment||Description||
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-v||--verbose|| ||print verbose messages during execution||

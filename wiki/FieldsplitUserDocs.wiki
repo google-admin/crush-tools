@@ -1,0 +1,28 @@
+#summary fieldsplit - splits a file into multiple files according to a particular field value.
+
+= Usage =
+
+`fieldsplit <options> [-h] <-f N> [-d D] [-p dir] [file(s)]`
+
+filenames will be the -n prefix argument (if any) followed by whatever the
+value of the field was (with spaces and slashes replaced with underscores),
+or "_blank_value" for lines where the field was empty, followed by the
+-s argument (if any).
+
+NOTE: you should insure none of the files which will be created exist before
+running this - new data will just be appended to the existing file in that
+case.
+
+= Options =
+||*Short Opt*||*Long Opt*||*Argument*||*Description*||
+||-h||--help|| ||print this message and exit||
+||-d||--delim||<delim> ||field separator string (default: 0xfe)||
+||-f||--field||<field> ||split on the specified field number (required)||
+||-p||--path||<path> ||specifies dir as directory in which files will be placed (default: ./)||
+||-n||--name||<name> ||output filename prefix||
+||-s||--suffix||<suffix> ||output filename suffix||
+||-k||--keep|| ||keep the header in all of the resulting files||
+||-x||--xform-names||<xform_names> ||user-supplied substitution regex to transform output names (e.g. 's/[^-\w]//g')||
+
+----
+back to UserDocs
