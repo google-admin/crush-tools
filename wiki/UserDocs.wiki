@@ -2,17 +2,31 @@
 
 = Applications =
 
+  * Add_fieldUserDocs
   * AggregateUserDocs
   * Aggregate2UserDocs
+  * SrcUserDocs
+  * BufferUserDocs
+  * CalcfieldUserDocs
   * ConvdateUserDocs
+  * CsvformatUserDocs
   * CutfieldUserDocs
+  * Dates_in_rangeUserDocs
+  * DbstreamUserDocs
+  * DeltadaysUserDocs
   * DeltaforceUserDocs
+  * FieldsplitUserDocs
+  * FindfilesUserDocs
+  * Find_not_processedUserDocs
   * Foreach_parallelUserDocs
   * FuniqUserDocs
   * GrepfieldUserDocs
   * IndexofUserDocs
   * MergekeysUserDocs
   * PivotUserDocs
+  * RangeUserDocs
   * ReorderUserDocs
   * SubtotalUserDocs
+  * TocharUserDocs
+  * Translate_fieldUserDocs
   * TruncfieldUserDocs
