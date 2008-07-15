@@ -2,7 +2,9 @@
 
 use strict;
 
-require 'date_parse_format.pl' || die;
+my $working_dir = $0;
+$working_dir =~ s:/[^/]*$::;
+require "$working_dir/date_parse_format.pl" || die;
 
 my $cur_test = 0;
 my $failures = 0;
