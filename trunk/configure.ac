@@ -59,7 +59,9 @@ dnl TODO: add enable-profiling - requires a static build
 
 AC_CONFIG_FILES([Makefile
 src/Makefile
+src/include/Makefile
 src/libcrush/Makefile
+src/perllib/Makefile
 src/add_field/Makefile
 src/aggregate/Makefile
 src/aggregate2/Makefile

@@ -10,3 +10,4 @@ TESTS = tests.sh
 CLEANFILES = $(BUILT_SOURCES)
 
 indexof_LDADD = ../libcrush/libcrush.la
+EXTRA_DIST = args.tab

@@ -11,3 +11,4 @@ aggregate_LDADD = ../libcrush/libcrush.la
 TESTS = test.sh
 CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = args.tab

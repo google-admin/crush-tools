@@ -11,3 +11,4 @@ TESTS = tests.sh
 
 CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = args.tab

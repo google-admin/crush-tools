@@ -12,3 +12,4 @@ convdate_LDADD = ../libcrush/libcrush.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = args.tab

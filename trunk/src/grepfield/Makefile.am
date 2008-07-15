@@ -11,3 +11,4 @@ TESTS = test.sh
 grepfield_LDADD = ../libcrush/libcrush.la
 CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = args.tab
