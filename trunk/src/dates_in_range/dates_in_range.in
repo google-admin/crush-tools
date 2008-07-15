@@ -60,8 +60,8 @@ options:
   -i, --increment <N>  specifies the number of days by which to
                        increment
 
-for date format string usage, see \`perldoc DART::DateFormat\`.  default is
-ISO 8601.
+Date formats may consist of patterns with YYYY, MM, DD, HH, MI, and SS.
+Default is YYYY-MM-DD (ISO 8601).
 
 ENDUSAGE
 }
