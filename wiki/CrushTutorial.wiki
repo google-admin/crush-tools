@@ -148,4 +148,47 @@ Output:
 "2008-07-09","342","44","111","3","0","1","79"
 }}}
 
-In this way, complicated transformations and formatting can be accomplished with straight-forward shell scripting.
+
+== Joining Datasets ==
+
+Many times it is necessary to join different datasets together.  One way of doing this is with the `mergekeys` utility (MergekeysUserDocs), which uses column headers to join sorted data sets.  Say you have a file named `food.log` containing
+
+{{{
+Auth-UserþFavorite-Food
+bvanhornþEggs
+hoofoosþHam
+hotshotþFish
+shadrackþCake
+snimþSoup
+sunnyjimþFrankfurters
+}}}
+
+And you want to join this into the first aggregation above (page-views by user).
+
+{{{
+aal2d access_log | aggregate -p -k 2 -c 1 > page_views.log
+mergekeys page_views.log food.log | csvformat
+}}}
+
+And you get
+
+{{{
+"Auth-User","IP","Favorite-Food"
+"-","1127",""
+"bvanhorn","103","Eggs"
+"hoofoos","303","Ham"
+"hotshot","3","Fish"
+"shadrack","13","Cake"
+"snim","12","Soup"
+"sunnyjim","141","Frankfurters"
+}}}
+
+Note that currently `mergekeys` requires that
+ * the two files should have the same column labels for all key fields
+ * all key fields occur at the beginning of the lines in both files
+ * both files be sorted by the key fields
+
+
+== So... ==
+
+By building up pipelines of CRUSH and standard Unix utilities, complicated transformations and formatting can be accomplished with straight-forward shell scripting.
