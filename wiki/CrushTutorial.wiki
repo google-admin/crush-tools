@@ -45,13 +45,14 @@ exit(0);
 
 The default delimiter 'þ' is used here for its low probability of collision with actual data.  Now that we've gotten that out of the way, we can start doing interesting things with the data.
 
+In the examples that follow, a relative path to "access_log" is used.  To operate against a live Apache web log, `cd` to `/var/log/httpd`, or download the example data file and run the commands from the directory where that file is kept.
 
 == Simple aggregations ==
 
 Let's say we want to know how many hits we're getting from each logged-in user.  The `aggregate` (AggregateUserDocs) utility is designed for this purpose.
 
 {{{
-aal2d /var/log/httpd/access_log | aggregate -p -k 2 -c 1
+aal2d access_log | aggregate -p -k 2 -c 1
 }}}
 
 Refer to the AggregateUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
@@ -60,19 +61,19 @@ The output is something like
 
 {{{
 Auth-UserþIP
--þ1105
+-þ1127
 bvanhornþ103
 hoofoosþ303
 hotshotþ3
 shadrackþ13
-snimþ34
+snimþ12
 sunnyjimþ141
 }}}
 
 If we wanted to get that broken out by day, we can convert the time format using `convdate` (ConvdateUserDocs) to contain only the date and add that as a key field.
 
 {{{
-aal2d /var/log/httpd/access_log |
+aal2d access_log |
   convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
   aggregate -p -k 3,2 -c 1
 }}}
@@ -84,10 +85,10 @@ TimeþAuth-UserþIP
 2008-07-06þ-þ28
 2008-07-06þhoofoosþ78
 2008-07-06þsunnyjimþ17
-2008-07-07þ-þ547
+2008-07-07þ-þ569
 2008-07-07þhoofoosþ93
 2008-07-07þshadrackþ6
-2008-07-07þsnimþ33
+2008-07-07þsnimþ11
 2008-07-08þ-þ188
 2008-07-08þbvanhornþ59
 2008-07-08þhoofoosþ21
@@ -107,7 +108,7 @@ TimeþAuth-UserþIP
 In the example of login-page-hits by day, if you have a small number of users you may wish to have a column for each user and a row for each date.  The `pivot` (PivotUserDocs) utility handles this:
 
 {{{
-aal2d /var/log/httpd/access_log |
+aal2d access_log |
   convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
   aggregate -p -k 3,2 -c 1 |
   pivot -k -f 1 -p 2 -v 3
@@ -118,7 +119,7 @@ Now we get an output of
 {{{
 Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsunnyjim: IP
 2008-07-06þ28þ0þ78þ0þ0þ0þ17
-2008-07-07þ547þ0þ93þ0þ6þ33þ0
+2008-07-07þ569þ0þ93þ0þ6þ11þ0
 2008-07-08þ188þ59þ21þ0þ7þ0þ45
 2008-07-09þ342þ44þ111þ3þ0þ1þ79
 }}}
@@ -126,7 +127,7 @@ Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsun
 Piping the same command to `csvformat` (CsvformatUserDocs) will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` (Translate_fieldUserDocs) to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we'll use the standard `sed(1)` utility on just the header line, though `translate_field` would work as well.
 
 {{{
-aal2d /var/log/httpd/access_log |
+aal2d access_log |
   (read header;
    echo "$header" | sed -e 's/IP/Page-Views/';
    cat -) |
@@ -142,7 +143,7 @@ Output:
 {{{
 "Time","Anonymous: Page-Views","bvanhorn: Page-Views","hoofoos: Page-Views","hotshot: Page-Views","shadrack: Page-Views","snim: Page-Views","sunnyjim: Page-Views"
 "2008-07-06","28","0","78","0","0","0","17"
-"2008-07-07","547","0","93","0","6","33","0"
+"2008-07-07","569","0","93","0","6","11","0"
 "2008-07-08","188","59","21","0","7","0","45"
 "2008-07-09","342","44","111","3","0","1","79"
 }}}
