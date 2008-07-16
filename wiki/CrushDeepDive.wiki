@@ -1,0 +1,10 @@
+#summary CRUSH Deep Dive
+
+= Introduction =
+
+This will be an in-depth discussion about building reliable data processing applications with the CRUSH toolkit.  It's a work in progress
+
+
+= Details =
+
+ * DealingWithChangingDataFormats
