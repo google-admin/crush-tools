@@ -6,5 +6,5 @@ This will be an in-depth discussion about building reliable data processing appl
 
 
 = Details =
-
+ * CrushAppBasics
  * DealingWithChangingDataFormats
