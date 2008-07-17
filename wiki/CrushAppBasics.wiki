@@ -83,3 +83,6 @@ trap 'cleanup_pidfile; exit $?' EXIT TERM INT HUP QUIT
 }}}
 
 In some cases, this trap could go into the global library.
+
+----
+Back to ApplicationDevelopmentWithCrush
