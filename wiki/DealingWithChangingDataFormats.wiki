@@ -72,3 +72,6 @@ aggregate -k $i_auth_name,$i_user_agent -c 1 access.log
 }}}
 
 Now if we go make tweaks to the aal2d and/or our apache log format output, our script will continue working just fine as long as the "Auth-User" and "User-Agent" fields aren't removed altogether.
+
+----
+Back to ApplicationDevelopmentWithCrush
