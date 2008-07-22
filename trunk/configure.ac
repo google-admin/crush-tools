@@ -18,7 +18,15 @@ AC_SUBST([abs_builddir], ["`pwd`"])
 AC_SUBST([CGENER], [$abs_srcdir/cgener])
 
 AC_PROG_CC
+AC_PATH_PROG(M4, m4, none)
+if test "$M4" = "none"; then
+  AC_MSG_ERROR("m4 was not found in your PATH.  Please install m4 or update your PATH variable and rerun $0")
+fi
+
 AC_PATH_PROG(PERL, perl, none)
+if test "$PERL" = "none"; then
+  AC_MSG_ERROR("perl was not found in your PATH.  Please install perl or update your PATH variable and rerun $0")
+fi
 
 AC_PROG_INSTALL
 if test "$INSTALL" = "build/install-sh -c"; then
