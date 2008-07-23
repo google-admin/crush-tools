@@ -1,0 +1,94 @@
+#!CRUSH_PERL_PATH -w
+#-*-perl-*-
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Long;
+use FileHandle;
+
+my ($h, $d, $i, $o, $noescape);
+
+$d = $ENV{DELIMITER} || chr(0xfe);
+
+&GetOptions(	"help!"		=> \$h,
+		"delim:s"	=> \$d,
+		"input:s"	=> \$i,
+		"output:s"	=> \$o,
+		"no-escape"	=> \$noescape,
+	   );
+
+if($h){
+	usage();
+	exit(1);
+}
+
+if( (!defined($i)) && scalar(@ARGV) ){
+	$i = $ARGV[0];
+}
+
+# if input and/or output files were specified on the cmd-line, open them
+my ($IN, $OUT);
+if ( $i ) {
+	open(TMPIN , "< $i") or die "csvformat: $i: $!\n";
+	$IN = \*TMPIN;
+}
+else {
+	$IN = \*STDIN;
+}
+
+if ( $o ) {
+	open(TMPOUT, "> $o") or die "csvformat: $o: $!\n";
+	$OUT = \*TMPOUT;
+}
+else {
+	$OUT = \*STDOUT;
+}
+
+while( <$IN> ) {
+
+	if ( ! $noescape ) {
+		$_ =~ s/"/""/g;		# "escape" existing quotes
+	}
+
+	s/([\r\n]+)//;			# remove the line-break
+
+	$_ = q(") . $_ . q(") . $1;	# wrap the whole string in quotes,
+					# putting the linebreak at the end
+
+	$_ =~ s/\Q$d\E/","/g;		# replace delims with quotes+comma
+
+	print $OUT $_;
+}
+
+exit(0);
+
+
+sub usage {
+	print STDERR <<"__USAGE__";
+
+converts a delimited file to csv format.
+
+Usage: $0 [options...]
+
+Options:
+	-d, --delim <delim>	input field separator (default: 0xfe)
+	-i, --input <infile>	input file (default: stdin)
+	-o, --output <outfile>	output file (default: stdout)
+	-n, --no-escape		do not escape quotes
+
+__USAGE__
+
+}

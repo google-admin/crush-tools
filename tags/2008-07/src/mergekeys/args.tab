@@ -1,0 +1,97 @@
+# data relevant to the application as a whole
+%global = (
+	category => 'General file manipulation',
+	name => "mergekeys",
+	category => "General file manipulation",
+	description => "merges two sorted flat files with some different columns",
+	version => "0.1",
+	trailing_opts => "file1 file2",
+	usage_extra => "",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose messages during execution'
+	},
+	{
+	  name => 'inner',
+	  shortopt => 'i',
+	  longopt => 'inner',
+	  type => 'flag',
+	  required => 0,
+	  description => 'inner join - i.e. drop lines that do not have a match in both files'
+	},
+	{
+	  name => 'right',
+	  shortopt => 'r',
+	  longopt => 'right',
+	  type => 'flag',
+	  required => 0,
+	  description => 'right outer join - i.e. drop lines in the first file that do not have a match in the second file'
+	},
+	{
+	  name => 'left',
+	  shortopt => 'l',
+	  longopt => 'left',
+	  type => 'flag',
+	  required => 0,
+	  description => 'left outer join - i.e. drop lines in the second file that do not have a match in the first file'
+	},
+	{
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'delimiting string for both input files'
+	},
+	{
+ 	  name => 'outfile',
+ 	  shortopt => 'o',
+ 	  longopt => 'outfile',
+ 	  type => 'var',
+ 	  required => 0,
+ 	  description => 'name of file for output'
+	}
+);
