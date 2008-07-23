@@ -27,6 +27,11 @@ AC_PATH_PROG(PERL, perl, none)
 if test "$PERL" = "none"; then
   AC_MSG_ERROR("perl was not found in your PATH.  Please install perl or update your PATH variable and rerun $0")
 fi
+CRUSH_REQUIRE_PERL_MODULE(Getopt::Long)
+CRUSH_CHECK_PERL_MODULE(DBI, PERL_DBI_PRESENT)
+CRUSH_CHECK_PERL_MODULE(Date::Calc, PERL_DATE_CALC_PRESENT)
+AC_SUBST([NEEDS_PERL_DBI], ["dbstream"])
+AC_SUBST([NEEDS_PERL_DATE_CALC], ["dates_in_range deltadays"])
 
 AC_PROG_INSTALL
 if test "$INSTALL" = "build/install-sh -c"; then
@@ -100,3 +105,15 @@ src/truncfield/Makefile
 ])
 
 AC_OUTPUT
+
+if test $PERL_DBI_PRESENT = no; then
+  AC_MSG_WARN([The DBI Perl module was not found.])
+  AC_MSG_WARN([$NEEDS_PERL_DBI will not be built])
+  AC_MSG_WARN([You may want to run "cpan DBI" and rerun $0])
+fi
+
+if test $PERL_DATE_CALC_PRESENT = no; then
+  AC_MSG_WARN([The Date::Calc Perl module was not found.])
+  AC_MSG_WARN([$NEEDS_PERL_DATE_CALC will not be built.])
+  AC_MSG_WARN([You may want to run "cpan Date::Calc" and rerun $0])
+fi
