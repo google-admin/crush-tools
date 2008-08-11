@@ -244,9 +244,8 @@ left_file_loop:
     int left_line_printed = 0;
 
     if (LEFT_LE_RIGHT(keycmp)) {
-      if (my_getline
-          (&buffer_left, &buffer_left_size, &peek_buffer_left,
-           &peek_buffer_left_size, left, &eof_left) <= 0) {
+      if (my_getline(&buffer_left, &buffer_left_size, &peek_buffer_left,
+                     &peek_buffer_left_size, left, &eof_left) <= 0) {
         keycmp = compare_keys(buffer_left, buffer_right);
         goto right_file_loop;
       }
@@ -322,10 +321,8 @@ left_file_loop:
           goto left_file_loop;
         }
       }
-
-    }                           /* feof( right ) */
-
-  }                             /* feof( left ) */
+    } /* feof( right ) */
+  } /* feof( left ) */
 
 cleanup:
   if (buffer_left)
@@ -346,8 +343,8 @@ cleanup:
 
 
 /* wrapper for get line with peek */
-int my_getline(char **buffer, size_t * size, char **peek_buffer,
-               size_t * peek_size, FILE * in, int *eof_flag) {
+int my_getline(char **buffer, size_t *size, char **peek_buffer,
+               size_t *peek_size, FILE *in, int *eof_flag) {
 
   /* if both buffers are empty, we are at the very beginning */
   if (*peek_buffer == NULL && *buffer == NULL) {
@@ -379,8 +376,7 @@ int my_getline(char **buffer, size_t * size, char **peek_buffer,
       char *tmp;
       tmp = (char *) realloc(*buffer, *peek_size);
       if (tmp == NULL) {
-        warn
-          ("not able to reallocate new memory to copy the peek buffer into the current buffer.");
+        warn("error reallocating the current-line buffer.");
         exit(2);
       }
       *buffer = tmp;
