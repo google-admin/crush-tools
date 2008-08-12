@@ -35,6 +35,8 @@ if($h){
 	exit(1);
 }
 
+$d = expand_chars($d); # expand escape sequences
+
 if( (!defined($i)) && scalar(@ARGV) ){
 	$i = $ARGV[0];
 }
@@ -92,3 +94,5 @@ Options:
 __USAGE__
 
 }
+
+m4_include(utils.pl)

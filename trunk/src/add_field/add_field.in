@@ -35,6 +35,8 @@ if ($help) {
   exit(1);
 }
 
+$delim = expand_chars($delim);
+
 if ($copy_field) {
   $copy_field--;
 }
@@ -115,3 +117,5 @@ usage: $0 [hdflv] [file(s)]
 
 ENDUSAGE
 }
+
+m4_include(utils.pl)

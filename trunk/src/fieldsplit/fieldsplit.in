@@ -41,6 +41,7 @@ if( $h || ! defined($f) ){
 	exit(1);
 }
 
+$d = expand_chars($d);
 $f--;
 
 # allow flush threshold to come from env so it can be tested
@@ -142,3 +143,5 @@ case.
 
 __USAGE__
 }
+
+m4_include(utils.pl)

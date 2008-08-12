@@ -50,6 +50,8 @@ if ($help) {
   exit(1);
 }
 
+$d = expand_chars($d);
+
 if (! (defined($dsn) && defined($uid) && defined($pwd) )) {
   print STDERR "need db connect info in environment vars DB_[DSN|UID|PWD]\n";
   exit(1);
@@ -140,3 +142,5 @@ DB_UID, and DB_PWD will be used for the unprovided values.
 
 ENDUSAGE
 }
+
+m4_include(utils.pl)

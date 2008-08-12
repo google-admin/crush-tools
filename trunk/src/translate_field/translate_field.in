@@ -45,6 +45,7 @@ if (! defined($field)) {
 }
 
 $field--;
+$delim = expand_chars($delim);
 
 if ($external) {
   print STDERR "sourcing $external\n" if ($debug);
@@ -172,3 +173,5 @@ The latter will nullify any -m parameters passed on the commandline.
 =back
 
 =cut
+
+m4_include(utils.pl)

@@ -64,11 +64,12 @@ my $i = 0;
 my $result = 0;
 my %header = ();
 
-# Check delimiter option. Set default if not provided.
-if (!defined($opt_d) || $opt_d eq "") {
-  $opt_d = $delim;
-  print "No delimiter given, assuming $opt_d\n" if (defined($opt_v));
+if ($opt_d) {
+  $delim = $opt_d;
+} else {
+  print "No delimiter given, assuming $delim\n" if (defined($opt_v));
 }
+$delim = expand_chars($delim);
 
 # Check index option. Set default if not provided.
 if (!defined($opt_i) || !$opt_i =~ m/[1-9][0-9]*/) {
@@ -99,14 +100,14 @@ if (defined($opt_p)) {
   # TODO: should this read from <> instead?
   if (defined($line = <STDIN>)) {
     $line = trim($line);  
-    @parts = split(/$opt_d/, $line);
+    @parts = split(/\Q$delim\E/, $line);
     
     # map header labels to indexes (needed during the expressions evaluation).
     for (0 .. $#parts ) {
       $header{$parts[$_]} = $_;
     }
 
-    print put_field($line, \@parts, $opt_d, $opt_c, $opt_i, $opt_r) . "\n";
+    print put_field($line, \@parts, $delim, $opt_c, $opt_i, $opt_r) . "\n";
   }
 }
 
@@ -115,13 +116,13 @@ my $calc_func;
 # TODO: should this read from <> instead?
 while (defined($line = <STDIN>)) {
   $line = trim($line);
-  @parts = split(/$opt_d/, $line, -1);
+  @parts = split(/\Q$delim\E/, $line, -1);
 
   $calc_func = create_calc_func($opt_e, \@parts, $opt_b)
     unless $calc_func;
   $result = $calc_func->(\@parts, $opt_b);
 
-  print put_field($line, \@parts, $opt_d, $result, $opt_i, $opt_r) . "\n";
+  print put_field($line, \@parts, $delim, $result, $opt_i, $opt_r) . "\n";
 }
 
 
@@ -156,13 +157,13 @@ sub put_field {
 
     if (defined($repl)) {
       # replace the existing field.
-      my @result = split(/$delim/, $line, $pos + 1);
+      my @result = split(/\Q$delim\E/, $line, $pos + 1);
       my $suffix = pop(@result);
       my $old    = pop(@result);
 
       $line = join($delim, @result) . $delim . $value . $delim . $suffix;
     } else {
-      my @result = split(/$delim/, $line, $pos);
+      my @result = split(/\Q$delim\E/, $line, $pos);
       my $suffix = pop(@result);
 
       $line = join($delim, @result) . $delim . $value . $delim . $suffix;
@@ -223,3 +224,5 @@ sub trim {
 
   return $text;
 }
+
+m4_include(utils.pl)
