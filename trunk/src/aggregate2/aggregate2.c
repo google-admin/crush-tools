@@ -140,6 +140,7 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (args->preserve_header) {
     if (getline(&input_line, &input_line_sz, in) > 0) {
+      chomp(input_line);
       if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys) != 0) {
         fprintf(stderr, "%s: malformatted input\n", argv[0]);
         return EXIT_FILE_ERR;
