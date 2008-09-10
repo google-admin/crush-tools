@@ -24,13 +24,22 @@ char *delim;
 size_t nfields_left;
 size_t nfields_right;
 
-int *keyfields = NULL;          /* array of fields common to both files */
+/* arrays of fields common to both files */
+int *left_keyfields = NULL;
+int *right_keyfields = NULL;
 size_t nkeys;
 
-int *mergefields = NULL;        /* fields only in RIGHT file - need to be added to those in A */
-size_t ntomerge;
+/* fields only in RIGHT or LEFT file */
+int *left_mergefields = NULL;
+int *right_mergefields = NULL;
+size_t left_ntomerge, right_ntomerge;
 
-size_t nkeys, ntomerge;
+
+
+/* extract each element of fields from line and print them, separated by delim.
+   the delimiter will not be printed after the last field. */
+static void extract_and_print_fields(char *line, int *fields, size_t nfields,
+                                     char *delim, FILE *out);
 
 
 /** @brief opens all the files necessary, sets a default
@@ -189,16 +198,29 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
   nfields_left = fields_in_line(buffer_left, delim);
   nfields_right = fields_in_line(buffer_right, delim);
 
-  if (args->verbose)
-    printf("fields in left: %s\nfields in right: %s\n", buffer_left,
-           buffer_right);
+  if (args->verbose) {
+    fprintf(stderr,
+            "VERBOSE: fields in left: %s\nVERBOSE: fields in right: %s\n",
+            buffer_left, buffer_right);
+  }
 
-  if ((keyfields = malloc(sizeof(int) * nfields_left)) == NULL) {
+  if ((left_keyfields = malloc(sizeof(int) * nfields_left)) == NULL) {
     warn("allocating key array");
     retval = EXIT_MEM_ERR;
     goto cleanup;
   }
-  if ((mergefields = malloc(sizeof(int) * nfields_right)) == NULL) {
+  if ((right_keyfields = malloc(sizeof(int) * nfields_right)) == NULL) {
+    warn("allocating key array");
+    retval = EXIT_MEM_ERR;
+    goto cleanup;
+  }
+
+  if ((left_mergefields = malloc(sizeof(int) * nfields_left)) == NULL) {
+    warn("allocating merge-fields array");
+    retval = EXIT_MEM_ERR;
+    goto cleanup;
+  }
+  if ((right_mergefields = malloc(sizeof(int) * nfields_right)) == NULL) {
     warn("allocating merge-fields array");
     retval = EXIT_MEM_ERR;
     goto cleanup;
@@ -213,13 +235,22 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
     goto cleanup;
   }
 
-  /* print the headers which were already read in above */
-  fputs(buffer_left, out);
-  for (i = 0; i < ntomerge; i++) {
-    get_line_field(field_right, buffer_right, MAX_FIELD_LEN, mergefields[i],
-                   delim);
-    fprintf(out, "%s%s", delim, field_right);
+  if (args->verbose) {
+    fprintf(stderr, "VERBOSE: # key fields:       %d\n", nkeys);
+    fprintf(stderr, "VERBOSE: left merge fields:  %d\n", left_ntomerge);
+    fprintf(stderr, "VERBOSE: right merge fields: %d\n", right_ntomerge);
   }
+
+  /* print the headers which were already read in above */
+  extract_and_print_fields(buffer_left, left_keyfields, nkeys, delim, out);
+  if (left_ntomerge > 0)
+    fputs(delim, out);
+  extract_and_print_fields(buffer_left, left_mergefields, left_ntomerge,
+                           delim, out);
+  if (right_ntomerge > 0)
+    fputs(delim, out);
+  extract_and_print_fields(buffer_right, right_mergefields, right_ntomerge,
+                           delim, out);
   fputc('\n', out);
 
   /* we need to have the buffers cleared before the first call to my_getline */
@@ -333,10 +364,14 @@ cleanup:
     free(peek_buffer_left);
   if (peek_buffer_right)
     free(peek_buffer_right);
-  if (keyfields)
-    free(keyfields);
-  if (mergefields)
-    free(mergefields);
+  if (left_keyfields)
+    free(left_keyfields);
+  if (right_keyfields)
+    free(right_keyfields);
+  if (left_mergefields)
+    free(left_mergefields);
+  if (right_mergefields)
+    free(right_mergefields);
 
   return retval;
 }
@@ -408,50 +443,62 @@ int my_getline(char **buffer, size_t *size, char **peek_buffer,
 }
 
 
+/* extract each element of fields from line and print them, separated by delim.
+   the delimiter will not be printed after the last field. */
+static void extract_and_print_fields(char *line, int *field_list,
+                                     size_t nfields, char *delim, FILE *out) {
+  int i;
+  char field_buffer[MAX_FIELD_LEN + 1];
+  for (i = 0; i < nfields - 1; i++) {
+    field_buffer[0] = '\0';
+    get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);
+    fputs(field_buffer, out);
+    fputs(delim, out);
+  }
+  get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);
+  fputs(field_buffer, out);
+}
+
+
 /* merge and print two lines. */
 void join_lines(char *left_line, char *right_line, FILE * out) {
 
-  int i, j;
+  int i;
   char field_right[MAX_FIELD_LEN + 1];
 
   if (left_line == NULL && right_line == NULL)
     return;
 
   if (right_line == NULL) {
-    /* just print LEFT line with empty merge fields */
-    fprintf(out, "%s", left_line);
-    for (i = 0; i < ntomerge; i++)
+    /* just print LEFT line with empty RIGHT merge fields */
+    extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
+    if (left_ntomerge > 0)
       fputs(delim, out);
+    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                             delim, out);
+    for (i = 0; i < right_ntomerge; i++) {
+      fputs(delim, out);
+    }
   } else if (left_line == NULL) {
-    /* just print fields from RIGHT with empty fields from LEFT */
-
-    /* first the keys & empty LEFT-only fields */
-    j = 0;
-    for (i = 0; i < nfields_left; i++) {
-      if (keyfields[j] == i) {
-        get_line_field(field_right, right_line, MAX_FIELD_LEN, keyfields[j],
-                       delim);
-        fprintf(out, "%s%s", (j > 0 ? delim : ""), field_right);
-        j++;
-      } else {
-        fputs(delim, out);
-      }
-    }
-
-    /* now the non-keys */
-    for (i = 0; i < ntomerge; i++) {
-      get_line_field(field_right, right_line, MAX_FIELD_LEN, mergefields[i],
-                     delim);
-      fprintf(out, "%s%s", delim, field_right);
-    }
+    /* print fields from RIGHT with empty fields from LEFT */
+    extract_and_print_fields(right_line, right_keyfields, nkeys, delim, out);
+    for (i = 0; i < left_ntomerge; i++)
+      fputs(delim, out);
+    if (right_ntomerge > 0)
+      fputs(delim, out);
+    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                             delim, out);
   } else {
-    /* presumably keys are equal. */
-    fprintf(out, "%s", left_line);
-    for (i = 0; i < ntomerge; i++) {
-      get_line_field(field_right, right_line, MAX_FIELD_LEN, mergefields[i],
-                     delim);
-      fprintf(out, "%s%s", delim, field_right);
-    }
+    /* keys are equal. */
+    extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
+    if (left_ntomerge > 0)
+      fputs(delim, out);
+    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                             delim, out);
+    if (right_ntomerge > 0)
+      fputs(delim, out);
+    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                             delim, out);
   }
 
   fputc('\n', out);
@@ -465,7 +512,7 @@ void classify_fields(char *left_header, char *right_header) {
 
   char label_left[MAX_FIELD_LEN + 1], label_right[MAX_FIELD_LEN + 1];
 
-  nkeys = ntomerge = 0;
+  nkeys = left_ntomerge = right_ntomerge = 0;
 
   j = (nfields_left < nfields_right ? nfields_left : nfields_right);
 
@@ -475,15 +522,30 @@ void classify_fields(char *left_header, char *right_header) {
     get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
     get_line_field(label_right, right_header, MAX_FIELD_LEN, i, delim);
 
-    if (str_eq(label_left, label_right))
-      keyfields[nkeys++] = i;
-    else
-      mergefields[ntomerge++] = i;
+    if (str_eq(label_left, label_right)) {
+      left_keyfields[nkeys] = i;
+      right_keyfields[nkeys] = i;
+      nkeys++;
+    } else {
+      left_mergefields[left_ntomerge] = i;
+      right_mergefields[right_ntomerge] = i;
+      left_ntomerge++;
+      right_ntomerge++;
+    }
   }
 
+  j = i;
+  /* if LEFT had more fields than RIGHT, all of those need merged */
+  for (; i < nfields_left; i++) {
+    left_mergefields[left_ntomerge] = i;
+    left_ntomerge++;
+  }
+
+  i = j;
   /* if RIGHT had more fields than LEFT, all of those need merged */
   for (; i < nfields_right; i++) {
-    mergefields[ntomerge++] = i;
+    right_mergefields[right_ntomerge] = i;
+    right_ntomerge++;
   }
 }
 
@@ -508,9 +570,10 @@ int compare_keys(char *buffer_left, char *buffer_right) {
     return RIGHT_GREATER;
 
   for (i = 0; i < nkeys; i++) {
-    get_line_field(field_left, buffer_left, MAX_FIELD_LEN, keyfields[i], delim);
-    get_line_field(field_right, buffer_right, MAX_FIELD_LEN, keyfields[i],
-                   delim);
+    get_line_field(field_left, buffer_left, MAX_FIELD_LEN,
+                   left_keyfields[i], delim);
+    get_line_field(field_right, buffer_right, MAX_FIELD_LEN,
+                   right_keyfields[i], delim);
     if ((keycmp = strcoll(field_left, field_right)) != 0)
       break;
   }
