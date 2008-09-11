@@ -36,14 +36,14 @@ if ($help) {
 if ((! defined($filedir)) ||
     (! defined($startdate) && scalar(@ARGV) < 3) ||
     (! defined($enddate)   && scalar(@ARGV) < 3)) {
-  print STDERR "directory, startdate, and enddate args are required.\n";
+  print STDERR "$0: directory, startdate, and enddate args are required.\n";
   exit(1);
 }
 
 $filedir =~ s:/$::;
 
 if (! -d $filedir){
-  print STDERR "findfiles: $filedir: not a directory\n";
+  print STDERR "$0: findfiles: $filedir: not a directory\n";
   exit(2);
 }
 
@@ -73,7 +73,7 @@ if ($fileglob) {
   # make sure the files have a time stamp
   @files = grep /$pattern/ , @files;
 } else {
-  opendir (FDIR, $filedir) or die "$filedir: $!\n";
+  opendir (FDIR, $filedir) or die "$0: $filedir: $!\n";
   @files = grep /$pattern/ , readdir(FDIR);
 }
 

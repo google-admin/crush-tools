@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
       if (amt_read + buffer_full > buffer_size) {
         if ((buffer = realloc(buffer, buffer_size + BUFFER_INITIAL_SIZE))
             == NULL) {
-          perror("out of memory");
+          fprintf(stderr, "%s: out of memory\n", getenv("_"));
           free(buffer);
           exit(EXIT_FAILURE);
         }

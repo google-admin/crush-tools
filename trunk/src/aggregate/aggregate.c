@@ -139,14 +139,14 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     size_t str_len;
 
     if (getline(&inbuf, &inbuf_sz, in) <= 0) {
-      fprintf(stderr, "aggregate: unexpected end of file\n");
+      fprintf(stderr, "%s: unexpected end of file\n", getenv("_"));
       exit(EXIT_FILE_ERR);
     }
     chomp(inbuf);
 
     outbuf = malloc(inbuf_sz);
     if (!outbuf) {
-      fprintf(stderr, "aggregate: out of memory.\n");
+      fprintf(stderr, "%s: out of memory.\n", getenv("_"));
       exit(EXIT_MEM_ERR);
     }
     outbuf_sz = inbuf_sz;
@@ -205,7 +205,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       if (inbuf_sz > outbuf_sz) {
         char *tmp_outbuf = realloc(outbuf, inbuf_sz + 32);
         if (!tmp_outbuf) {
-          fprintf(stderr, "aggregate: out of memory.\n");
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           goto aggregate_cleanup;
         }
         outbuf = tmp_outbuf;
@@ -222,7 +222,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
         /* value = malloc(sizeof(struct aggregation));
            memset(value, 0, sizeof(struct aggregation)); */
         if (!value) {
-          fprintf(stderr, "aggregate: out of memory.\n");
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           goto aggregate_cleanup;
         }
       } else {
@@ -268,7 +268,8 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
 
       if (!in_hash) {
         if (ht_put(&aggregations, outbuf, value) != 0)
-          fprintf(stderr, "failed to store value in hashtable.\n");
+          fprintf(stderr, "%s: failed to store value in hashtable.\n",
+                  getenv("_"));
         n_hash_elems++;
       }
 

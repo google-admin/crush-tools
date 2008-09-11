@@ -45,7 +45,7 @@ if (! $logfile) {
 
 my (@files_in_log, @files_in_dir);
 
-open(LOG, $logfile) or die "$logfile: $!\n";
+open(LOG, $logfile) or die "$0: $logfile: $!\n";
 # chomp() assumes consistency in linebreak style
 @files_in_log = <LOG>;
 map { s/[\r\n]//g; } @files_in_log;
@@ -58,7 +58,7 @@ if ($file_glob) {
   if (! $file_regex) {
     $file_regex = '^[^.]';
   }
-  opendir(DIR, $dir) || die "$dir: $!\n";
+  opendir(DIR, $dir) || die "$0: $dir: $!\n";
   @files_in_dir = grep /$file_regex/, readdir(DIR);
   closedir(DIR);
 }

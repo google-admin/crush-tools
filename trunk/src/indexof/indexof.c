@@ -48,7 +48,7 @@ int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
     do {
       if (getline(&buf, &buflen, in) == -1) {
         free(buf);
-        fprintf(stderr, "out of memory\n");
+        fprintf(stderr, "%s: out of memory\n", getenv("_"));
         return EXIT_MEM_ERR;
       }
       curline++;
@@ -57,7 +57,7 @@ int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
     chomp(buf);
 
     if (feof(in)) {
-      fprintf(stderr, "invalid line number: %d\n", lineno);
+      fprintf(stderr, "%s: invalid line number: %d\n", lineno, getenv("_"));
       exit(EXIT_HELP);
     }
   } else {
@@ -65,7 +65,7 @@ int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
        a dynamically allocated copy */
     buf = malloc(strlen(args->string) + 1);
     if (buf == NULL) {
-      fprintf(stderr, "out of memory\n");
+      fprintf(stderr, "%s: out of memory\n", getenv("_"));
       return EXIT_MEM_ERR;
     }
     strcpy(buf, args->string);

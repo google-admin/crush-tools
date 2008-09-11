@@ -60,7 +60,7 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
      into an array of ints */
   fields = malloc(sizeof(int) * 32);
   if (!fields) {
-    fprintf(stderr, "out of memory\n");
+    fprintf(stderr, "%s: out of memory\n", getenv("_"));
     return (EXIT_MEM_ERR);
   }
   fields_sz = 32;

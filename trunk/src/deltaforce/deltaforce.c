@@ -51,8 +51,8 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (argc - optind != 2) {
     fprintf(stderr,
-            "missing file arguments.  see %s -h for usage information.\n",
-            argv[0]);
+            "%s: missing file arguments.  see %s -h for usage information.\n",
+            argv[0], argv[0]);
     return EXIT_HELP;
   }
 

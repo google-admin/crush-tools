@@ -62,8 +62,8 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (argc - optind != 2) {
     fprintf(stderr,
-            "missing file arguments.  see %s -h for usage information.\n",
-            argv[0]);
+            "%s: missing file arguments.  see %s -h for usage information.\n",
+            argv[0], argv[0]);
     return EXIT_HELP;
   } else if (str_eq(argv[optind], argv[optind + 1])) {
     /* TODO: it would be safer to convert these to absolute
@@ -71,8 +71,8 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
        go through.
      */
     fprintf(stderr,
-            "both input files are the same. see %s -h for usage information.\n",
-            argv[0]);
+            "%s: both input files are the same. see %s -h for usage information.\n",
+            argv[0], argv[0]);
     return EXIT_HELP;
   }
 
@@ -182,12 +182,12 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
   int keycmp = 0;
 
   if (getline(&buffer_left, &buffer_left_size, left) <= 0) {
-    fprintf(stderr, "no header found in left-hand file\n");
+    fprintf(stderr, "%s: no header found in left-hand file\n", getenv("_"));
     retval = EXIT_FILE_ERR;
     goto cleanup;
   }
   if (getline(&buffer_right, &buffer_right_size, right) <= 0) {
-    fprintf(stderr, "no header found in right-hand file\n");
+    fprintf(stderr, "%s: no header found in right-hand file\n", getenv("_"));
     retval = EXIT_FILE_ERR;
     goto cleanup;
   }

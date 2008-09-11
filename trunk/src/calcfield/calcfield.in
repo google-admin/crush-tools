@@ -79,14 +79,14 @@ if (!defined($opt_i) || !$opt_i =~ m/[1-9][0-9]*/) {
 
 # Check formula. Bail out if it is not given. If given, check the formulas validity.
 if (!defined($opt_e)) {
-  die "No formula given. Please use option -f to provide one.\n";
+  die "$0: No formula given. Please use option -f to provide one.\n";
 } else {
   print "Using formula \"" . $opt_e . "\".\n" if (defined($opt_v));
 }
 
 # require a -b (fallback) value
 if (!defined($opt_b)) {
-  die "No fallback result given. Please use option -b to provide one.\n";
+  die "$0: No fallback result given. Please use option -b to provide one.\n";
 }
 
 # Check the column description

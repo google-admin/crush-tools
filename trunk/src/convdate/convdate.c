@@ -55,7 +55,7 @@ int convdate(struct cmdargs *args, int argc, char *argv[], int optind) {
   } else {
     field_no = atoi(args->field);
     if (field_no < 0) {
-      fprintf(stderr, "%d: invalid field number.\n", field_no);
+      fprintf(stderr, "%s: %d: invalid field number.\n", getenv("_"), field_no);
       return EXIT_HELP;
     }
   }
@@ -112,8 +112,8 @@ int convdate(struct cmdargs *args, int argc, char *argv[], int optind) {
 
           // No => print unmodified line
           if (args->verbose) {
-            fprintf(stderr, "line %lu: could not convert date \"%.*s\"\n",
-                    lineno, end - start + 1, buffer + start);
+            fprintf(stderr, "%s: line %lu: could not convert date \"%.*s\"\n",
+                    getenv("_"), lineno, end - start + 1, buffer + start);
           }
 
           fprintf(out, "%s", buffer);
@@ -123,8 +123,8 @@ int convdate(struct cmdargs *args, int argc, char *argv[], int optind) {
 
         // pass the line through if we have not found the field.
         if (args->verbose) {
-          fprintf(stderr, "line %lu: did not find the field at %i\n", lineno,
-                  field_no);
+          fprintf(stderr, "%s: line %lu: did not find the field at %i\n",
+                  getenv("_"), lineno, field_no);
         }
 
         fprintf(out, "%s", buffer);

@@ -193,14 +193,14 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
         /* this could validly return NULL if both sizes are 0 the first time thru,
            when keystr is still NULL, but that shouldn't happen */
         if (realloc_if_needed(&keystr, &keystr_sz, inbuf_sz) == NULL) {
-          fprintf(stderr, "out of memory.\n");
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           break;
         }
       }
 
       if (n_pivots) {
         if (realloc_if_needed(&pivstr, &pivstr_sz, inbuf_sz) == NULL) {
-          fprintf(stderr, "out of memory.\n");
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           break;
         }
       }

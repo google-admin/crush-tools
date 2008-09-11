@@ -166,7 +166,7 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   /* cleanup stuff in case of an error with malloc or realloc */
 memerror:
-  fprintf(stderr, "out of memory.\n");
+  fprintf(stderr, "%s: out of memory.\n", getenv("_"));
   if (order)
     free(order);
   if (lbuf)
@@ -358,14 +358,14 @@ int pushswap(char *s, int action_type) {
   /* compile the expression to match N,N */
   if ((ret = regcomp(&s_re, "^[0-9]+,[0-9]+$", REG_EXTENDED)) != 0) {
     regerror(ret, NULL, errbuf, 1024);
-    fprintf(stderr, "%s\n", errbuf);
+    fprintf(stderr, "%s: %s\n", getenv("_"), errbuf);
     return ret;
   }
 
   /* execute the expression */
   if ((ret = regexec(&s_re, s, 0, NULL, 0)) != 0) {
     regerror(ret, &s_re, errbuf, 1024);
-    fprintf(stderr, "%s\n", errbuf);
+    fprintf(stderr, "%s: %s\n", getenv("_"), errbuf);
     regfree(&s_re);
     return ret;
   }

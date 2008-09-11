@@ -75,7 +75,7 @@ int subtotal(struct cmdargs *args, int argc, char *argv[], int optind) {
     return EXIT_HELP;
 
   if ((sums = malloc(sizeof(int) * nsums)) == NULL) {
-    fprintf(stderr, "out of memory\n");
+    fprintf(stderr, "%s: out of memory\n", getenv("_"));
     free(sum_cols);
     return EXIT_MEM_ERR;
   }

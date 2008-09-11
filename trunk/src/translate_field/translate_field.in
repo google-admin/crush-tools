@@ -40,7 +40,7 @@ if ($help) {
 }
 
 if (! defined($field)) {
-  print STDERR "-f must be specified.\n";
+  print STDERR "$0: -f must be specified.\n";
   exit(1);
 }
 

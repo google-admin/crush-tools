@@ -53,7 +53,7 @@ if ($help) {
 $d = expand_chars($d);
 
 if (! (defined($dsn) && defined($uid) && defined($pwd) )) {
-  print STDERR "need db connect info in environment vars DB_[DSN|UID|PWD]\n";
+  print STDERR "$0: need db connect info in environment vars DB_[DSN|UID|PWD]\n";
   exit(1);
 }
 
@@ -61,12 +61,12 @@ my $query;
 if (defined($sql)) {
   $query = $sql;
 } elsif (defined($sqlfile)) {
-  open(SFILE, $sqlfile) or die "$sqlfile: $!\n";
+  open(SFILE, $sqlfile) or die "$0: $sqlfile: $!\n";
   $query = join '', <SFILE>;
   close(SFILE);
 } else {
   usage();
-  print STDERR "-s or -f must be specified.";
+  print STDERR "$0: -s or -f must be specified.\n";
   exit(1);
 }
 
@@ -77,11 +77,11 @@ if ($query =~ /^\(*\s*select/mi) {
   my $fhout;
   if (defined($outfile)) {
     $fhout = new FileHandle($outfile, "w");
-    die "$outfile: $!\n" unless $fhout;
+    die "$0: $outfile: $!\n" unless $fhout;
   } else {
     $fhout = new FileHandle;
     $fhout->fdopen("STDOUT", "w");
-    die "stdout: $!\n" unless $fhout;
+    die "$0: stdout: $!\n" unless $fhout;
   }
   $dbq->execute();
   while (my $results = $dbq->fetchrow_arrayref()) {
@@ -97,11 +97,11 @@ if ($query =~ /^\(*\s*select/mi) {
   my $fhin;
   if (defined($infile)) {
     $fhin = new FileHandle($infile, "r");
-    die "$infile: $!\n" unless $fhin;
+    die "$0: $infile: $!\n" unless $fhin;
   } else {
     $fhin = new FileHandle;
     $fhin->fdopen("STDIN", "r");
-    die "stdin: $!\n" unless $fhin;
+    die "$0: stdin: $!\n" unless $fhin;
   }
   while (<$fhin>) {
     chomp(my @vals = split(/\Q$d\E/));
@@ -109,7 +109,7 @@ if ($query =~ /^\(*\s*select/mi) {
   }
   $fhin->close;
 } else {
-  print STDERR "invalid query syntax\n";
+  print STDERR "$0: invalid query syntax\n";
   exit(1);
 }
 

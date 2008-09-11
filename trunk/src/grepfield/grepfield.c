@@ -54,7 +54,7 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
     field_no = atoi(args->field) - 1;
     field_to_scan = scan_field;
     if (field_no < 0) {
-      fprintf(stderr, "%d: invalid field number.\n", field_no);
+      fprintf(stderr, "%s: %d: invalid field number.\n", getenv("_"), field_no);
       return EXIT_HELP;
     }
   }
@@ -158,7 +158,7 @@ char *scan_field(char **field_buffer, ssize_t * field_buffer_size,
     else
       tmp = malloc(strlen(orig_line));
     if (tmp == NULL) {
-      fprintf(stderr, "out of memory");
+      fprintf(stderr, "%s: out of memory", getenv("_"));
       exit(EXIT_MEM_ERR);
     }
     *field_buffer = tmp;
@@ -177,6 +177,6 @@ void re_perror(int err_code, regex_t pattern) {
   len = regerror(err_code, &pattern, NULL, 0);
   buf = malloc(len);
   regerror(err_code, &pattern, buf, len);
-  fprintf(stderr, "%s\n", buf);
+  fprintf(stderr, "%s: %s\n", getenv("_"), buf);
   free(buf);
 }
