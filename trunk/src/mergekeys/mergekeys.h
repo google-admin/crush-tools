@@ -78,8 +78,15 @@ int merge_files(FILE * a, FILE * b, enum join_type_t join_type, FILE * out,
                 struct cmdargs *args);
 
 void classify_fields(char *left_header, char *right_header);
+int set_field_types(const char *left_keys, const char *right_keys);
 int compare_keys(char *buffer_left, char *buffer_right);
 void join_lines(char *left_line, char *right_line, FILE * out);
 int peek_keys(char *peek_line, char *current_line);
+
+/* extract each element of fields from line and print them, separated by delim.
+   the delimiter will not be printed after the last field. */
+static void extract_and_print_fields(char *line, int *fields, size_t nfields,
+                                     char *delim, FILE *out);
+
 
 #endif /* MERGEKEYS_H */

@@ -6,7 +6,11 @@
 	description => "merges two sorted flat files with some different columns",
 	version => "0.1",
 	trailing_opts => "file1 file2",
-	usage_extra => "",
+	usage_extra =>
+      "Input files must be sorted by key fields.\\n\\n" .
+      "If -a and -b are not specified, the first line of each file will be examined\\n" .
+      "to determine common fields.  In this case, all key fields must precede all\\n" .
+      "mergeable fields.",
 	do_long_opts => 1,
 	preproc_extra => '',
 	copyright => <<END_COPYRIGHT
@@ -54,6 +58,20 @@ END_COPYRIGHT
 	  parseopt_code => 'args->verbose++;',
 	  description => 'print verbose messages during execution'
 	},
+  {
+    name => 'left_keys',
+    shortopt => 'a',
+    longopt => 'left-keys',
+    type => 'var',
+    description => 'list of key fields in left-hand file'
+  },
+  {
+    name => 'right_keys',
+    shortopt => 'b',
+    longopt => 'right-keys',
+    type => 'var',
+    description => 'list of key fields in right-hand file'
+  },
 	{
 	  name => 'inner',
 	  shortopt => 'i',

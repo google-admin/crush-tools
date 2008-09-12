@@ -36,12 +36,6 @@ size_t left_ntomerge, right_ntomerge;
 
 
 
-/* extract each element of fields from line and print them, separated by delim.
-   the delimiter will not be printed after the last field. */
-static void extract_and_print_fields(char *line, int *fields, size_t nfields,
-                                     char *delim, FILE *out);
-
-
 /** @brief opens all the files necessary, sets a default
   * delimiter if none was specified, and calls the
   * merge_files() function.
@@ -59,6 +53,13 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   int fd_tmp, retval;           /* file descriptor and return value */
 
   enum join_type_t join_type;
+
+  if (args->left_keys && ! args->right_keys ||
+      ! args->left_keys && args->right_keys) {
+    fprintf(stderr, "%s: if -a or -b is specified, the other must be also.\n",
+            argv[0]);
+    return EXIT_HELP;
+  }
 
   if (argc - optind != 2) {
     fprintf(stderr,
@@ -226,8 +227,16 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
     goto cleanup;
   }
 
-  /* figure out which fields are keys or need to be merged */
-  classify_fields(buffer_left, buffer_right);
+  if (args->left_keys && args->right_keys) {
+    if (set_field_types(args->left_keys, args->right_keys) < 0) {
+      retval = EXIT_FAILURE;
+      goto cleanup;
+    }
+  } else {
+    /* use headers to figure out which fields are keys or need to be merged */
+    classify_fields(buffer_left, buffer_right);
+  }
+
 
   if (nkeys == 0) {
     fprintf(stderr, "%s: no common fields found\n", getenv("_"));
@@ -502,6 +511,84 @@ void join_lines(char *left_line, char *right_line, FILE * out) {
   }
 
   fputc('\n', out);
+}
+
+
+static int Expand_nums(const char *str, int **arr,
+                       size_t *sz, const char *desc) {
+  ssize_t retval = expand_nums(str, arr, sz);
+  switch (retval) {
+    case -1: fprintf(stderr, "%s: out of memory\n", getenv("_"));
+             break;
+    case  0:
+    case -2: fprintf(stderr, "%s: bad %s key string: \"%s\"\n",
+                     getenv("_"), desc, str);
+             break;
+  }
+  return retval;
+}
+
+
+static void decrement_each(int *array, size_t n) {
+  int i;
+  for (i = 0; i < n; i++) {
+    array[i]--;
+  }
+}
+
+
+int set_field_types(const char *left_keys, const char *right_keys) {
+  ssize_t nkeys_left, nkeys_right;
+  int i;
+
+  nkeys_left = Expand_nums(left_keys, &left_keyfields,
+                           &nfields_left, "left");
+  if (nkeys_left < 1)
+    return -1;
+
+  nkeys_right = Expand_nums(right_keys, &right_keyfields,
+                            &nfields_right, "right");
+  if (nkeys_right < 1)
+    return -1;
+
+  if (nkeys_left != nkeys_right) {
+    fprintf(stderr,
+            "%s: left and right files must have the same number of keys.\n",
+            getenv("_"));
+    return -1;
+  }
+
+  decrement_each(left_keyfields, nkeys_left);
+  decrement_each(right_keyfields, nkeys_right);
+
+  nkeys = nkeys_left;
+  left_ntomerge = right_ntomerge = 0;
+
+  for (i = 0; i < nfields_left; i++) {
+    int j, found = 0;
+    for (j = 0; j < nkeys_left; j++) {
+      if (left_keyfields[j] == i) {
+        found = 1;
+        break;
+      }
+    }
+    if (! found)
+      left_mergefields[left_ntomerge++] = i;
+  }
+
+  for (i = 0; i < nfields_right; i++) {
+    int j, found = 0;
+    for (j = 0; j < nkeys_right; j++) {
+      if (right_keyfields[j] == i) {
+        found = 1;
+        break;
+      }
+    }
+    if (! found)
+      right_mergefields[right_ntomerge++] = i;
+  }
+
+  return 0;
 }
 
 
