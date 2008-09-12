@@ -30,54 +30,47 @@ errors=0
 
 for i in `seq 0 $(( ${#tests[*]} - 1 ))`; do
 
-	echo "" # just put an empty line for readability
+  echo "" # just put an empty line for readability
 
-	optstring=`echo ${tests[$i]} | sed 's/\s//g'`
+  optstring=`echo ${tests[$i]} | sed 's/\s//g'`
 
-	for t in ${subtests[*]}; do
+  for t in ${subtests[*]}; do
 
-		left=$datadir/test_${t}.a
-		right=$datadir/test_${t}.b
-		expected=$datadir/test_${t}.${optstring}.expected
-		out=$datadir/test_${t}.${optstring}.out
+    left=$datadir/test_${t}.a
+    right=$datadir/test_${t}.b
+    expected=$datadir/test_${t}.${optstring}.expected
+    out=$datadir/test_${t}.${optstring}.out
 
-		if [ -e $expected ]; then
+    if [ -e $expected ]; then
 
-			echo -n "test $i - \"${test_names[$i]}\" (sub test ${t}): "
+      echo -n "test $i - \"${test_names[$i]}\" (sub test ${t}): "
 
-			if [ "$t" = "06" ] && [ ! "$locale_works" ]; then
-				echo "skipped"
-				continue
-			fi
+      if [ "$t" = "06" ] && [ ! "$locale_works" ]; then
+        echo "skipped"
+        continue
+      fi
 
-			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $out.1
-                        cat $left | $wdir/mergekeys -d "$test_delim" $optstring - $right > $out.2
-                        cat $right | $wdir/mergekeys -d "$test_delim" $optstring $left - > $out.3
+      $wdir/mergekeys -d "$test_delim" $optstring $left $right > $out.1
+      cat $left | $wdir/mergekeys -d "$test_delim" $optstring - $right > $out.2
+      cat $right | $wdir/mergekeys -d "$test_delim" $optstring $left - > $out.3
 
-                        if [ "`diff -q $out.1 $expected`" ] || [ "`diff -q $out.2 $expected`" ] || [ "`diff -q $out.3 $expected`" ]; then
-                                (( errors++ ))
-                                echo "failed"
-				for ((j=1; j<=3; j++)); do
-	                                if [ "`diff -q $out.$j $expected`" ]; then echo "          see $out.$j"; fi
-				done
-				
-                        else
-                                echo "passed"
-                                rm $out.*
-                        fi
+      if [ "`diff -q $out.1 $expected`" ] || [ "`diff -q $out.2 $expected`" ] || [ "`diff -q $out.3 $expected`" ]; then
+        (( errors++ ))
+        echo "failed"
+        for ((j=1; j<=3; j++)); do
+          if [ "`diff -q $out.$j $expected`" ]; then echo "          see $out.$j"; fi
+        done
+      else
+        echo "passed"
+        rm $out.*
+      fi
 
-
-		else
-
-			echo "creating $expected from $left, $right and options ${tests[$i]}"
-
-			$wdir/mergekeys -d "$test_delim" $optstring $left $right > $expected
-
-		fi
-
-	done
-
-done
+    else # if [ -e $expected ]; then
+      echo "creating $expected from $left, $right and options ${tests[$i]}"
+      $wdir/mergekeys -d "$test_delim" $optstring $left $right > $expected
+    fi
+  done # subtests
+done # tests
 
 echo -e "\n$errors errors\n"
 
