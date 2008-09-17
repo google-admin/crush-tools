@@ -68,7 +68,7 @@ my @files_to_run = array_diff(\@files_in_log, \@files_in_dir);
 if ($print_dir) {
   if ($dir !~ m#/$#) { $dir .= '/' }
   foreach my $f (@files_to_run) {
-    print $dir, $f , q();
+    print $dir, $f , q( );
   }
 } else {
   print join(' ', @files_to_run);
