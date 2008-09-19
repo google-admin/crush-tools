@@ -39,6 +39,7 @@ int cutfield(struct cmdargs *args, int argc, char *argv[], int optind) {
   size_t in_buffer_sz = 0;      /* the size of the input buffer */
   size_t n_fields = 0;          /* the number of fields from input
                                    file */
+  int field_length;
 
   if (args->output_fname) {
     if (!freopen(args->output_fname, "w", stdout)) {
@@ -90,20 +91,27 @@ int cutfield(struct cmdargs *args, int argc, char *argv[], int optind) {
           ++next_field_to_skip;
           continue;
         }
-        if (!get_line_pos(in_buffer, i, args->delim, &f_first, &f_last))
+        field_length = get_line_pos(in_buffer, i, args->delim,
+                                    &f_first, &f_last);
+        if (field_length < 0)
           continue;
 
         if (first_field_printed)
           printf("%s", args->delim);
 
-        printf("%.*s", f_last - f_first + 1, &(in_buffer[f_first]));
+        if (field_length > 0)
+          printf("%.*s", f_last - f_first + 1, &(in_buffer[f_first]));
         first_field_printed = 1;
       }
 
       /* print everything after the last field in the
        * line (preserves input line-break style) */
-      get_line_pos(in_buffer, n_fields - 1, args->delim, &f_first, &f_last);
-      printf("%s", &(in_buffer[f_last + 1]));
+      field_length = get_line_pos(in_buffer, n_fields - 1, args->delim,
+                                  &f_first, &f_last);
+      if (field_length > 0)
+        printf("%s", &(in_buffer[f_last + 1]));
+      else
+        printf("%s", &(in_buffer[f_last]));
 
     }
 
