@@ -104,22 +104,16 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
   }
 
-  do {
-    while (1) {
+  while (fp != NULL) {
+    while (getline(&lbuf, &lbs, fp) > 0) {
 
-      if (getline(&lbuf, &lbs, fp) < 0)
-        break;
-
-      /* make sure there's enough room in the working
-         buffer */
+      /* make sure there's enough room in the working buffer */
       if (wbuf == NULL) {
         if ((wbuf = malloc(lbs)) == NULL)
           goto memerror;
         wbs = lbs;
       } else if (wbs < lbs) {
-        /* if realloc unsuccessful, we don't want
-         * wbuf to end up being NULL
-         */
+        /* if realloc unsuccessful, we don't want wbuf to end up being NULL */
         char *tmp_ptr;
         if ((tmp_ptr = realloc(wbuf, lbs)) == NULL)
           goto memerror;
@@ -133,22 +127,14 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
         if (docut(&wbuf, lbuf, &wbs, args->delim, order, order_elems) < 0)
           goto memerror;
       }
-      fprintf(fpout, "%s", wbuf);
+      fputs(wbuf, fpout);
       memset(lbuf, 0, lbs);
       memset(wbuf, 0, wbs);
-      /* fputs(lbuf, fpout); */
-
     }
 
     fclose(fp);
-    fp = NULL;
-
     fp = nextfile(argc, argv, &optind, "r");
-
-    if (fp == NULL)
-      break;
-
-  } while (optind <= argc);
+  }
 
   fflush(fpout);
   fclose(fpout);
