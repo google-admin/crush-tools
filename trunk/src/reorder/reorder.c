@@ -92,10 +92,6 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (args->fields) {
 
-    order_sz = fields_in_line(args->fields, ",");
-    if ((order = malloc(order_sz * sizeof(int))) == NULL)
-      goto memerror;
-
     order_elems = expand_nums(args->fields, &order, &order_sz);
 
     if (args->verbose) {
