@@ -258,15 +258,19 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
 static int extract_keys(char *target,
                         const char *source,
                         const char *delim, int *keys, size_t nkeys) {
-  int i, s, e;
+  int i, s, e; /* iter, start, end */
+  int field_len;
 
   target[0] = '\0';
   for (i = 0; i < nkeys; i++) {
-    if (get_line_pos(source, keys[i], delim, &s, &e)) {
-      strncat(target, source + s, e - s + 1);
+  	field_len = get_line_pos(source, keys[i], delim, &s, &e);
+    if (field_len < 0) {
+      return 1;
+    } else if (field_len == 0) {
       strcat(target, delim);
     } else {
-      return 1;
+      strncat(target, source + s, e - s + 1);
+      strcat(target, delim);
     }
   }
   return 0;
