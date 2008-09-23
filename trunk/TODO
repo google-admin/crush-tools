@@ -24,7 +24,6 @@ $Author$
 
   src/add_field/
   src/buffer/
-  src/csvformat/
   src/dates_in_range/
   src/dbstream/
   src/deltadays/

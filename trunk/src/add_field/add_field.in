@@ -17,24 +17,28 @@
 use strict;
 use Getopt::Long;
 
-my ($help, $header, $value, $location, $delim, $copy_field);
+my ($help, $header, $value, $location, $delim, $copy_field, $show_version);
 
 $value = '';
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 $location = 1;
-
+Getopt::Long::Configure("no_ignore_case");
 &GetOptions("help" => \$help,
             "label=s" => \$header,
             "value=s" => \$value,
             "field=n" => \$location,
             "delim=s" => \$delim,
-            "copy=n" => \$copy_field);
+            "copy=n" => \$copy_field,
+            "Version" => \$show_version);
 
 if ($help) {
   usage();
   exit(1);
 }
-
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
 $delim = expand_chars($delim);
 
 if ($copy_field) {

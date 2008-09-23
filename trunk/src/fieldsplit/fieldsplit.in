@@ -21,11 +21,11 @@ use Memoize;
 
 memoize ('transform_splitfield');
  
-my( $h, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames );
+my( $h, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames, $show_version );
 $d = $ENV{'DELIMITER'} || chr(0xfe);
 $dir = './';
 $prefix = $suffix = '';
-
+Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions(	"help"		=> \$h,
 		"keepheader"	=> \$keep,
 		"delim=s"	=> \$d,
@@ -34,8 +34,13 @@ $prefix = $suffix = '';
 		"name=s"	=> \$prefix,
 		"suffix=s"	=> \$suffix,
 		"xform-name=s"	=> \$xform_outnames,
+    "Version" => \$show_version,
 		);
 
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
 if( $h || ! defined($f) ){
 	usage();
 	exit(1);

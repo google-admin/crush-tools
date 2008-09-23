@@ -18,17 +18,23 @@ use strict;
 use Date::Calc qw(Add_Delta_Days);
 use Getopt::Long;
 
-my ($help, $s, $e, $f, $inc);
+my ($help, $s, $e, $f, $inc, $show_version);
 $s = $e = '';
 $f = 'YYYY-MM-DD';
 $inc = 1;
-
+Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions("help" => \$help,
             "start=s" => \$s,
             "end=s" => \$e,
             "format=s" => \$f,
-            "increment=n" => \$inc);
+            "increment=n" => \$inc,
+            "Version" => \$show_version,
+           );
 
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
 if ($help ||                       # user asked for it
     $s !~ /^\d{4}-\d{2}-\d{2}$/ || # malformed start date
     $e !~ /^\d{4}-\d{2}-\d{2}$/ || # malformed end date

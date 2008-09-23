@@ -4,11 +4,11 @@
 	name => "reorder",
 	category => "General file manipulation",
 	description => "swaps columns in a delimited flat file",
-	version => "0.1",
+	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "[file(s)]",
 	usage_extra => "the fields param is exclusive of swap and move - if -f and -m or -s are\\nspecified, only -f will be used.\\n\\nexample: reorder -d : -s 1,3 -m 2,4 /etc/passwd\\n\\nwould swap fields 1 and 3, and then would move field 2 to position 4.",
 	do_long_opts => 1,
-	preproc_extra => '#include "reorder.h"',
+	preproc_extra => "#include \"reorder.h\"\n#include <crush_version.h>",
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

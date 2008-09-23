@@ -2,11 +2,11 @@
 %global = (
 	name => "cutfield",
 	description => "removes specified fields from a string-delimited data stream",
-	version => "2.0",
+	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "[file ...]",
 	usage_extra => "if -d is not specified and DELIMITER enviroment variable is defined, that value will be used.",
 	do_long_opts => 1,
-	preproc_extra => '',
+	preproc_extra => '#include <crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

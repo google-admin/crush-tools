@@ -30,9 +30,9 @@ $pwd = $ENV{'DB_PWD'};
 # input will be a stream of values for insert or update queries
 # d (delimiter) provided for spliting input lines or joining output
 
-my ($help, $sqlfile, $sql, $infile, $outfile, $d);
+my ($help, $sqlfile, $sql, $infile, $outfile, $d, $show_version);
 $d = $ENV{"DELIMITER"} || chr(0xfe);
-
+Getopt::Long::Configure( "no_ignore_case" );
 GetOptions('help' => \$help,
            'file=s' => \$sqlfile,
            'sql=s' => \$sql,
@@ -41,13 +41,19 @@ GetOptions('help' => \$help,
            'delimiter=s' => \$d,
            'dsn=s' => \$dsn,
            'uid=s' => \$uid,
-           'pwd=s' => \$pwd);
+           'pwd=s' => \$pwd,
+           'Version' => \$show_version,
+          );
   
 
 
 if ($help) {
   usage();
   exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
 }
 
 $d = expand_chars($d);

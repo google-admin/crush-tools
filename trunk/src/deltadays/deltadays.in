@@ -20,12 +20,20 @@ use strict;
 use Date::Calc qw(Delta_DHMS);
 use Getopt::Long;
 
-my( $dfs, $start, $end, $help );
+my( $dfs, $start, $end, $help, $show_version );
 $dfs = 'YYYY-MM-DD';
+Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions("help" => \$help,
             "start=s" => \$start,
             "end=s" => \$end,
-            "format=s" => \$dfs);
+            "format=s" => \$dfs,
+            "Version" => \$show_version,
+           );
+
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
 
 if (! defined($start)) {
   $start = shift(@ARGV);

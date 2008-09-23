@@ -16,10 +16,11 @@
 
 use strict;
 use Getopt::Std;
-use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p $opt_b $opt_c $opt_r);
+use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p
+            $opt_b $opt_c $opt_r $opt_V);
 use Date::Calc qw(Delta_DHMS);
 
-getopts('hvprd:e:i:b:c:');
+getopts('hVvprd:e:i:b:c:');
 
 # Define default delimiter
 my $delim = $ENV{"DELIMITER"} || chr(0xfe);
@@ -55,6 +56,11 @@ if the -p option is active, you may also use the field names, e.g.
 HELP
 
    exit(0);
+}
+
+if ($opt_V) {
+  crush_version();
+  exit(0);
 }
 
 # Evaluate event ids

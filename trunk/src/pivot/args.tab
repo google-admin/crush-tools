@@ -4,11 +4,11 @@
 	name => "pivot",
 	category => "General file manipulation",
 	description => "pivots flat-file data from rows to columns",
-	version => "0.5",
+	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "[file ...]",
 	usage_extra => "-f, -p, and -v values are comma-separated numbers or ranges.  for example:\\n\\n1,2-5,7",
 	do_long_opts => 1,
-	preproc_extra => '',
+	preproc_extra => '#include <crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

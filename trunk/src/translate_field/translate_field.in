@@ -20,7 +20,7 @@ use Getopt::Long;
 Getopt::Long::Configure("no_ignore_case");
 
 my($help, $debug, $field, $delim, $replace, $append, $prepend, %mapping,
-   $external);
+   $external, $show_version);
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
@@ -32,11 +32,17 @@ GetOptions("help" => \$help,
            "prepend" => \$prepend,
            "replace" => \$replace,
            "map=s" => \%mapping,
-           "external=s" => \$external);
+           "external=s" => \$external,
+           "Version" => \$show_version,
+          );
 
 if ($help) {
   usage();
   exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
 }
 
 if (! defined($field)) {

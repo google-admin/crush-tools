@@ -17,20 +17,27 @@
 use strict;
 use Getopt::Long;
 
-my($help, $debug, $filedir, $startdate, $enddate, $pattern, $fileglob);
+my($help, $debug, $filedir, $startdate, $enddate, $pattern, $fileglob,
+   $show_version);
 $pattern = '\d\d-\d\d-\d\d\d\d';
 $debug = 0;
-
+Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions("help" => \$help,
             "directory:s" => \$filedir,
             "startdate:s" => \$startdate,
             "enddate:s" => \$enddate,
             "pattern:s" => \$pattern,
-            "glob:s" => \$fileglob);
+            "glob:s" => \$fileglob,
+            "Version" => \$show_version,
+           );
 
 if ($help) {
   usage();
   exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
 }
 
 if ((! defined($filedir)) ||

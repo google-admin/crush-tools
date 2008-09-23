@@ -3,11 +3,11 @@
 	name => "subtotal",
 	category => "General file manipulation",
 	description => "adds subtotal lines to a flat-file",
-	version => "0.1",
+	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "",
 	usage_extra => "",
 	do_long_opts => 1,
-	preproc_extra => '',
+	preproc_extra => '#include <crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

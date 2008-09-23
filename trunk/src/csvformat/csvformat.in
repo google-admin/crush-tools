@@ -19,20 +19,25 @@ use strict;
 use Getopt::Long;
 use FileHandle;
 
-my ($h, $d, $i, $o, $noescape);
+my ($h, $d, $i, $o, $noescape, $show_version);
 
 $d = $ENV{DELIMITER} || chr(0xfe);
-
+Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions("help"    => \$h,
             "delim=s"  => \$d,
             "input=s"  => \$i,
             "output=s"  => \$o,
             "no-escape"  => \$noescape,
+            "Version" => \$show_version,
            );
 
 if ($h) {
   usage();
   exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
 }
 
 $d = expand_chars($d); # expand escape sequences

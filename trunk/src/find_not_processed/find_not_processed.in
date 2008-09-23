@@ -17,18 +17,24 @@
 use strict;
 use Getopt::Long;
 
-my ($help, $dir, $logfile, $print_dir, $file_regex, $file_glob);
-
+my ($help, $dir, $logfile, $print_dir, $file_regex, $file_glob, $show_version);
+Getopt::Long::Configure( "no_ignore_case" );
 GetOptions("help" => \$help,
            "directory=s" => \$dir,
            "logfile=s" => \$logfile,
            "print-dir" => \$print_dir,
            "glob=s" => \$file_glob,
-           "regex=s" => \$file_regex);
+           "regex=s" => \$file_regex,
+           "Version" => \$show_version,
+          );
 
 if ($help) {
   usage();
   exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
 }
 
 if (! $dir) {

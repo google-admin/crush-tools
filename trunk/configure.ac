@@ -1,5 +1,5 @@
 AC_INIT([crush],
-        [0.1],
+        [2008-10 (trunk)],
         [http://code.google.com/p/crush-tools/])
 AM_CONFIG_HEADER(src/include/config.h)
 AC_CONFIG_SRCDIR(src/include/ffutils.h)
@@ -16,6 +16,7 @@ AC_SUBST(ac_aux_dir)
 AC_SUBST([abs_srcdir], ["`cd $srcdir && pwd`"])
 AC_SUBST([abs_builddir], ["`pwd`"])
 AC_SUBST([CGENER], [$abs_srcdir/cgener])
+AC_SUBST([BUILD_DATE_TIME], ["`date +%Y-%m-%d-%H:%M:%S`"])
 
 AC_PROG_CC
 AC_PATH_PROG(M4, m4, none)
@@ -73,8 +74,10 @@ dnl TODO: add enable-profiling - requires a static build
 AC_CONFIG_FILES([Makefile
 src/Makefile
 src/include/Makefile
+src/include/crush_version.h
 src/libcrush/Makefile
 src/perllib/Makefile
+src/perllib/crush_version.pl
 src/add_field/Makefile
 src/aggregate/Makefile
 src/aggregate2/Makefile
