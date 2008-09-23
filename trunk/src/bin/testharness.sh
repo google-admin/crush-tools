@@ -13,6 +13,7 @@ fi
 
 pass=0
 fail=0
+xfail=0
 skip=0
 
 # report on the results of a test and tally the failures
@@ -25,9 +26,10 @@ function test_status {
 
   echo "$result: $test_num.$subtest: $description"
   case "$result" in
-    PASS) ((pass++));;
-    FAIL) ((fail++));;
-    SKIP) ((skip++));;
+    PASS)  ((pass++));;
+    FAIL)  ((fail++));;
+    SKIP)  ((skip++));;
+    XFAIL) ((xfail++));;
     *)    echo "UNRECOGNIZED RESULT: $result"; exit;;
   esac
 }
@@ -42,9 +44,9 @@ done
 cat << END_SUMMARY
 =====================================================
 test results for $application:
-  $pass PASSED
-  $fail FAILED
-  $skip SKIPPED
+  PASSED:  $pass 
+  FAILED:  $fail unexpected, $xfail expected
+  SKIPPED: $skip
 =====================================================
 END_SUMMARY
 
