@@ -6,7 +6,7 @@ Writing reliable applications using the CRUSH toolkit is mostly about writing re
 
 = A central library =
 
-Throughout the deep-dive we'll be defining shell functions to handle certain aspects of application development.  These can be put into a centralized library and sourced by all of your applications.  (TODO: include the actual library file in the download section and put a link here.)
+Throughout the deep-dive we'll be defining shell functions to handle certain aspects of application development.  These can be put into a centralized library and sourced by all of your applications.  The source for these functions is available at http://crush-tools.googlecode.com/svn/trunk/contrib/crushlib.sh
 
 = Scheduling considerations =
 
