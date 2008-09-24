@@ -67,7 +67,7 @@ function assert_single_instance {
 
 function cleanup_pidfile {
   local exit_code=$?
-  local pidfile="${$1:-$0.pid}"
+  local pidfile="${1:-$0.pid}"
   if test -e "$pidfile" -a `cat "$pidfile"` -eq $$; then
     rm $pidfile
   fi
