@@ -37,6 +37,9 @@ function test_status {
 cd `dirname "$1"`
 . `basename "$1"`
 
+# make it easier to check pipeline exit codes on stdin tests
+set pipefail
+
 for test_file in $test_files; do
   . $test_file
 done
