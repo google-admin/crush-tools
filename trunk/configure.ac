@@ -73,6 +73,7 @@ dnl TODO: add enable-profiling - requires a static build
 
 AC_CONFIG_FILES([Makefile
 src/Makefile
+src/bin/Makefile
 src/include/Makefile
 src/include/crush_version.h
 src/libcrush/Makefile

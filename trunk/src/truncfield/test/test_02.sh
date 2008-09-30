@@ -1,26 +1,26 @@
-#!/bin/bash
+test_number=02
+description="middle field"
 
-test_name="middle field"
+expected=$test_dir/test_$test_number.expected
+output=$test_dir/test_$test_number.out
 
-$wdir/truncfield -f 2 -d '\t' > $0.out << "END_INPUT"
-f0	f1	f2
-00	01	02
-10	11	12
-20	21	22
-END_INPUT
-
-cat > $0.expected << "END_EXPECT"
+cat > $expected << "END_EXPECT"
 f0		f2
 00		02
 10		12
 20		22
 END_EXPECT
 
-if [ "`diff -q $0.expected $0.out`" ]; then
-  echo "FAIL: $test_name"
-  exit 1
+$bin -f 2 -d '\t' > $output << "END_INPUT"
+f0	f1	f2
+00	01	02
+10	11	12
+20	21	22
+END_INPUT
+
+if [ $? -ne 0 ] || [ "`diff -q $expected $output`" ]; then
+  test_status $test_number 1 "$description" FAIL
 else
-  rm "$0.expected" "$0.out"
-  echo "PASS: $test_name"
-  exit 0
+  rm "$expected" "$output"
+  test_status $test_number 1 "$description" PASS
 fi

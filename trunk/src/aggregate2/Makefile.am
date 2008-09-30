@@ -13,4 +13,9 @@ TESTS = test.conf
 
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab
+EXTRA_DIST = args.tab test.conf test/test.in \
+             test/test_00.sh test/test_00.exected \
+             test/test_01.sh test/test_01.expected \
+             test/test_02.sh test/test_02.expected \
+             test/test_03.sh test/test_03.expected \
+             test/test_04.sh

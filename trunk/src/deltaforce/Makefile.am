@@ -8,7 +8,17 @@ deltaforce_SOURCES = deltaforce.c deltaforce.h $(BUILT_SOURCES)
 
 deltaforce_LDADD = ../libcrush/libcrush.la
 
-TESTS = tests.sh
+TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
+TESTS = test.conf
+
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab
+EXTRA_DIST = args.tab test.conf \
+             tests/test_00.sh tests/test_00-full.txt \
+						 tests/test_00-delta.txt tests/test_00.expected \
+             tests/test_01.sh tests/test_01-full.txt \
+						 tests/test_01-delta.txt tests/test_01.expected \
+             tests/test_02.sh tests/test_02-full.txt \
+						 tests/test_02-delta.txt tests/test_02.expected \
+             tests/test_03.sh tests/test_03-full.txt \
+						 tests/test_03-delta.txt tests/test_03.expected

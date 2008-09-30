@@ -1,14 +1,11 @@
-#!/bin/bash
+test_number=03
+description="input from string"
 
-test_name="input from string"
-
-index=`$wdir/indexof -l f2 -s "f0	f1	f2" -d '\t'`
 expected=3
+index=`$bin -l f2 -s "f0	f1	f2"`
 
-if [ $index -ne 3 ]; then
-  echo "FAIL: $test_name - got $index instead of $expected"
-  exit 1
+if [ $? -ne 0 ] || [ $index -ne 3 ]; then
+  test_status $test_number 1 "$description" FAIL
 else
-  echo "PASS: $test_name"
-  exit 0
+  test_status $test_number 1 "$description" PASS
 fi

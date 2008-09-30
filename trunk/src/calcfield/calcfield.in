@@ -103,8 +103,7 @@ if (!defined($opt_c)) {
 
 # Should we preserve the header line?
 if (defined($opt_p)) {
-  # TODO: should this read from <> instead?
-  if (defined($line = <STDIN>)) {
+  if ($line = <>) {
     $line = trim($line);  
     @parts = split(/\Q$delim\E/, $line);
     
@@ -119,8 +118,7 @@ if (defined($opt_p)) {
 
 my $calc_func;
 
-# TODO: should this read from <> instead?
-while (defined($line = <STDIN>)) {
+while ($line = <>) {
   $line = trim($line);
   @parts = split(/\Q$delim\E/, $line, -1);
 

@@ -6,8 +6,13 @@ $(BUILT_SOURCES) : args.tab
 bin_PROGRAMS = indexof
 indexof_SOURCES = indexof.c indexof.h $(BUILT_SOURCES)
 
-TESTS = tests.sh
+TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
+TESTS = test.conf
+
 CLEANFILES = $(BUILT_SOURCES)
 
 indexof_LDADD = ../libcrush/libcrush.la
-EXTRA_DIST = args.tab
+EXTRA_DIST = args.tab test.conf \
+             test/test_01.sh \
+             test/test_02.sh \
+             test/test_03.sh

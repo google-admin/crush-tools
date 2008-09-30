@@ -1,24 +1,25 @@
-#!/bin/bash
+test_number=01
+description="defaults"
 
-test_name="defaults"
+expected=$test_dir/test_$test_number.expected
+output=$test_dir/test_$test_number.out
 
-$wdir/convdate -d '\t' > $0.out << "END_TEST"
-Date	Field-0	Field-1
-10-11-2008-16:32:08	hello	world
-10-11-2008-16:32:08	hello	world
-END_TEST
-
-cat > $0.expected << "END_EXPECT"
+cat > $expected << "END_EXPECT"
 Date	Field-0	Field-1
 2008-10-11-16:32:08	hello	world
 2008-10-11-16:32:08	hello	world
 END_EXPECT
 
-if [ "`diff -q $0.expected $0.out`" ]; then
-  echo "FAIL: $test_name"
-  exit 1
+$bin > $output << "END_TEST"
+Date	Field-0	Field-1
+10-11-2008-16:32:08	hello	world
+10-11-2008-16:32:08	hello	world
+END_TEST
+
+if [ $? -ne 0 ] ||
+   [ "`diff -q $expected $output`" ]; then
+  test_status $test_number 1 "$description" FAIL
 else
-  rm "$0.expected" "$0.out"
-  echo "PASS: $test_name"
-  exit 0
+  test_status $test_number 1 "$description" PASS
+  rm $expected $output
 fi

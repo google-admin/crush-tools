@@ -8,7 +8,12 @@ aggregate_SOURCES = aggregate.c aggregate.h $(BUILT_SOURCES)
 
 aggregate_LDADD = ../libcrush/libcrush.la
 
-TESTS = test.sh
+TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
+TESTS = test.conf
+
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab
+EXTRA_DIST = args.tab test.conf test/test.in \
+             test/test_00.sh test/test_00.expected \
+             test/test_01.sh test/test_01.expected \
+						 test/test_02.sh test/test_02.expected

@@ -6,7 +6,7 @@ if COND_PERL_DATE_CALC_PRESENT
 WITH_DATE_CALC = $(NEEDS_PERL_DATE_CALC)
 endif
 
-SUBDIRS = include libcrush perllib aggregate aggregate2 buffer convdate \
+SUBDIRS = bin include libcrush perllib aggregate aggregate2 buffer convdate \
           cutfield deltaforce foreach_parallel funiq grepfield indexof \
           mergekeys pivot range reorder subtotal tochar truncfield \
           add_field fieldsplit translate_field findfiles csvformat \

@@ -1,20 +1,18 @@
-#!/bin/bash
+test_number=02
+description="input from file"
 
-test_name="input from file"
-
-cat > $0.in << "END_INPUT"
+input="$test_dir/test_$test_number.in"
+cat > "$input" << END_INPUT
 f0	f1	f2
 00	001	002
 END_INPUT
 
-index=`$wdir/indexof -l f2 -f $0.in -d '\t'`
 expected=3
+index=`$bin -l f2 -f "$input"`
 
-if [ $index -ne $expected ]; then
-  echo "FAIL: $test_name - got $index instead of $expected"
-  exit 1
+if [ $? -ne 0 ] || [ $index -ne $expected ]; then
+  test_status $test_number 1 "$description" FAIL
 else
-  rm $0.in
-  echo "PASS: $test_name"
-  exit 0
+  rm $input
+  test_status $test_number 1 "$description" PASS
 fi
