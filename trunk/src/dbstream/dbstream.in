@@ -30,7 +30,7 @@ $pwd = $ENV{'DB_PWD'};
 # input will be a stream of values for insert or update queries
 # d (delimiter) provided for spliting input lines or joining output
 
-my ($help, $sqlfile, $sql, $infile, $outfile, $d, $show_version);
+my ($help, $sqlfile, $sql, $infile, $outfile, $d, $show_version, $include_header);
 $d = $ENV{"DELIMITER"} || chr(0xfe);
 Getopt::Long::Configure( "no_ignore_case" );
 GetOptions('help' => \$help,
@@ -43,6 +43,7 @@ GetOptions('help' => \$help,
            'uid=s' => \$uid,
            'pwd=s' => \$pwd,
            'Version' => \$show_version,
+           'Header'  => \$include_header,
           );
   
 
@@ -90,6 +91,9 @@ if ($query =~ /^\(*\s*select/mi) {
     die "$0: stdout: $!\n" unless $fhout;
   }
   $dbq->execute();
+  if ($include_header) {
+    print $fhout join($d, @{ $dbq->{NAME} }), qq(\n);
+  }
   while (my $results = $dbq->fetchrow_arrayref()) {
     for (my $ri = 0; $ri < scalar(@{ $results }); $ri++) {
       if (! defined($results->[$ri])) {
@@ -134,6 +138,7 @@ usage: $0 <-f <sql-file> | -s <query>> [options]
 options:
 
   -h, --help           print this message and exit
+  -H, --Header         output the sql field names
   -f, --file <file>    take sql from specified file
   -s, --sql <query>    take sql on the commandline
   -i, --input <file>   input of placeholder values
