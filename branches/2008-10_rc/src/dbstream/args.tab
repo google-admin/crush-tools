@@ -1,0 +1,104 @@
+# this is a dummy file used only for generating documentation.
+
+# data relevant to the application as a whole
+%global = (
+	name => "dbstream",
+	description => "streams data to or from a database.",
+	version => "0.1",
+	trailing_opts => "",
+	usage_extra => "if --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN, DB_UID, and DB_PWD will be used for the unprovided values.",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+  {
+	  name => 'delim',
+	  shortopt => '',
+	  longopt => 'delimiter',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string (default: 0xfe)'
+	},
+	{
+	  name        => 'sql_file',
+	  shortopt    => 'f',
+	  longopt     => 'file',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'run sql specified in this file'
+	},
+	{
+	  name        => 'sql',
+	  shortopt    => 's',
+	  longopt     => 'sql',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'run sql specified here'
+	},
+	{
+	  name        => 'input_file',
+	  shortopt    => 'i',
+	  longopt     => 'input',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'file containing placeholder values for insert/update statements'
+	},
+	{
+	  name        => 'output_file',
+	  shortopt    => 'o',
+	  longopt     => 'output',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'write to specified file instead of stdout'
+	},
+	{
+	  name        => 'dsn',
+	  shortopt    => '',
+	  longopt     => 'dsn',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'DBI-style data source name'
+	},
+	{
+	  name        => 'uid',
+	  shortopt    => '',
+	  longopt     => 'uid',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'database username'
+	},
+	{
+	  name        => 'pwd',
+	  shortopt    => '',
+	  longopt     => 'pwd',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'database password'
+	},
+);
+

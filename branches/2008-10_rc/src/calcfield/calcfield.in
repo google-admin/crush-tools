@@ -1,0 +1,232 @@
+#!CRUSH_PERL_PATH
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Std;
+use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p
+            $opt_b $opt_c $opt_r $opt_V);
+use Date::Calc qw(Delta_DHMS);
+
+getopts('hVvprd:e:i:b:c:');
+
+# Define default delimiter
+my $delim = $ENV{"DELIMITER"} || chr(0xfe);
+
+if ($opt_h) {
+    print << "HELP";
+
+usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] \
+       -e <expression> -b <fallback_result> [-c <column_name>]
+
+ -h              print this message and exit
+ -v              produce verbose runtime messages (for debugging)
+ -p              preserve the first line (header) in the input
+ -i <I>          insert the calculated result at index I.  
+                     (default: append the new field to the line)
+ -r              replace the value at the index specified in -i instead
+                     of inserting a new field at that position.
+ -d <D>          specifies D as the field separator
+ -e <EXPR>       the expression to calculate (see below)
+ -b <FALLBACK>   use FALLBACK as the field value if the formula is not properly
+                   evaluated (required)
+ -c <LABEL>      the name of the column for the calculated field; only
+                   used in conjuction with -p
+
+the expression specified in -e may contain references to fields, e.g.
+
+  -e '[1] + [2]'
+
+if the -p option is active, you may also use the field names, e.g.
+  
+  -e '[Clicks] + [Impressions]'
+
+HELP
+
+   exit(0);
+}
+
+if ($opt_V) {
+  crush_version();
+  exit(0);
+}
+
+# Evaluate event ids
+my $line = "";
+my @parts = ();
+my $i = 0;
+my $result = 0;
+my %header = ();
+
+if ($opt_d) {
+  $delim = $opt_d;
+} else {
+  print "No delimiter given, assuming $delim\n" if (defined($opt_v));
+}
+$delim = expand_chars($delim);
+
+# Check index option. Set default if not provided.
+if (!defined($opt_i) || !$opt_i =~ m/[1-9][0-9]*/) {
+  $opt_i = -1;
+  print "No index for the calculated field given, appending the field at the end of the row.\n" if (defined($opt_v));
+}
+
+# Check formula. Bail out if it is not given. If given, check the formulas validity.
+if (!defined($opt_e)) {
+  die "$0: No formula given. Please use option -f to provide one.\n";
+} else {
+  print "Using formula \"" . $opt_e . "\".\n" if (defined($opt_v));
+}
+
+# require a -b (fallback) value
+if (!defined($opt_b)) {
+  die "$0: No fallback result given. Please use option -b to provide one.\n";
+}
+
+# Check the column description
+if (!defined($opt_c)) {
+  $opt_c = "Calculated-Field";
+  print "No column name given - using \"$opt_c\"\n" if (defined($opt_v));
+}
+
+# Should we preserve the header line?
+if (defined($opt_p)) {
+  if ($line = <>) {
+    $line = trim($line);  
+    @parts = split(/\Q$delim\E/, $line);
+    
+    # map header labels to indexes (needed during the expressions evaluation).
+    for (0 .. $#parts ) {
+      $header{$parts[$_]} = $_;
+    }
+
+    print put_field($line, \@parts, $delim, $opt_c, $opt_i, $opt_r) . "\n";
+  }
+}
+
+my $calc_func;
+
+while ($line = <>) {
+  $line = trim($line);
+  @parts = split(/\Q$delim\E/, $line, -1);
+
+  $calc_func = create_calc_func($opt_e, \@parts, $opt_b)
+    unless $calc_func;
+  $result = $calc_func->(\@parts, $opt_b);
+
+  print put_field($line, \@parts, $delim, $result, $opt_i, $opt_r) . "\n";
+}
+
+
+# creates a new line with the calculated value in place.
+sub put_field {
+  my ($line, $parts, $delim, $value, $pos, $repl) = @_;
+
+  if ($pos == -1 ||
+      $pos > scalar @{$parts} ||
+      (defined($opt_r) && $pos == scalar @{$parts})) {
+    # Put the new value at the end of the line.
+
+    if (defined($repl)) {
+      # replace the existing field.
+      pop(@{$parts});
+      $line = join($delim, @{$parts}) . $delim . $value;
+    } else {
+      $line = $line . $delim . $value;
+    }
+  } elsif ($pos == 1) {
+    # Put the new value at the beginning of the line.
+
+    if (defined($repl)) {
+      # replace the existing field.
+      shift(@{$parts});
+      $line = $value . $delim . join($delim, @{$parts});
+    } else {
+      $line = $value . $delim . $line;
+    }
+  } else {
+    # Put the new value somewhere in the middle of the line.
+
+    if (defined($repl)) {
+      # replace the existing field.
+      my @result = split(/\Q$delim\E/, $line, $pos + 1);
+      my $suffix = pop(@result);
+      my $old    = pop(@result);
+
+      $line = join($delim, @result) . $delim . $value . $delim . $suffix;
+    } else {
+      my @result = split(/\Q$delim\E/, $line, $pos);
+      my $suffix = pop(@result);
+
+      $line = join($delim, @result) . $delim . $value . $delim . $suffix;
+    }
+  }
+
+  return $line;
+}
+
+sub create_calc_func {
+  my($formula, $parts, $fallback) = @_;
+
+  my $i = 0;
+
+  $formula = "\$result = " . $formula;
+
+  # [ N ] -> $_[N-1]
+  $formula =~ s/\[\s*(\d+)\s*\]/\$parts->[$1 - 1]/g;
+
+  if (%header ) {
+    # [ FieldName ] -> $_[ indexOf(FieldName) ]
+    while ($formula =~ /\[\s*([-a-zA-Z]+)\s*\]/g) {
+      my $label_idx = $header{$1};
+      if (defined($label_idx) ) {
+        $formula =~ s/\[\s*[-a-zA-Z]+\s*\]/\$parts->[$label_idx]/;
+      }
+      else {
+        die "$0: undefined header label: $1\n";
+      }
+    }
+  }
+
+  my $calc_func_txt = <<CALC_FUNC;
+\$calc_func = sub {
+  my(\$parts, \$fallback) = \@_;
+  my \$result;
+
+  eval { $formula };
+
+  if (\$@) {
+    \$result = \$fallback;
+  }
+  
+  return \$result;
+}
+CALC_FUNC
+
+  my $calc_func;
+  eval($calc_func_txt);
+
+  return $calc_func;
+}
+
+sub trim {
+  my $text = shift;
+  $text =~ s/^\s+//;
+  $text =~ s/\s+$//;
+
+  return $text;
+}
+
+m4_include(utils.pl)

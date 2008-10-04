@@ -1,0 +1,34 @@
+$LastChangedDate$
+$Author$
+
+./bootstrap:
+
+  Only certain versions of libtoolize require adding file content to aclocal.m4.
+  v 2.2.2 requires it (tested on cygwin).  v. 1.5.24 does not (tested on
+  linux), and v. 1.5.27a does not (tested on cygwin).
+
+  Need to figure out a) if the "cat >> aclocal.m4" can be avoided altogether;
+  and b) if not, exactly which versions of libtoolize need it.
+
+
+* "make dist" is broken when run from directories containing spaces in the
+  path.
+
+
+* src/calcfield
+
+  tests are disabled because they are failing.
+
+
+* These utilities need tests:
+
+  src/add_field/
+  src/buffer/
+  src/dates_in_range/
+  src/deltadays/
+  src/fieldsplit/
+  src/findfiles/
+  src/range/
+  src/tochar/
+  src/translate_field/
+
