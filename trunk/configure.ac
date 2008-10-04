@@ -72,6 +72,7 @@ AS_HELP_STRING([--enable-maintainer-mode],
 dnl TODO: add enable-profiling - requires a static build
 
 AC_CONFIG_FILES([Makefile
+contrib/Makefile
 src/Makefile
 src/bin/Makefile
 src/include/Makefile

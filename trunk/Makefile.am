@@ -15,7 +15,7 @@ dist-hook:
 		cp $$file $(distdir)/$$file; \
 	done
 
-SUBDIRS = src
+SUBDIRS = src contrib
 INCLUDES = -I$(top_srcdir)/include
 PERL = @PERL@
 
