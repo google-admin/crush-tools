@@ -10,7 +10,7 @@
       "Input files must be sorted by key fields.\\n\\n" .
       "If -a and -b are not specified, the first line of each file will be examined\\n" .
       "to determine common fields.  In this case, all key fields must precede all\\n" .
-      "mergeable fields.",
+      "mergeable fields.  A header line in each file is required in either case.",
 	do_long_opts => 1,
 	preproc_extra => '#include <crush_version.h>',
 	copyright => <<END_COPYRIGHT
