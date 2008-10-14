@@ -18,7 +18,6 @@ use strict;
 use Getopt::Std;
 use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p
             $opt_b $opt_c $opt_r $opt_V);
-use Date::Calc qw(Delta_DHMS);
 
 getopts('hVvprd:e:i:b:c:');
 
