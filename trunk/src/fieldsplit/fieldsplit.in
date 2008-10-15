@@ -22,7 +22,7 @@ use Memoize;
 memoize('transform_splitfield');
  
 my ($help, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames,
-    $show_version);
+    $show_version, $buckets);
 $d = $ENV{'DELIMITER'} || chr(0xfe);
 $dir = './';
 $prefix = $suffix = '';
@@ -36,6 +36,7 @@ Getopt::Long::Configure("no_ignore_case");
             "suffix=s"     => \$suffix,
             "xform-name=s" => \$xform_outnames,
             "Version"      => \$show_version,
+            "buckets=n"    => \$buckets,
            );
 
 if ($show_version) {
@@ -65,6 +66,13 @@ if ( $keep ) {
   $header = <>;
 }
 
+# this is the sprintf format string for "bucketized" split keys, defined here
+# to avoid recalculating length($buckets) inside the file loop.
+my $fmt_str;
+if ($buckets) {
+  $fmt_str = '%' . length($buckets) . 'd';
+}
+
 while (my $lstr = <>) {
   $lineno++;
 
@@ -72,6 +80,9 @@ while (my $lstr = <>) {
 
   my $split_key = transform_splitfield($line[$f]);
 
+  if ($buckets) {
+    $split_key = sprintf($fmt_str, hash($split_key) % $buckets);
+  }
   push @{ $fdat{$split_key} }, $lstr;
 
   if ($lineno == $flush) {
@@ -122,6 +133,18 @@ sub flush_data {
 }
 
 
+# based on the hashing algorithm used in Perl 5.005
+# see http://www.perl.com/lpt/a/679
+sub hash {
+  my $str = shift;
+  my $h = 0;
+  foreach (split //, $str) {
+    $h = $h * 33 + ord($_);
+  }
+  return $h;
+}
+
+
 sub usage {
   print STDERR <<__USAGE__;
 
@@ -140,6 +163,8 @@ usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
   -x, --xform-names <SUBSTITUTION>
                         user-supplied substitution regex to transform
                         output names (e.g. 's/[^-\\w]//g')
+  -b, --buckets <N>     split data into at most N files, guaranteeing that
+                        like field values are in the same output file.
 
 filenames will be the -n prefix argument (if any) followed by whatever the
 value of the field was (with spaces and slashes replaced with underscores),
