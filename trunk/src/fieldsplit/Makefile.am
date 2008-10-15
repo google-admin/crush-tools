@@ -18,3 +18,6 @@ fieldsplit: fieldsplit.in Makefile
 	$(M4) -D"CRUSH_PERL_PATH=$(PERL)" --prefix-builtins \
 				-I$(srcdir)/../perllib hackery.m4 $< crush_version.pl > $@
 	chmod +x $@
+
+TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
+TESTS = test.conf
