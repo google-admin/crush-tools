@@ -19,31 +19,36 @@ use strict;
 use Getopt::Long;
 use Memoize;
 
-memoize ('transform_splitfield');
+memoize('transform_splitfield');
  
-my( $h, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames, $show_version );
+my ($help, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames,
+    $show_version);
 $d = $ENV{'DELIMITER'} || chr(0xfe);
 $dir = './';
 $prefix = $suffix = '';
-Getopt::Long::Configure( "no_ignore_case" );
-&GetOptions(	"help"		=> \$h,
-		"keepheader"	=> \$keep,
-		"delim=s"	=> \$d,
-		"field=n"	=> \$f,
-		"path=s"	=> \$dir,
-		"name=s"	=> \$prefix,
-		"suffix=s"	=> \$suffix,
-		"xform-name=s"	=> \$xform_outnames,
-    "Version" => \$show_version,
-		);
+Getopt::Long::Configure("no_ignore_case");
+&GetOptions("help"         => \$help,
+            "keepheader"   => \$keep,
+            "delim=s"      => \$d,
+            "field=n"      => \$f,
+            "path=s"       => \$dir,
+            "name=s"       => \$prefix,
+            "suffix=s"     => \$suffix,
+            "xform-name=s" => \$xform_outnames,
+            "Version"      => \$show_version,
+           );
 
 if ($show_version) {
   crush_version();
   exit(0);
 }
-if( $h || ! defined($f) ){
-	usage();
-	exit(1);
+if ($help) {
+  usage();
+  exit(0);
+}
+if (! defined($f)) {
+  warn "$0: -f option is required.  see $0 --help for details.\n";
+  exit(1);
 }
 
 $d = expand_chars($d);
@@ -57,25 +62,25 @@ my $lineno = 0;
 
 my $header;
 if ( $keep ) {
-	$header = <>;
+  $header = <>;
 }
 
-while(my $lstr = <>){
-	$lineno++;
+while (my $lstr = <>) {
+  $lineno++;
 
-	my @line = split(/\Q$d\E/, $lstr, -1);
+  my @line = split(/\Q$d\E/, $lstr, -1);
 
-	my $split_key = transform_splitfield( $line[$f] );
+  my $split_key = transform_splitfield($line[$f]);
 
-	push @{ $fdat{$split_key} }, $lstr;
+  push @{ $fdat{$split_key} }, $lstr;
 
-	if( $lineno == $flush ){
-		flush_data( \%fdat );
-		$lineno = 0;
-	}
+  if ($lineno == $flush) {
+    flush_data(\%fdat);
+    $lineno = 0;
+  }
 }
 
-flush_data( \%fdat );
+flush_data(\%fdat);
 
 exit(0);
 
@@ -88,54 +93,53 @@ sub transform_splitfield {
     $k =~ s/\s/_/g;
     $k =~ s/\//_/g;
 
-    if ( $xform_outnames ) {
+    if ($xform_outnames) {
         eval "\$k =~ $xform_outnames;";
     }
-
     return $k;
 }
 
 
 sub flush_data {
-	my $fdat = shift;
-	foreach my $key ( keys %{ $fdat } ){
-		my $fname = $dir . '/' . $prefix . $key . $suffix;
+  my $fdat = shift;
+  foreach my $key (keys %{ $fdat }){
+    my $fname = $dir . '/' . $prefix . $key . $suffix;
 
-		# if keeping the header and the file doesn't
-		# exist yet open it & print the header to it
-		if ( $keep && ! -f $fname ) {
-			open(F, "> $fname") or die "$0: $fname: $!\n";
-			print F $header;
-		} else {
-			open(F, ">> $fname") or die "$0: $fname: $!\n";
-		}
-		foreach my $l ( @{ $fdat->{$key} } ){
-			print F $l;
-		}
-		close(F);
-		delete $fdat->{$key}
-	}
+    # if keeping the header and the file doesn't
+    # exist yet open it & print the header to it
+    if ($keep && ! -f $fname) {
+      open(F, "> $fname") or die "$0: $fname: $!\n";
+      print F $header;
+    } else {
+      open(F, ">> $fname") or die "$0: $fname: $!\n";
+    }
+    foreach my $l (@{ $fdat->{$key} }){
+      print F $l;
+    }
+    close(F);
+    delete $fdat->{$key}
+  }
 }
 
 
 sub usage {
-	print STDERR <<__USAGE__;
+  print STDERR <<__USAGE__;
 
 splits a file into multiple files according to a particular field value.
 
 usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
 
-	-h, --help	print this message and exit
-	-f, --field N	split on field number N (required)
-	-d, --delim D	specifies D as the field delimiter (default: 0xfe)
-	-p, --path dir	specifies dir as directory in which files will be
-			placed (default: ./)
-	-n, --name <PREFIX> output filename prefix
-	-s, --suffix <SUFFIX> output filename suffix
-	-k, --keep	keep the header in all of the resulting files
-	-x, --xform-names <SUBSTITUTION>
-			user-supplied substitution regex to transform
-			output names (e.g. 's/[^-\\w]//g')
+  -h, --help            print this message and exit
+  -f, --field N         split on field number N (required)
+  -d, --delim D         specifies D as the field delimiter (default: 0xfe)
+  -p, --path dir        specifies dir as directory in which files will be
+                        placed (default: ./)
+  -n, --name <PREFIX>   output filename prefix
+  -s, --suffix <SUFFIX> output filename suffix
+  -k, --keep            keep the header in all of the resulting files
+  -x, --xform-names <SUBSTITUTION>
+                        user-supplied substitution regex to transform
+                        output names (e.g. 's/[^-\\w]//g')
 
 filenames will be the -n prefix argument (if any) followed by whatever the
 value of the field was (with spaces and slashes replaced with underscores),
