@@ -257,10 +257,9 @@ ssize_t field_str(const char *value, const char *line, const char *delim);
 ssize_t getline(char **outbuf, size_t * outsize, FILE * fp);
 #endif
 
-#ifdef __GNUC__
-/* no __VA_ARGS__ in vc++, and the use of '##' is
-   a GNU cpp extension.  so these versions take a single
-   rquired argument.  */
+#ifndef __GNUC__
+/* no __VA_ARGS__ in vc++, and the use of '##' is a GNU cpp extension.
+   So these versions take a format string plus a single required argument. */
 
 /** @brief emit an error message.
   *
