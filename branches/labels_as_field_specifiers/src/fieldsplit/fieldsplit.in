@@ -1,0 +1,181 @@
+#!CRUSH_PERL_PATH -w
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+
+use Getopt::Long;
+use Memoize;
+
+memoize('transform_splitfield');
+ 
+my ($help, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames,
+    $show_version, $buckets);
+$d = $ENV{'DELIMITER'} || chr(0xfe);
+$dir = './';
+$prefix = $suffix = '';
+Getopt::Long::Configure("no_ignore_case");
+&GetOptions("help"         => \$help,
+            "keepheader"   => \$keep,
+            "delim=s"      => \$d,
+            "field=n"      => \$f,
+            "path=s"       => \$dir,
+            "name=s"       => \$prefix,
+            "suffix=s"     => \$suffix,
+            "xform-name=s" => \$xform_outnames,
+            "Version"      => \$show_version,
+            "buckets=n"    => \$buckets,
+           );
+
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
+if ($help) {
+  usage();
+  exit(0);
+}
+if (! defined($f)) {
+  warn "$0: -f option is required.  see $0 --help for details.\n";
+  exit(1);
+}
+
+$d = expand_chars($d);
+$f--;
+
+# allow flush threshold to come from env so it can be tested
+# with smaller input files
+my $flush = $ENV{FIELDSPLIT_FLUSH} || 10000;
+my %fdat = ();
+my $lineno = 0;
+
+my $header;
+if ( $keep ) {
+  $header = <>;
+}
+
+# this is the sprintf format string for "bucketized" split keys, defined here
+# to avoid recalculating length($buckets) inside the file loop.
+my $fmt_str;
+if ($buckets) {
+  $fmt_str = '%' . length($buckets) . 'd';
+}
+
+while (my $lstr = <>) {
+  $lineno++;
+
+  my @line = split(/\Q$d\E/, $lstr, -1);
+
+  my $split_key = transform_splitfield($line[$f]);
+
+  if ($buckets) {
+    $split_key = sprintf($fmt_str, hash($split_key) % $buckets);
+  }
+  push @{ $fdat{$split_key} }, $lstr;
+
+  if ($lineno == $flush) {
+    flush_data(\%fdat);
+    $lineno = 0;
+  }
+}
+
+flush_data(\%fdat);
+
+exit(0);
+
+sub transform_splitfield {
+    my $k = shift;
+
+    $k =~ s/[\r\n]//g;
+    return '_blank_value' if ( ! length $k );
+
+    $k =~ s/\s/_/g;
+    $k =~ s/\//_/g;
+
+    if ($xform_outnames) {
+        eval "\$k =~ $xform_outnames;";
+    }
+    return $k;
+}
+
+
+sub flush_data {
+  my $fdat = shift;
+  foreach my $key (keys %{ $fdat }){
+    my $fname = $dir . '/' . $prefix . $key . $suffix;
+
+    # if keeping the header and the file doesn't
+    # exist yet open it & print the header to it
+    if ($keep && ! -f $fname) {
+      open(F, "> $fname") or die "$0: $fname: $!\n";
+      print F $header;
+    } else {
+      open(F, ">> $fname") or die "$0: $fname: $!\n";
+    }
+    foreach my $l (@{ $fdat->{$key} }){
+      print F $l;
+    }
+    close(F);
+    delete $fdat->{$key}
+  }
+}
+
+
+# based on the hashing algorithm used in Perl 5.005
+# see http://www.perl.com/lpt/a/679
+sub hash {
+  my $str = shift;
+  my $h = 0;
+  foreach (split //, $str) {
+    $h = $h * 33 + ord($_);
+  }
+  return $h;
+}
+
+
+sub usage {
+  print STDERR <<__USAGE__;
+
+splits a file into multiple files according to a particular field value.
+
+usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
+
+  -h, --help            print this message and exit
+  -f, --field N         split on field number N (required)
+  -d, --delim D         specifies D as the field delimiter (default: 0xfe)
+  -p, --path dir        specifies dir as directory in which files will be
+                        placed (default: ./)
+  -n, --name <PREFIX>   output filename prefix
+  -s, --suffix <SUFFIX> output filename suffix
+  -k, --keep            keep the header in all of the resulting files
+  -x, --xform-names <SUBSTITUTION>
+                        user-supplied substitution regex to transform
+                        output names (e.g. 's/[^-\\w]//g')
+  -b, --buckets <N>     split data into at most N files, guaranteeing that
+                        like field values are in the same output file.
+
+filenames will be the -n prefix argument (if any) followed by whatever the
+value of the field was (with spaces and slashes replaced with underscores),
+or "_blank_value" for lines where the field was empty, followed by the
+-s argument (if any).
+
+NOTE: you should insure none of the files which will be created exist before
+running this - new data will just be appended to the existing file in that
+case.
+
+__USAGE__
+}
+
+m4_include(utils.pl)

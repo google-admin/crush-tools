@@ -1,0 +1,11 @@
+
+# get only matched activities from an activity file
+
+header=`<a href="bash_functions.html#get_header_line">get_header_line</a> $dtfile`
+delim=`<a href="bash_functions.html#get_header_delim">get_header_delim</a> "$header"`
+event_id_index=`<a href="bash_functions.html#get_header_index">get_header_index</a> "Event-ID" "$header" "$delim"`
+
+<a href="gzdog.html">gzdog</a> $dtfile |
+	<b>grepfield</b> -f $event_id_index '[12]' \
+	> $wdir/tmp/$$_matched_activities.log
+

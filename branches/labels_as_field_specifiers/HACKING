@@ -1,0 +1,41 @@
+-- Compilation --
+
+To build CRUSH from a repository checkout...
+
+1) install cgener (http://code.google.com/p/cgener/) at /usr/local/bin
+2) ./bootstrap
+3) ./configure && make
+4) "make install" if desired.
+
+To build from a distribution tarball, only steps 3 and 4 are necessary.
+
+
+-- Coding Standards --
+
+CRUSH uses the portion of the Google C++ coding standards which applies to C.
+(ref: http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml)
+
+C files can automatically get *most* of this formatting by issuing the following
+command:
+
+  indent -br -brf -brs -cdw -ce -cli2 -i2 -l80 -lp -npcs -nprs -npsl -nut \
+         -saf -sai -saw -ts2 <filename.c>
+
+If you use this, it should only be done on new source files.  When modifying
+existing files, maintain consistency with the surrounding code.
+
+
+-- Source Repository --
+
+Log messages in follow the convention used by the Subversion project.  See
+http://subversion.tigris.org/hacking.html#log-messages
+
+
+-- Release Schedule --
+
+In order to avoid the tempation to cut a release after each feature or bug fix
+is added to a single application, CRUSH will be released on a strictly
+time-based schedule.  A release will be created every 3 months.  Whatever
+features or fixes have been completed at that time will be included in the
+new release.
+

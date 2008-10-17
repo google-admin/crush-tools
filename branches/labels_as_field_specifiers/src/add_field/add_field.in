@@ -1,0 +1,125 @@
+#!CRUSH_PERL_PATH -w
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Long;
+
+my ($help, $header, $value, $location, $delim, $copy_field, $show_version);
+
+$value = '';
+$delim = $ENV{"DELIMITER"} || chr(0xfe);
+$location = 1;
+Getopt::Long::Configure("no_ignore_case");
+&GetOptions("help" => \$help,
+            "label=s" => \$header,
+            "value=s" => \$value,
+            "field=n" => \$location,
+            "delim=s" => \$delim,
+            "copy=n" => \$copy_field,
+            "Version" => \$show_version);
+
+if ($help) {
+  usage();
+  exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
+$delim = expand_chars($delim);
+
+if ($copy_field) {
+  $copy_field--;
+}
+
+my $expected_fields;
+while (my $line = <>) {
+  $line =~ s/[\r\n]//g;
+  if (! defined($expected_fields)) {
+    $expected_fields = 1;
+    my $i = 0;
+    while (($i = index($line, $delim, $i)) > 0) {
+      $expected_fields++;
+      $i += length($delim);
+    }
+    if ($location < 0) {
+      $location = $expected_fields + $location + 2;
+    }
+  }
+  if ($header && $. == 1) {
+    # don't specify the copy field if processing the header line
+    print add_field($line, $header, $location, $delim), qq(\n);
+  } else {
+    print add_field($line, $value, $location, $delim, $copy_field), qq(\n);
+  }
+}
+
+exit(0);
+
+# (line, value, position, delimiter)
+sub add_field {
+  my ($l, $v, $p, $d, $c) = @_;
+
+  my @a;
+  if (defined($c)) {
+    @a = split(/\Q$d\E/, $l, -1);
+    $v = $a[$c];
+  }
+
+  # simple case: prepending the field
+  if ($p == 1 || $p == 0) {
+    return $v . $d . $l;
+  }
+
+  # simple case: appending the field
+  if ($expected_fields < $p) {
+    return $l . $d . $v;
+  }
+
+  if (! @a) {
+    @a = split(/\Q$d\E/, $l, -1);
+  }
+
+  # put the field somewhere in the middle
+  return join($d, splice(@a, 0, $p - 1)) . $d .
+         $v . $d . join($d, @a);
+}
+
+sub usage {
+  print STDERR <<ENDUSAGE;
+
+adds a field to a flat-file.
+
+usage: $0 [hdflv] [file(s)]
+
+  -h, --help  print this message and exit
+  -d, --delim <S>  the field delimiter string (default: 0xfe)
+  -f, --field <N>  the 1-based index for the new field (default: 1)
+  -l, --label <S>  label the new field as S on the first line
+  -v, --value <S>  the value to place in the new field (default: emtpy)
+  -c, --copy <N>  copy the value from field N into the new field
+
+ * if no "label" is provided, the "value" will be used.
+ * for -f, a field of either 0 or 1 may be used to indicate the first
+   position.
+ * if a field value of -1 indicates that the field should be appended to
+   each line.
+ * if both -v and -c are specified, -c takes precedence.
+
+ENDUSAGE
+}
+
+m4_include(utils.pl)

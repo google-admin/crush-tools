@@ -1,0 +1,488 @@
+#!/usr/bin/perl -w
+#-*-perl-*-
+
+# copyright 2004 - 2008, Jeremy Hinds <jeremy.hinds AT gmail DOT com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+
+use strict;
+
+use Getopt::Long;
+
+my $version = '0.3.3';
+
+my ($show_help, $show_version, $dir, $argfile);
+
+$dir='./';
+
+&GetOptions("help"    => \$show_help,
+            "version"  => \$show_version,
+            "directory:s"  => \$dir,
+            "argfile:s"  => \$argfile,
+           );
+
+if ( $show_version ){
+  version();
+  exit(1);
+}
+
+if ( $show_help || ! defined($argfile) ){
+  usage();
+  exit(1);
+}
+
+my (%global, @args);
+
+# this is to get the data structures into the main namespace
+# without having to turn off strict
+open(ARGFILE, $argfile) or die "$argfile: $!\n";
+my @argfile_a = <ARGFILE>;
+close(ARGFILE);
+my $argfile_content = join('', @argfile_a);
+eval "$argfile_content";
+
+if (! @args){
+  print STDERR "$argfile: missing args array.\n";
+  exit(1);
+}
+if (! %global){
+  print STDERR "$argfile: missing global hash.\n";
+  exit(1);
+}
+if (! defined($global{name})) {
+  print STDERR "global{name} must be defined in $argfile.\n";
+  exit(1);
+}
+
+if ( ! defined( $global{version} ) ){
+  $global{version} = '0.1';
+}
+if ( ! defined( $global{description} ) ){
+  $global{description} = '';
+}
+if ( ! defined( $global{preproc_extra} ) ){
+  $global{preproc_extra} = '';
+}
+if ( ! defined( $global{copyright} ) ){
+  $global{copyright} = '';
+}
+if ( ! defined( $global{language} ) ) {
+  $global{language} = 'c';
+}
+
+my $c_usage = make_usage();
+my $c_arg_struct = make_arg_struct();
+my $c_arg_parse;
+if ($global{do_long_opts}){
+  $c_arg_parse = make_arg_parse_long();
+} else {
+  $c_arg_parse = make_arg_parse();
+}
+my $c_required_args = make_requirement_check();
+
+
+if ($dir !~ /[\/\\]$/) {
+  $dir .= '/';
+}
+
+while(<DATA>){
+  s/%appname%/$global{name}/g;
+  s/%language%/$global{language}/g;
+  s/%APPNAME%/\U$global{name}/g;
+  s/%appdescription%/$global{description}/g;
+  s/%appversion%/$global{version}/g;
+  s/%appcopyright%/$global{copyright}/g;
+  s/%user_defined_preproc%/$global{preproc_extra}/g;
+  s/%usage_function%/$c_usage/g;
+  s/%required_args%/$c_required_args/g;
+  s/%args_struct%/$c_arg_struct/g;
+  s/%parse_function%/$c_arg_parse/g;
+
+  if (/^----(.*)----$/) {
+    if ( defined(fileno(OUT)) ) {
+      close(OUT);
+    }
+    open(OUT, "> $dir$1") or die "$dir$1: $!\n";
+  }
+  else {
+    print OUT $_;
+  }
+}
+
+close(OUT);
+exit(0);
+
+sub usage {
+  print STDERR <<DISCLAIMER;
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+DISCLAIMER
+
+  print STDERR "\ncgen: generates files for a new c application.\n\n",
+    "usage: $0 <-h|-n <name>> [-d <dir> -e <desc>]\n\n",
+    "  -h | --help    print this message and exit\n",
+    "  -a | --argfile <file>  specifies the argument table file\n",
+    "  -d | --directory <dir>  specifies output directory\n\n",
+    "you may want to use newcapp to generate the files to get you started.\n\n";
+}
+
+sub version {
+  print STDERR "$0: $version\n";
+}
+
+
+sub make_usage {
+  my $uline = 'fprintf(stderr, "\nusage: %s <options>';
+  if (defined($global{trailingopts})){
+    $uline .= " $global{trailingopts} ";
+  }
+  if (defined($global{trailing_opts})){
+    $uline .= " $global{trailing_opts} ";
+  }
+  my $ustr =<<__END_USAGE__;
+/** prints application help information.
+ * \@param bin application name as invoked on the commandline
+ */
+void usage( char *bin ) {
+  fprintf(stderr, "\\n$global{name}: $global{description}\\n");
+  $uline\\n", bin);
+  fprintf(stderr, "options:\\n");
+__END_USAGE__
+  foreach my $arg ( @args ){
+    $ustr .= qq(\t) . 'fprintf' . '(stderr, "\t-' . $arg->{shortopt} ;
+    if ( $global{do_long_opts} && $arg->{longopt} ){
+      $ustr .= ($global{do_long_opts} ? ', --' . $arg->{longopt} : '') ;
+    }
+    $ustr .= ( $arg->{type} !~ /flag/ ? ' <' . $arg->{name} . '>\t' : '\t' ) .
+        $arg->{description} . '\n");' . qq(\n);
+  }
+  if ( defined($global{usage_extra}) && length($global{usage_extra}) ){
+    $ustr .= qq(\t) . 'fprintf' .
+             '(stderr, "\n' . $global{usage_extra} . '");' . qq(\n);
+  }
+
+  $ustr .= qq(\tprintf("\\n\\n");\n\treturn;\n} );
+  return $ustr;
+}
+
+sub make_arg_struct {
+  my $astr =<<ARGSTRUCT;
+/** structure to hold commandline options & arguments.
+ */
+struct cmdargs {
+ARGSTRUCT
+  foreach my $arg ( @args ){
+    if ( ! defined($arg->{name}) || ! defined($arg->{type}) ){
+      print STDERR "WARNING: arg missing required field(s)\n";
+      next;
+    }
+    $astr .= qq(\t) . ($arg->{type} =~ /flag/ ? 'int ' : 'char *').
+      $arg->{name} . qq(;\t/**< \@brief ) . $arg->{description}. qq( */\n);
+  }
+  $astr .= q(};) . qq(\n);
+  return $astr;
+}
+
+sub make_arg_parse {
+  my $optstr = '';
+  my $pstr = '';
+  foreach my $arg ( @args ) {
+    $optstr .= $arg->{shortopt};
+    if ( $arg->{type} !~ /flag/ ){
+      $optstr .= ':';
+    }
+  }
+  $optstr = <<__OPT_PARSE__;
+/** parses commandline arguments and puts the info into a cmdargs struct.
+ * \@param argc number of arguments
+ * \@param argv array of argument strings
+ * \@param args structure to hold the parsed options & arguments
+ */
+void parse_args ( int argc, char **argv, struct cmdargs *args){
+  int c;
+
+  init_cmdargs(args);
+
+  while( (c = getopt(argc, argv, "$optstr")) != -1 ){
+    switch (c) {
+__OPT_PARSE__
+  foreach my $arg ( @args ){
+    $optstr .= "\t\t\tcase '" . $arg->{shortopt} . "':\n" .
+         "\t\t\t\t" ;
+    if ( $arg->{type} eq 'flag' ){
+      $optstr .= 'args->' . $arg->{name} . " = 1;\n";
+    } elsif ( $arg->{type} eq 'var' ) {
+      $optstr .= 'args->' . $arg->{name} . " = optarg;\n";
+    } elsif ( $arg->{type} eq 'var_optional' ) {
+      $optstr .= 'if ( optarg ) args->' . $arg->{name} . " = optarg;\n";
+      $optstr .= 'else args->' . $arg->{name} . " = (char *) 1;\n";
+    } elsif ( $arg->{type} =~ /custom/ ) {
+      $optstr .= $arg->{parseopt_code} . ";\n";
+    } else {
+      print STDERR "WARNING: unknown type for arg ", $arg->{name}, "\n";
+    }
+    $optstr .= "\t\t\t\tbreak;\n";
+  }
+  $optstr .= "\t\t\tdefault: break;\n\t\t}\n\t}\n\treturn;\n}\n";
+  return $optstr;
+}
+
+sub make_arg_parse_long {
+  my $optstr = '';
+  my $longopts =  '#include <getopt.h>' . "\n\n" .
+      '/** long option structure list */' . "\n" .
+      'static struct option long_options[] = {';
+  my $pstr = '';
+  foreach my $arg ( @args ) {
+    $optstr .= $arg->{shortopt};
+    if ( $arg->{type} !~ /flag/ ){
+      $optstr .= ':';
+    }
+    if ( $arg->{type} =~ /optional/ ){
+      $optstr .= ':';
+    }
+
+    if ( defined($arg->{longopt}) ){
+      $longopts .= qq(\n\t{") . $arg->{longopt} . q(", );
+      if ( $arg->{type} =~ /flag/ ){
+        $longopts .= 'no_argument';
+      } elsif ( $arg->{type} =~ /optional/ ){
+        $longopts .= 'optional_argument';
+      } else {
+        $longopts .= 'required_argument';
+      }
+      $longopts .= q(, 0, ') . $arg->{shortopt} . q('},);
+    }
+  }
+  $longopts .= qq(\n\t{0, 0, 0, 0}\n};\n\n);
+  $optstr = <<__OPT_PARSE__;
+/** parses commandline arguments and puts the info into a cmdargs struct.
+ * \@param argc number of arguments
+ * \@param argv array of argument strings
+ * \@param args structure to hold the parsed options & arguments
+ */
+void parse_args ( int argc, char **argv, struct cmdargs *args){
+  int c, option_index=0;
+
+  init_cmdargs(args);
+
+  while( (c = getopt_long(argc, argv, "$optstr", long_options, &option_index)) != -1 ){
+    switch (c) {
+      case '0':
+        if ( long_options[option_index].flag != 0 )
+          break;
+__OPT_PARSE__
+  foreach my $arg ( @args ){
+    $optstr .= "\t\t\tcase '" . $arg->{shortopt} . "':\n" .
+         "\t\t\t\t" ;
+    if ( $arg->{type} eq 'flag' ){
+      $optstr .= 'args->' . $arg->{name} . " = 1;\n";
+    } elsif ( $arg->{type} eq 'var' ) {
+      $optstr .= 'args->' . $arg->{name} . " = optarg;\n";
+    } elsif ( $arg->{type} eq 'var_optional' ) {
+      $optstr .= 'if ( optarg ) args->' . $arg->{name} . " = optarg;\n";
+      $optstr .= 'else args->' . $arg->{name} . " = (char *) 1;\n";
+    } elsif ( $arg->{type} =~ /custom/ ) {
+      $optstr .= $arg->{parseopt_code} . ";\n";
+    } else {
+      print STDERR "WARNING: unknown type for arg ", $arg->{name}, "\n";
+    }
+    $optstr .= "\t\t\t\tbreak;\n";
+  }
+  $optstr .= "\t\t\tdefault: break;\n\t\t}\n\t}\n\treturn;\n}\n";
+  return $longopts . $optstr;
+}
+
+
+sub make_requirement_check {
+  my $rstr = '';
+  my $exitfunc = '';
+  my $hasrequired = 0;
+  foreach my $arg ( @args ){
+    if ( $arg->{required} && $arg->{type} !~ /flag/ ){
+      $hasrequired = 1;
+      $rstr .= "\n\tif ( args." . $arg->{name} . " == NULL ) {\n".
+               "\t\tfprintf(stderr, \"" . $arg->{longopt} .
+               " must be specified.\\n\");\n" .
+               "exit( EXIT_HELP );\n\t}\n";
+    }
+    if ( defined($arg->{main_code}) && $arg->{main_code} ne '' ){
+      $exitfunc .= "\n\tif ( args." . $arg->{name} . " ){\n\t\t" .
+                   $arg->{main_code} . 
+                   "\n\t}\n";
+    }
+  }
+
+  $rstr = $exitfunc . $rstr;
+  return $rstr;
+}
+
+
+__DATA__
+----%appname%_main.h----
+/************************************
+  %appcopyright%
+ ************************************/
+
+/** @file %appname%_main.h
+ *  @brief defines structure to hold command-line arguments and protypes
+ *  some functions.
+ *
+ *  generated by cgener.  http://code.google.com/p/cgener/
+ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#ifndef %APPNAME%_MAIN_H
+#define %APPNAME%_MAIN_H
+
+/* user-defined things in arg table */
+%user_defined_preproc%
+/* end user-defined things */
+
+/** exit code to use when invoked with usage() or version(). */
+#define EXIT_HELP 1
+/** exit code to use when everything was okay. */
+#define EXIT_OKAY 0
+/** exit code to use when there was an i/o-related error. */
+#define EXIT_FILE_ERR -1
+/** exit code to use when there was an error allocating memory. */
+#define EXIT_MEM_ERR -2
+
+/** current version of the application. */
+#define APPLICATION_VERSION "%appversion%"
+/** short description of what the app does. */
+#define APPLICATION_DESCRIPTION "%appdescription%"
+
+%args_struct%
+
+/** parses commandline arguments and puts the info into a cmdargs struct.
+ * @param argc number of arguments
+ * @param argv array of argument strings
+ * @param args structure to hold the parsed options & arguments
+ */
+void parse_args ( int, char **, struct cmdargs *);
+
+/** prints application help information.
+ * @param bin application name as invoked on the commandline
+ */
+void usage ( char * );
+
+/** @brief prints application version.
+  */
+void version ( void );
+
+/** @brief beginning of primary application logic section called by main().
+  * 
+  * @param args contains the parsed cmd-line options & arguments.
+  * @param argc number of cmd-line arguments.
+  * @param argv list of cmd-line arguments
+  * @param optind index of the first non-option cmd-line argument.
+  * 
+  * @return exit status for main() to return.
+  */
+int %appname%( struct cmdargs *args, int argc, char *argv[], int optind );
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+----main.%language%----
+/************************************
+  %appcopyright%
+ ************************************/
+
+/** @file main.%language%
+  * @brief just contains the main() function.
+  *
+  * generated by cgener.  http://code.google.com/p/cgener/
+  */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+#include "%appname%_main.h"
+
+/** @brief entry point into the application.
+  * as this is a generated function, it just calls apropriate fucntions to
+  * parse commandlines, may do some user-defined code from the argument table,
+  * and calls user-defined function %appname%(), which is where all the real
+  * work will begin.
+  * 
+  * @param argc number of command-line arguments.
+  * @param argv list of arguments.
+  * 
+  * @return 
+  */
+int main ( int argc, char *argv[] ){
+  struct cmdargs args;
+
+  parse_args ( argc, argv, &args );
+
+  %required_args%
+
+  return %appname%( &args, argc, argv, optind );
+}
+
+----usage.%language%----
+/************************************
+  %appcopyright%
+ ************************************/
+
+/** @file usage.%language%
+ *  @brief contains functions for parsing arguments and printing usage info.
+ *
+ *  generated by cgener.  http://code.google.com/p/cgener/
+ */
+
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+#include "%appname%_main.h"
+
+%usage_function%
+
+/* this won't be used outside of this file */
+void init_cmdargs( struct cmdargs * );
+
+%parse_function%
+
+/** @brief initializes all elements in the cmdargs struct to NULL or 0.
+ *  @param args pointer to the argument structure to be cleared out.
+ */
+void init_cmdargs( struct cmdargs *args ){
+  /* this set all pointers to null, int values to 0 */
+  memset( args, 0, sizeof(struct cmdargs) );
+}
+
+/** @brief prints application version.
+  */
+void version ( void ){
+  fprintf(stderr, "%s\n", APPLICATION_VERSION);
+}
+

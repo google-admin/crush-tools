@@ -1,0 +1,11 @@
+CRUSH is a free, open-source collection of Custom Reporting Utilities for SHell.
+
+See COPYING for copyright information.
+
+See INSTALL for installation instructions.
+
+CRUSH has been tested and is believed to work on
+
+  Linux (32- and 64-bit)
+  Cygwin
+  Mac OSX
