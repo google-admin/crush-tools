@@ -45,7 +45,7 @@ exit(0);
 
 The default delimiter 'þ' is used here for its low probability of collision with actual data.  Now that we've gotten that out of the way, we can start doing interesting things with the data.
 
-In the examples that follow, a relative path to "access_log" is used.  To operate against a live Apache web log, `cd` to `/var/log/httpd`, or [http://crush-tools.googlecode.com/files/access_log.gz download the example data file] and run the commands from the directory where that file is kept.
+In the examples that follow, a relative path to "access_log" is used.  To operate against a live Apache web log, `cd` to `/var/log/httpd`, or [http://crush-tools.googlecode.com/files/access_log.tar.gz download the example data file] and run the commands from the directory where that file is kept.
 
 == Simple aggregations ==
 
