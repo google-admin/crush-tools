@@ -155,6 +155,27 @@ sub make_usage {
   if (defined($global{trailing_opts})){
     $uline .= " $global{trailing_opts} ";
   }
+
+  # figure out column widths for the option/description list
+  my %col_widths = ();
+  my $max_width = 0;
+  foreach my $arg (@args) {
+    my $this_arg_width = 2;
+    if ($global{do_long_opts} && $arg->{longopt}) {
+      # add room for '--', comma & space
+      $this_arg_width += length($arg->{longopt}) + 4;
+    }
+    if ($arg->{type} !~ /flag/) {
+      # add room for '<', '>' & space
+      $this_arg_width += length($arg->{name}) + 3;
+    }
+    $col_widths{$arg->{shortopt}}[0] = $this_arg_width;
+    $col_widths{$arg->{shortopt}}[1] = length($arg->{description});
+    if ($this_arg_width > $max_width && $this_arg_width < 28) {
+      $max_width = $this_arg_width;
+    }
+  }
+
   my $ustr =<<__END_USAGE__;
 /** prints application help information.
  * \@param bin application name as invoked on the commandline
@@ -165,12 +186,22 @@ void usage( char *bin ) {
   fprintf(stderr, "options:\\n");
 __END_USAGE__
   foreach my $arg ( @args ){
-    $ustr .= qq(\t) . 'fprintf' . '(stderr, "\t-' . $arg->{shortopt} ;
+    $ustr .= qq(\t) . 'fprintf' . '(stderr, "  -' . $arg->{shortopt} ;
     if ( $global{do_long_opts} && $arg->{longopt} ){
-      $ustr .= ($global{do_long_opts} ? ', --' . $arg->{longopt} : '') ;
+      $ustr .= ', --' . $arg->{longopt};
     }
-    $ustr .= ( $arg->{type} !~ /flag/ ? ' <' . $arg->{name} . '>\t' : '\t' ) .
-        $arg->{description} . '\n");' . qq(\n);
+    if ($arg->{type} !~ /flag/) {
+      $ustr .= ' <' . $arg->{name} . '>';
+    }
+    if ($col_widths{$arg->{shortopt}}[0] <= $max_width) {
+      $ustr .= ' ' x ($max_width - $col_widths{$arg->{shortopt}}[0]);
+    } else {
+      $ustr .= '\\n  ' . ' ' x $max_width;
+    }
+    $ustr .= '  ' .
+             wrap_description($max_width + 2, 80 - $max_width - 2,
+                              $arg->{description}) .
+             '\n");' . qq(\n);
   }
   if ( defined($global{usage_extra}) && length($global{usage_extra}) ){
     $ustr .= qq(\t) . 'fprintf' .
@@ -331,6 +362,40 @@ sub make_requirement_check {
 
   $rstr = $exitfunc . $rstr;
   return $rstr;
+}
+
+
+sub wrap_description {
+  # inserts escaped line breaks and spaces so that the result in usage() will
+  # print out wrapped.
+  my $lpad = shift;
+  my $width = shift;
+  my $text = shift;
+
+  if (length($text) <= $width) {
+    return $text;
+  }
+
+  my $wrapped_text = '';
+  my $current_line = '';
+  while ($text) {
+    $text =~ s/^(\s+)//;
+    my $current_ws = $1 || '';
+    $text =~ s/^(\S+)//;
+    my $current_word = $1;
+
+    if (length($current_line) + length($current_ws)
+                              + length($current_word) > $width) {
+      if ($wrapped_text) {
+        $wrapped_text .= '\\n  ' . (' ' x $lpad);
+      }
+      $wrapped_text .=  $current_line;
+      $current_line = $current_word;
+    } else {
+      $current_line .= $current_ws . $current_word;
+    }
+  }
+  return $wrapped_text . '\\n  ' . (' ' x $lpad) . $current_line;
 }
 
 
