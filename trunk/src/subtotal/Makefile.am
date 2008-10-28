@@ -14,3 +14,6 @@ CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = args.tab test.conf test/test_01.sh
 
+man1_MANS = subtotal.1
+subtotal.1 : args.tab
+	../bin/genman.pl args.tab > $@

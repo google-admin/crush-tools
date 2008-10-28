@@ -17,3 +17,6 @@ EXTRA_DIST = args.tab test.conf \
              test/test_02.sh \
              test/test_03.sh \
              test/test_04.sh
+man1_MANS = cutfield.1
+cutfield.1 : args.tab
+	../bin/genman.pl args.tab > $@

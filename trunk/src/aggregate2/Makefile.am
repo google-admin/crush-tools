@@ -19,3 +19,6 @@ EXTRA_DIST = args.tab test.conf test/test.in \
              test/test_02.sh test/test_02.expected \
              test/test_03.sh test/test_03.expected \
              test/test_04.sh
+man1_MANS = aggregate2.1
+aggregate2.1 : args.tab
+	../bin/genman.pl args.tab > $@

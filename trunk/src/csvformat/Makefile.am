@@ -13,3 +13,6 @@ csvformat: csvformat.in Makefile
 TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
 TESTS = test.conf
 
+man1_MANS = csvformat.1
+csvformat.1 : args.tab
+	../bin/genman.pl args.tab > $@

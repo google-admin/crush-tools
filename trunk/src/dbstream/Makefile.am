@@ -11,3 +11,6 @@ dbstream: dbstream.in Makefile
 
 TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
 TESTS = test.conf
+man1_MANS = dbstream.1
+dbstream.1 : args.tab
+	../bin/genman.pl args.tab > $@

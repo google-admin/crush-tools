@@ -40,3 +40,6 @@ EXTRA_DIST = args.tab test.conf \
 						 tests/test_08.-l.expected tests/test_08.-r.expected \
 						 tests/test_09.sh tests/test_09.a tests/test_09.b \
              tests/test_09.expected 
+man1_MANS = mergekeys.1
+mergekeys.1 : args.tab
+	../bin/genman.pl args.tab > $@
