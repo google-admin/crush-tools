@@ -213,6 +213,24 @@ void expand_chars(char *s);
   */
 ssize_t expand_nums(char *arg, int **array, size_t * array_size);
 
+/** @brief populates an array with 1-based indexes of the location of each of
+  * a list of labels.
+  *
+  * @param labels comma-separated list of labels
+  * @param line the header line
+  * @param delim field separator used in the line
+  * @param array the array in which to store the indexes
+  * @param array_sz the current size of the array
+  *
+  * @returns the number of indexes found on success,
+  *          -1 if one or more labels were not found in the line, or
+  *          -2 on error.
+  */
+ssize_t expand_label_list(const char *labels,
+                          const char *line,
+                          const char *delim,
+                          int **array, size_t *array_sz);
+
 /** @brief determines the position of the first and the last character
   * of the given field.
   *

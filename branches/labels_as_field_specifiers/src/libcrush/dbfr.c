@@ -58,10 +58,6 @@ dbfr_t * dbfr_init(FILE *fp) {
   reader->next_line_len = getline(&(reader->next_line),
                                   &(reader->next_line_sz),
                                   reader->file);
-  if (reader->next_line_len < 1) {
-    dbfr_close(reader);
-    reader = NULL;
-  }
   return reader;
 }
 

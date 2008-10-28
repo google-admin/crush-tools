@@ -1,4 +1,4 @@
-/** \file double_buffered_file_reader.h
+/** \file dbfr.h
   *
   * \brief A double-buffered file reader, meaning that the current and
   * next lines of a file are both buffered and available for use.
