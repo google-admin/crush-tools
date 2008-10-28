@@ -43,7 +43,8 @@ struct aggregation {
 };
 
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
-                              int *fields, size_t nfields, char *delim);
+                              int *fields, size_t nfields, char *delim,
+                              char *suffix);
 void decrement_values(int *array, size_t sz);
 int print_keys_sums_counts_avgs(char *key, struct aggregation *val);
 int ht_print_keys_sums_counts_avgs(void *htelem);

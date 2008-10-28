@@ -115,7 +115,15 @@ END_COPYRIGHT
 	  longopt => 'labels',
 	  type => 'var',
 	  required => 0,
-	  description => 'how to label the aggregation fields (default: unchanged)'
+	  description => 'delimiter-separated list of labels for the aggregation fields (default: unchanged)'
 	},
+  {
+    name => 'auto_label',
+    shortopt => 'L',
+    longopt => 'auto-label',
+    type => 'flag',
+    required => 0,
+    description => 'add \\"-Sum\\", \\"-Count\\", and \\"-Average\\" suffixes to aggregation fields',
+  },
 );
 

@@ -151,39 +151,34 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
     outbuf_sz = inbuf_sz;
 
-    /* NOTE also that sums have to be printed out before counts
-       to maintain backwards compatibility with the old perl
-       version of aggregate.
-     */
-
     extract_fields_to_string(inbuf, outbuf, outbuf_sz,
-                             key_fields, nkeys, delim);
+                             key_fields, nkeys, delim, NULL);
+    fputs(outbuf, stdout);
+    if (args->labels) {
+    	printf("%s%s", delim, args->labels);
+    } else {
+      if (nsums) {
+        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
+                                 sum_fields, nsums, delim,
+                                 args->auto_label ? "-Sum" : NULL);
+        printf("%s%s", delim, outbuf);
+      }
 
-    if (nsums) {
-      strcat(outbuf, delim);
-      str_len = strlen(outbuf);
-      extract_fields_to_string(inbuf, outbuf + str_len,
-                               outbuf_sz - str_len, sum_fields, nsums, delim);
+      if (ncounts) {
+        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
+                                 count_fields, ncounts, delim,
+                                 args->auto_label ? "-Count" : NULL);
+        printf("%s%s", delim, outbuf);
+      }
+
+      if (naverages) {
+        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
+                                 average_fields, naverages, delim,
+                                 args->auto_label ? "-Average" : NULL);
+        printf("%s%s", delim, outbuf);
+      }
     }
-
-    if (ncounts) {
-      strcat(outbuf, delim);
-      str_len = strlen(outbuf);
-      extract_fields_to_string(inbuf, outbuf + str_len,
-                               outbuf_sz - str_len,
-                               count_fields, ncounts, delim);
-    }
-
-    if (naverages) {
-      strcat(outbuf, delim);
-      str_len = strlen(outbuf);
-      extract_fields_to_string(inbuf, outbuf + str_len,
-                               outbuf_sz - str_len,
-                               average_fields, naverages, delim);
-    }
-
-
-    puts(outbuf);
+    fputs("\n", stdout);
 
   }
 
@@ -213,7 +208,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       extract_fields_to_string(inbuf, outbuf, outbuf_sz, key_fields, nkeys,
-                               delim);
+                               delim, NULL);
 
       value = (struct aggregation *) ht_get(&aggregations, outbuf);
       if (!value) {
@@ -405,20 +400,28 @@ int ht_print_keys_sums_counts_avgs(void *htelem) {
 }
 
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
-                              int *fields, size_t nfields, char *delim) {
+                              int *fields, size_t nfields, char *delim,
+                              char *suffix) {
   char *pos;
   int i;
-  size_t delim_len, field_len;
+  size_t delim_len = 0, field_len = 0, suffix_len = 0;
 
   delim_len = strlen(delim);
+  if (suffix)
+    suffix_len = strlen(suffix);
   pos = destbuf;
 
   for (i = 0; i < nfields; i++) {
     field_len =
-      get_line_field(pos, line, destbuf_sz - (pos - destbuf), fields[i], delim);
+        get_line_field(pos, line, destbuf_sz - (pos - destbuf),
+                       fields[i], delim);
     pos += field_len;
+    if (suffix) {
+    	strncat(pos, suffix, destbuf_sz - (pos - destbuf));
+    	pos += suffix_len;
+    }
     if (i != nfields - 1) {
-      strcat(pos, delim);
+    	strncat(pos, delim, destbuf_sz - (pos - destbuf));
       pos += delim_len;
     }
   }
