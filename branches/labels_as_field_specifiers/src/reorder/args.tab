@@ -82,7 +82,7 @@ ENDCODE
  	  longopt => 'move',
  	  type => 'custom_var',
  	  required => 0,
- 	  description => 'specifies a field to move to a new position\\n\\t\\t\\t\\t\\t(ex: -s 3,1)',
+ 	  description => 'specifies a field to move to a new position (ex: -s 3,1)',
 	  parseopt_code => <<ENDCODE
 				if( pushswap(optarg, REORDER_TYPE_MOVE ) != 0 ){
 					fprintf(stderr, "invalid fields in \\"-s %s\\"\\n", optarg);
@@ -96,14 +96,6 @@ ENDCODE
  	  longopt => 'fields',
  	  type => 'var',
  	  required => 0,
- 	  description => 'specifies fields to use to create a new string\\n\\t\\t\\t\\t\\t(ex: -f 3,4,1,5,2)',
-	},
-  {
-    name => 'field_labels',
-    shortopt => 'F',
-    longopt => 'field-labels',
-    type => 'var',
-    required => 0,
-    description => 'a list of labels specifying the output field order',
-  },
+ 	  description => 'specifies fields to use to create a new string (ex: -f 3,4,1,5,2)',
+	}
 );

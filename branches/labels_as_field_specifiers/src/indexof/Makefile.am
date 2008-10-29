@@ -16,3 +16,6 @@ EXTRA_DIST = args.tab test.conf \
              test/test_01.sh \
              test/test_02.sh \
              test/test_03.sh
+man1_MANS = indexof.1
+indexof.1 : args.tab
+	../bin/genman.pl args.tab > $@

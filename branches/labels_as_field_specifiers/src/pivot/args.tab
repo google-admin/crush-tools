@@ -59,7 +59,7 @@ END_COPYRIGHT
 	  longopt => 'keep-header',
 	  type => 'flag',
 	  required => 0,
-	  description => 'indicates that the first line of input \n\t\t\t\tshould be treated as header info'
+	  description => 'indicates that the first line of input should be treated as header info'
 	},
 	{
 	  name => 'keys',

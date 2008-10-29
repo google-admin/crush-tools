@@ -21,3 +21,6 @@ fieldsplit: fieldsplit.in Makefile
 
 TESTS_ENVIRONMENT = $(top_srcdir)/src/bin/testharness.sh
 TESTS = test.conf
+man1_MANS = fieldsplit.1
+fieldsplit.1 : args.tab
+	../bin/genman.pl args.tab > $@

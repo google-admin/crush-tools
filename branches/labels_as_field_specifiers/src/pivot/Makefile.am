@@ -17,3 +17,6 @@ EXTRA_DIST = args.tab test.conf \
              tests/test_01.sh tests/test_01.in tests/test_01.expected \
              tests/test_02.sh tests/test_02.in tests/test_02.expected
 
+man1_MANS = pivot.1
+pivot.1 : args.tab
+	../bin/genman.pl args.tab > $@

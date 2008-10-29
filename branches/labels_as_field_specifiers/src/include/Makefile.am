@@ -11,5 +11,4 @@ EXTRA_DIST = bstree.h \
              linklist.h \
              mempool.h \
              qsort_helper.h \
-             queue.h \
-             dbfr.h
+             queue.h

@@ -15,3 +15,6 @@ funiq_LDADD = ../libcrush/libcrush.la
 EXTRA_DIST = args.tab test.conf \
              test/test_01.sh \
              test/test_02.sh
+man1_MANS = funiq.1
+funiq.1 : args.tab
+	../bin/genman.pl args.tab > $@

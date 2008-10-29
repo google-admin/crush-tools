@@ -16,3 +16,6 @@ EXTRA_DIST = args.tab test.conf tests/test.in0 tests/test.in1 tests/test.in2 \
              tests/test_00.sh tests/test_01.sh tests/test_01.0.expected \
              tests/test_02.sh tests/test_02.1.expected
 
+man1_MANS = reorder.1
+reorder.1 : args.tab
+	../bin/genman.pl args.tab > $@

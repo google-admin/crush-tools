@@ -19,6 +19,7 @@
 #include <linklist.h>
 
 #include "ffutils.h"
+#include "data_transfer.h"
 
 int XFAIL(int n) {
   if (n == 0)
@@ -38,7 +39,6 @@ int test_chomp(void);
 int test_nextfile(void);
 int test_expand_chars(void);
 int test_expand_nums(void);
-int test_expand_label_list(void);
 int test_cut_field(void);
 int test_field_str(void);
 
@@ -56,7 +56,6 @@ int main(int argc, char *argv[]) {
   errs += test_nextfile();
   errs += test_expand_chars();
   errs += test_expand_nums();
-  errs += test_expand_label_list();
   errs += test_cut_field();
   errs += test_field_str();
   /* errs += test_get_spot_tag_attributes(); */
@@ -487,58 +486,6 @@ int test_expand_nums(void) {
 
   return n_errors;
 }
-
-
-int test_expand_label_list(void) {
-	int n_errors = 0;
-	char *line = "L1|L2|L3|L4|L5\n";
-  char *delim = "|";
-  int *array = NULL;
-  size_t array_sz = 0;
-  int retval, i;
-
-	char *T0_labels = "L1,L3";
-	int T0_retval = 2;
-	int T0_elems[] = {1, 3};
-
-	char *T1_labels = "L1,L7";
-	int T1_retval = -1;
-
-  retval = expand_label_list(T0_labels, line, delim, &array, &array_sz);
-  if (retval != T0_retval) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %u instead of %u\n",
-            "expand_label_list()", retval, T0_retval);
-  	n_errors++;
-  } else {
-    for (i = 0; i < retval; i++) {
-    	if (T0_elems[i] != array[i]) {
-        fprintf(stderr,
-                FUNC_NAME_FMT
-                ": failed (test 0)\n\telem %d is %d instead of %d\n",
-                "expand_label_list()", i, array[i], T0_elems[i]);
-      }
-    }
-  }
-
-  retval = expand_label_list(T1_labels, line, delim, &array, &array_sz);
-  if (retval != T1_retval) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %u instead of %u\n",
-            "expand_label_list()", retval, T0_retval);
-  	n_errors++;
-  }
-
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "expand_label_list()");
-  }
-
-  free(array);
-  return n_errors;
-}
-
 
 int test_cut_field(void) {
   int n_errors = 0;

@@ -18,3 +18,6 @@ EXTRA_DIST = args.tab test.conf test/test.in \
              test/test_02.sh test/test_02.expected \
              test/test_03.sh test/test_03.expected
 
+man1_MANS = grepfield.1
+grepfield.1 : args.tab
+	../bin/genman.pl args.tab > $@

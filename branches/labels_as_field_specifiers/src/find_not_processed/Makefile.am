@@ -7,3 +7,6 @@ find_not_processed: find_not_processed.in Makefile
 	chmod +x $@
 
 TESTS = test.sh
+man1_MANS = find_not_processed.1
+find_not_processed.1 : args.tab
+	../bin/genman.pl args.tab > $@

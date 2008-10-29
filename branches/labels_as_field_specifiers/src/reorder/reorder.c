@@ -13,7 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-#include <dbfr.h>
 #include "reorder_main.h"
 #include "reorder.h"
 
@@ -51,7 +50,8 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
 
 int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *fp, *fpout;
-  dbfr_t *reader;
+  char *lbuf = NULL;            /* line buffer */
+  size_t lbs = 0;               /* line buffer size */
 
   char *wbuf = NULL;            /* working buffer */
   size_t wbs = 0;               /* working buffer size */
@@ -87,91 +87,53 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
   else
     fp = nextfile(argc, argv, &optind, "r");
 
-  reader = dbfr_init(fp);
-
-  if (reader == NULL)
+  if (fp == NULL)
     return EXIT_FILE_ERR;
 
   if (args->fields) {
+
     order_elems = expand_nums(args->fields, &order, &order_sz);
 
     if (args->verbose) {
       int i;
-      fprintf(stderr, "there are %d fields: ", order_elems);
+      fprintf(stderr, "there are %d fields: ", order_sz);
       for (i = 0; i < order_elems; i++) {
         fprintf(stderr, " %d", order[i]);
       }
       fprintf(stderr, "\n");
     }
-  } else if (args->field_labels) {
-    order_elems = expand_label_list(args->field_labels, reader->next_line,
-                                    args->delim, &order, &order_sz);
-    if (order_elems == -1) {
-      fprintf(stderr, "%s: one or more labels in -F were not found.\n",
-              getenv("_"));
-      return EXIT_FAILURE;
-    } else if (order_elems < 1) {
-      fprintf(stderr, "%s: error translating labels in -F.\n",
-              getenv("_"));
-      return EXIT_FAILURE;
-    }
-    if (args->verbose) {
-    	int idx;
-    	fprintf(stderr, "%s: %d field translated from labels: ",
-              getenv("_"), order_elems);
-    	for (idx = 0; idx < order_elems; idx++) {
-    		fprintf(stderr, " %d", order[idx]);
-      }
-      fputs("\n", stderr);
-    }
   }
 
   while (fp != NULL) {
-    while (dbfr_getline(reader) > 0) {
+    while (getline(&lbuf, &lbs, fp) > 0) {
+
       /* make sure there's enough room in the working buffer */
       if (wbuf == NULL) {
-        if ((wbuf = malloc(reader->current_line_len)) == NULL)
+        if ((wbuf = malloc(lbs)) == NULL)
           goto memerror;
-        wbs = reader->current_line_len;
-      } else if (wbs < reader->current_line_len) {
+        wbs = lbs;
+      } else if (wbs < lbs) {
         /* if realloc unsuccessful, we don't want wbuf to end up being NULL */
         char *tmp_ptr;
-        if ((tmp_ptr = realloc(wbuf, reader->current_line_len)) == NULL)
+        if ((tmp_ptr = realloc(wbuf, lbs)) == NULL)
           goto memerror;
         wbuf = tmp_ptr;
-        wbs = reader->current_line_len;
+        wbs = lbs;
       }
 
-      if (!args->fields && !args->field_labels) {
-        doswap(wbuf, reader->current_line, args->delim);
+      if (!args->fields) {
+        doswap(wbuf, lbuf, args->delim);
       } else {
-        if (docut(&wbuf, reader->current_line, &wbs, args->delim,
-                  order, order_elems) < 0) {
+        if (docut(&wbuf, lbuf, &wbs, args->delim, order, order_elems) < 0)
           goto memerror;
-        }
       }
       fputs(wbuf, fpout);
+      memset(lbuf, 0, lbs);
       memset(wbuf, 0, wbs);
     }
 
-    dbfr_close(reader);
+    fclose(fp);
     fp = nextfile(argc, argv, &optind, "r");
-    if (fp) {
-      reader = dbfr_init(fp);
-      if (args->field_labels) {
-        order_elems = expand_label_list(args->field_labels, reader->next_line,
-                                        args->delim, &order, &order_sz);
-        if (order_elems == -1) {
-          fprintf(stderr, "%s: one or more labels in -F were not found.\n",
-                  getenv("_"));
-          return EXIT_FAILURE;
-        } else if (order_elems < 1) {
-          fprintf(stderr, "%s: error translating labels in -F.\n",
-                  getenv("_"));
-          return EXIT_FAILURE;
-        }
-      }
-    }
   }
 
   fflush(fpout);
@@ -179,6 +141,7 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (order)
     free(order);
+  free(lbuf);
   free(wbuf);
 
   return EXIT_OKAY;
@@ -188,6 +151,8 @@ memerror:
   fprintf(stderr, "%s: out of memory.\n", getenv("_"));
   if (order)
     free(order);
+  if (lbuf)
+    free(lbuf);
   if (wbuf)
     free(wbuf);
   if (fp)

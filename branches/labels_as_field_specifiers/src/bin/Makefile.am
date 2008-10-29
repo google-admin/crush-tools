@@ -1,1 +1,1 @@
-EXTRA_DIST = testharness.sh
+EXTRA_DIST = testharness.sh genman.pl

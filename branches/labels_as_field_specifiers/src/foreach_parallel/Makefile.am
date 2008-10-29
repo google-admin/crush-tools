@@ -10,3 +10,6 @@ foreach_parallel_SOURCES = foreach_parallel.c $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = args.tab
+man1_MANS = foreach_parallel.1
+foreach_parallel.1 : args.tab
+	../bin/genman.pl args.tab > $@
