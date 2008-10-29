@@ -96,6 +96,14 @@ END_COPYRIGHT
 	  required => 0,
 	  description => 'left outer join - i.e. drop lines in the second file that do not have a match in the first file'
 	},
+  {
+	  name => 'merge_default',
+	  shortopt => 'D',
+	  longopt => 'default',
+	  type => 'var',
+	  required => 0,
+	  description => 'for outer joins, the defaut value to put in unmatched merge fields'
+  },
 	{
 	  name => 'delim',
 	  shortopt => 'd',

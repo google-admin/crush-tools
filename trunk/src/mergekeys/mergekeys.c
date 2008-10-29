@@ -125,6 +125,9 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   expand_chars(args->delim);
   delim = args->delim;
 
+  if (!args->merge_default) {
+    args->merge_default = "";
+  }
   if (args->inner)
     join_type = join_type_inner;
   else if (args->left)
@@ -295,13 +298,13 @@ left_file_loop:
 
     if (LEFT_LT_RIGHT(keycmp)) {
       if (join_type == join_type_outer || join_type == join_type_left_outer)
-        join_lines(buffer_left, NULL, out);
+        join_lines(buffer_left, NULL, args->merge_default, out);
       goto left_file_loop;
     }
 
     if (LEFT_EQ_RIGHT(keycmp)) {
       /* everybody likes an inner join */
-      join_lines(buffer_left, buffer_right, out);
+      join_lines(buffer_left, buffer_right, args->merge_default, out);
 
       if (peek_keys(peek_buffer_left, buffer_left) == 0) {
         /* the keys in the next line of LEFT are the same.
@@ -318,7 +321,7 @@ left_file_loop:
     while (!eof_right) {
       if (LEFT_GT_RIGHT(keycmp)) {
         if (join_type == join_type_outer || join_type == join_type_right_outer)
-          join_lines(NULL, buffer_right, out);
+          join_lines(NULL, buffer_right, args->merge_default, out);
       }
 
       my_getline(&buffer_right, &buffer_right_size, &peek_buffer_right,
@@ -331,14 +334,14 @@ left_file_loop:
             (join_type == join_type_outer
              || join_type == join_type_left_outer)) {
 
-          join_lines(buffer_left, NULL, out);
+          join_lines(buffer_left, NULL, args->merge_default, out);
         }
 
         goto left_file_loop;
       }
 
       if (LEFT_EQ_RIGHT(keycmp)) {
-        join_lines(buffer_left, buffer_right, out);
+        join_lines(buffer_left, buffer_right, args->merge_default, out);
         left_line_printed = 1;
 
 
@@ -470,7 +473,8 @@ static void extract_and_print_fields(char *line, int *field_list,
 
 
 /* merge and print two lines. */
-void join_lines(char *left_line, char *right_line, FILE * out) {
+void join_lines(char *left_line, char *right_line, char *merge_default,
+                FILE * out) {
 
   int i;
   char field_right[MAX_FIELD_LEN + 1];
@@ -486,13 +490,13 @@ void join_lines(char *left_line, char *right_line, FILE * out) {
     extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
                              delim, out);
     for (i = 0; i < right_ntomerge; i++) {
-      fputs(delim, out);
+      fprintf(out, "%s%s", delim, merge_default);
     }
   } else if (left_line == NULL) {
     /* print fields from RIGHT with empty fields from LEFT */
     extract_and_print_fields(right_line, right_keyfields, nkeys, delim, out);
     for (i = 0; i < left_ntomerge; i++)
-      fputs(delim, out);
+      fprintf(out, "%s%s", delim, merge_default);
     if (right_ntomerge > 0)
       fputs(delim, out);
     extract_and_print_fields(right_line, right_mergefields, right_ntomerge,

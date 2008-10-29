@@ -80,7 +80,8 @@ int merge_files(FILE * a, FILE * b, enum join_type_t join_type, FILE * out,
 void classify_fields(char *left_header, char *right_header);
 int set_field_types(const char *left_keys, const char *right_keys);
 int compare_keys(char *buffer_left, char *buffer_right);
-void join_lines(char *left_line, char *right_line, FILE * out);
+void join_lines(char *left_line, char *right_line, char *merge_default,
+                FILE * out);
 int peek_keys(char *peek_line, char *current_line);
 
 /* extract each element of fields from line and print them, separated by delim.
