@@ -134,9 +134,13 @@ int test_dbfr_getline_2() {
   }
 
   retval = dbfr_getline(reader);
-  if (retval != 0) {
-    strcpy(failure_reason,
-           "dbfr_getline() did not return 0 where EOF should be.");
+  if (retval > 0) {
+    sprintf(failure_reason,
+            "dbfr_getline() returned %d where EOF should be.", retval);
+    return 1;
+  }
+  if (! reader->eof) {
+    strcpy(failure_reason, "dbfr_t.eof not not set");
     return 1;
   }
 

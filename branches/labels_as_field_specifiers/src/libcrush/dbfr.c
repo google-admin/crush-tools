@@ -9,10 +9,19 @@
 #  ifdef HAVE_STDLIB_H
 #    include <stdlib.h>
 #  endif
+#  ifdef HAVE_STDIO_H
+#    include <stdio.h>
+#  endif
+#  ifdef HAVE_STRING_H
+#    include <string.h>
+#  endif
 #else
+#  define HAVE_FCNTL 1
 #  include <unistd.h>
 #  include <fcntl.h>
 #  include <stdlib.h>
+#  include <stdio.h>
+#  include <string.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <dbfr.h>
@@ -21,7 +30,7 @@
 int dbfr_is_readable(FILE *fp) {
   int fd = fileno(fp);
   int flags = fcntl(fd, F_GETFL);
-  if (! flags & O_RDONLY && ! flags & O_RDWR)
+  if (flags & O_WRONLY)
     return 0;
   return 1;
 }
@@ -55,14 +64,15 @@ dbfr_t * dbfr_init(FILE *fp) {
   memset(reader, 0, sizeof(*reader));
   reader->file = fp;
 
-  reader->next_line_len = getline(&(reader->next_line),
-                                  &(reader->next_line_sz),
-                                  reader->file);
+  if ((reader->next_line_len = getline(&(reader->next_line),
+                                      &(reader->next_line_sz),
+                                      reader->file)) <= 0) {
+    reader->eof = 1;
+  }
   return reader;
 }
 
 ssize_t dbfr_getline(dbfr_t *reader) {
-  ssize_t next_len;
   /* swap buffers, to make the old "next" line the new "current" */
   char *cur = reader->current_line;
   size_t cur_sz = reader->current_line_sz;
@@ -70,6 +80,7 @@ ssize_t dbfr_getline(dbfr_t *reader) {
 
   if (reader->next_line_len < 1) {
     /* do not nullify current_line on EOF */
+    reader->eof = 1;
     return reader->next_line_len;
   }
 
@@ -88,7 +99,6 @@ ssize_t dbfr_getline(dbfr_t *reader) {
   if (reader->next_line_len < 1) {
     free(reader->next_line);
     reader->next_line = NULL;
-    reader->next_line_len = 0;
     reader->next_line_sz = 0;
   }
   reader->line_no++;

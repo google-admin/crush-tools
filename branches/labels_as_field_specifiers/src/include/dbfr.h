@@ -34,6 +34,8 @@ typedef struct {
   ssize_t next_line_len;    /**< \brief the length of the next line. */
   size_t next_line_sz;      /**< \brief the size of the next_line buffer. */
   FILE *file;               /**< \brief the file being read. */
+  int eof;                  /**< \brief non-zero when EOF is reached in the
+                                        current line. */
 } dbfr_t;
 
 /** \brief opens FILENAME for reading with a double-buffered reader.
@@ -66,8 +68,9 @@ dbfr_t * dbfr_init(FILE *fp);
   *
   * \param reader a valid double-buffered reader object.
   *
-  * \returns the length of the current line, zero on EOF, or a negative value
-  *          on error.
+  * \returns the length of the current line, zero or negative on EOF or error.
+  *          (exact behavior seems to be dependent on the getline
+  *          implementation)
   */
 ssize_t dbfr_getline(dbfr_t *reader);
 
