@@ -19,6 +19,7 @@
 #endif
 
 #include <ffutils.h>
+#include <dbfr.h>
 
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>             /* open64() */
@@ -74,11 +75,13 @@ enum join_type_t {
   join_type_right_outer,
 };
 
-int merge_files(FILE * a, FILE * b, enum join_type_t join_type, FILE * out,
+int merge_files(dbfr_t *a, dbfr_t *b, enum join_type_t join_type, FILE * out,
                 struct cmdargs *args);
 
 void classify_fields(char *left_header, char *right_header);
-int set_field_types(const char *left_keys, const char *right_keys);
+int set_key_lists(struct cmdargs *args, const char *left_line,
+                  const char *right_line, const char *delim);
+int set_field_types();
 int compare_keys(char *buffer_left, char *buffer_right);
 void join_lines(char *left_line, char *right_line, char *merge_default,
                 FILE * out);
