@@ -1,7 +1,7 @@
 test_number=04
 description="last line of A is greater than last line of B"
 
-for i in `seq 0 ${#test_variants[*]}`; do
+for i in `seq 0 $((${#test_variants[*]} - 1))`; do
   outfile="$test_dir/test_$test_number.${test_variants[$i]}.actual"
   expected=$test_dir/test_$test_number.${test_variants[$i]}.expected
   $bin ${test_variants[$i]} \
@@ -11,9 +11,9 @@ for i in `seq 0 ${#test_variants[*]}`; do
 
   if [ $? -ne 0 ] ||
      [ "`diff -q $outfile $expected`" ]; then
-    test_status $test_number $i "$description" FAIL
+    test_status $test_number $i "$description (${variant_desc[$i]})" FAIL
   else
-    test_status $test_number $i "$description" PASS
+    test_status $test_number $i "$description (${variant_desc[$i]})" PASS
     rm "$outfile"
   fi
 done
