@@ -68,6 +68,14 @@ END_COPYRIGHT
 	  required => 0,
 	  description => '1-based number of field to convert (default: 1)'
 	},
+  {
+	  name => 'field_label',
+	  shortopt => 'F',
+	  longopt => 'field-label',
+	  type => 'var',
+	  required => 0,
+	  description => 'header label of field to convert'
+	},
 	{
 	  name => 'input_format',
 	  shortopt => 'i',
