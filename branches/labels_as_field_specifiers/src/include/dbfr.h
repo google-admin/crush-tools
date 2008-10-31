@@ -43,8 +43,8 @@ typedef struct {
   * Upon successful initialization, the next_line will be initialized to the
   * first line of the file, 
   *
-  * \param filename if NULL, the reader will attach to stdin.  Otherwise the
-  *                 named file is opened for reading.
+  * \param filename if NULL or "-", the reader will attach to stdin.
+  *                 Otherwise the named file is opened for reading.
   *
   * \returns a double-buffered file reader object, or NULL if the file cannot
   *          be opened.

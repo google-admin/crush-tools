@@ -5,6 +5,8 @@
 #  endif
 #  ifdef HAVE_FCNTL_H
 #    include <fcntl.h>
+#  elif HAVE_SYS_FCNTL_H
+#    include <sys/fcntl.h>
 #  endif
 #  ifdef HAVE_STDLIB_H
 #    include <stdlib.h>
@@ -15,6 +17,15 @@
 #  ifdef HAVE_STRING_H
 #    include <string.h>
 #  endif
+#  ifdef HAVE_SYS_TYPES_H
+#    include <sys/types.h>
+#  endif
+#  ifdef HAVE_SYS_STAT_H
+#    include <sys/stat.h>
+#  endif
+#  ifndef HAVE_OPEN64
+#    define open64 open
+#  endif
 #else
 #  define HAVE_FCNTL 1
 #  include <unistd.h>
@@ -22,6 +33,8 @@
 #  include <stdlib.h>
 #  include <stdio.h>
 #  include <string.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
 #endif /* HAVE_CONFIG_H */
 
 #include <dbfr.h>
@@ -50,8 +63,13 @@ static void * xmalloc(size_t size) {
 }
 
 dbfr_t * dbfr_open(char *filename) {
-  FILE *fp = fopen(filename, "r");
-  if (! fp)
+  int fd;
+  FILE *fp;
+  if (filename == NULL || strcmp(filename, "-") == 0)
+    return dbfr_init(stdin);
+  if ((fd = open64(filename, O_RDONLY | O_LARGEFILE)) < 0)
+    return NULL;
+  if ((fp = fdopen(fd, "r")) == NULL)
     return NULL;
   return dbfr_init(fp);
 }
