@@ -25,10 +25,8 @@ static void print_line(FILE * out,
                        size_t ncounts,
                        const double *sums, int nsums, int *sums_precision);
 
-static int extract_keys(char *target,
-                        const char *source,
-                        const char *delim, int *keys, size_t nkeys);
-
+static int extract_keys(char *target, const char *source, const char *delim,
+                        int *keys, size_t nkeys, const char *suffix);
 
 static int float_precision(char *n);
 
@@ -49,14 +47,15 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
   char *input_line = NULL;
   size_t input_line_sz = 0;
 
-  int *keys = NULL, *sums = NULL, *counts = NULL, *sums_precision = NULL; /* output the same precision as
-                                                                             in the input */
+  int *keys = NULL, *sums = NULL, *counts = NULL,
+      *sums_precision = NULL; /* output the same precision as in the input */
   int cur_precision;
   size_t keys_sz = 0, sums_sz = 0, counts_sz = 0;
 
   ssize_t nkeys = 0, nsums = 0, ncounts = 0;
 
   char *cur_keys = NULL, *prev_keys = NULL;
+  int prev_keys_initialized = 0;
   size_t keybuf_sz = 0;
 
   int *cur_counts = NULL;
@@ -137,42 +136,44 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
   prev_keys = malloc(sizeof(char) * 1024);
   keybuf_sz = 1024;
 
+  if (args->labels || args->auto_label)
+    args->preserve_header = 1;
 
   if (args->preserve_header) {
-    if (getline(&input_line, &input_line_sz, in) > 0) {
-      chomp(input_line);
-      if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys) != 0) {
-        fprintf(stderr, "%s: malformatted input\n", argv[0]);
-        return EXIT_FILE_ERR;
-      }
-      fputs(cur_keys, out);
+    if (getline(&input_line, &input_line_sz, in) <= 0) {
+      DIE("unexpected end of file");
+    }
 
+    chomp(input_line);
+    if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys,
+                     NULL) != 0) {
+      fprintf(stderr, "%s: malformatted input\n", argv[0]);
+      return EXIT_FILE_ERR;
+    }
+    fputs(cur_keys, out);
+
+    if (args->labels) {
+      fprintf(out, "%s%s", args->delim, args->labels);
+    } else {
       if (nsums > 0) {
-        if (extract_keys(cur_keys, input_line, args->delim, sums, nsums) != 0) {
+        if (extract_keys(cur_keys, input_line, args->delim, sums, nsums,
+                        args->auto_label ? "-Sum" : NULL) != 0) {
           fprintf(stderr, "%s: malformatted input\n", argv[0]);
           return EXIT_FILE_ERR;
         }
-
-        if (ncounts == 0) {
-          /* remove trailing delimiter */
-          cur_keys[strlen(cur_keys) - strlen(args->delim)] = '\0';
-        }
-        fputs(cur_keys, out);
+        fprintf(out, "%s%s", args->delim, cur_keys);
       }
 
       if (ncounts > 0) {
-        if (extract_keys(cur_keys, input_line, args->delim, counts, ncounts) !=
-            0) {
+        if (extract_keys(cur_keys, input_line, args->delim, counts, ncounts,
+                         args->auto_label ? "-Count" : NULL) != 0) {
           fprintf(stderr, "%s: malformatted input\n", argv[0]);
           return EXIT_FILE_ERR;
         }
-        /* remove trailing delimiter */
-        cur_keys[strlen(cur_keys) - strlen(args->delim)] = '\0';
-        fputs(cur_keys, out);
+        fprintf(out, "%s%s", args->delim, cur_keys);
       }
-
-      fputs("\n", out);
     }
+    fputs("\n", out);
   }
 
   cur_keys[0] = '\0';
@@ -201,12 +202,13 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
         keybuf_sz = input_line_sz;
       }
 
-      if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys) != 0) {
+      if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys, NULL)
+          != 0) {
         fprintf(stderr, "%s: malformatted input\n", argv[0]);
         return EXIT_FILE_ERR;
       }
 
-      if (prev_keys[0] != '\0' && !str_eq(cur_keys, prev_keys)) {
+      if (prev_keys_initialized && !str_eq(cur_keys, prev_keys)) {
         print_line(out, prev_keys, args->delim, cur_counts, ncounts, cur_sums,
                    nsums, sums_precision);
 
@@ -233,6 +235,7 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       strcpy(prev_keys, cur_keys);
+      prev_keys_initialized = 1;
     }
     in = nextfile(argc, argv, &optind, "r");
   }
@@ -254,24 +257,26 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
 
 
 /* assumption: target is at least as big as source, so it cannot be
-   overflowed. */
-static int extract_keys(char *target,
-                        const char *source,
-                        const char *delim, int *keys, size_t nkeys) {
+   overflowed.
+   TODO(jhinds): this is faulty if the same field is specified multiple times;
+   and when auto_labeling, the suffix might cause an overflow.
+ */
+static int extract_keys(char *target, const char *source, const char *delim,
+                        int *keys, size_t nkeys, const char *suffix) {
   int i, s, e; /* iter, start, end */
   int field_len;
 
   target[0] = '\0';
   for (i = 0; i < nkeys; i++) {
   	field_len = get_line_pos(source, keys[i], delim, &s, &e);
-    if (field_len < 0) {
+    if (field_len < 0)
       return 1;
-    } else if (field_len == 0) {
-      strcat(target, delim);
-    } else {
+    if (field_len > 0)
       strncat(target, source + s, e - s + 1);
+    if (suffix)
+      strcat(target, suffix);
+    if (i != nkeys - 1)
       strcat(target, delim);
-    }
   }
   return 0;
 }
@@ -288,18 +293,11 @@ static void print_line(FILE * out,
   fputs(keys, out);
 
   for (i = 0; i < nsums; i++) {
-    fprintf(out, "%.*f", sums_precision[i], sums[i]);
-    if (i < nsums - 1)
-      fputs(delim, out);
+    fprintf(out, "%s%.*f", delim, sums_precision[i], sums[i]);
   }
 
-  if (ncounts > 0 && nsums > 0)
-    fputs(delim, out);
-
   for (i = 0; i < ncounts; i++) {
-    fprintf(out, "%d", counts[i]);
-    if (i < ncounts - 1)
-      fputs(delim, out);
+    fprintf(out, "%s%d", delim, counts[i]);
   }
 
   fputs("\n", out);
