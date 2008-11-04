@@ -364,6 +364,8 @@ static void extract_and_print_fields(char *line, int *field_list,
                                      size_t nfields, char *delim, FILE *out) {
   int i;
   char field_buffer[MAX_FIELD_LEN + 1];
+  if (nfields == 0)
+    return;
   for (i = 0; i < nfields - 1; i++) {
     field_buffer[0] = '\0';
     get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);

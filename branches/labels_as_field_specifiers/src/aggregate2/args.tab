@@ -102,4 +102,20 @@ END_COPYRIGHT
 	  type        => 'var',
 	  description => 'file to which output should be written (default: stdout)',
 	},
+  {
+    name => 'labels',
+    shortopt => 'l',
+    longopt => 'labels',
+    type => 'var',
+    required => 0,
+    description => 'delimiter-separated list of labels for the aggregation fields (default: unchanged)'
+  },
+  {
+    name => 'auto_label',
+    shortopt => 'L',
+    longopt => 'auto-label',
+    type => 'flag',
+    required => 0,
+    description => 'add \\"-Sum\\" or \\"-Count\\" suffixes to aggregation fields',
+  },
 );
