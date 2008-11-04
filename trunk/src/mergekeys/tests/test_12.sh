@@ -1,5 +1,5 @@
 test_number=12
-description="input file with single field"
+description="input file with single field in left-hand file"
 
 for i in `seq 0 $((${#test_variants[*]} - 1))`; do
   outfile="$test_dir/test_$test_number.${test_variants[$i]}.actual"
@@ -11,7 +11,7 @@ for i in `seq 0 $((${#test_variants[*]} - 1))`; do
 
   if [ $? -ne 0 ] ||
      [ "`diff -q $outfile $expected`" ]; then
-    test_status $test_number $i "$description (${variant_desc[$i]})" XFAIL
+    test_status $test_number $i "$description (${variant_desc[$i]})" FAIL
   else
     test_status $test_number $i "$description (${variant_desc[$i]})" PASS
     rm "$outfile"

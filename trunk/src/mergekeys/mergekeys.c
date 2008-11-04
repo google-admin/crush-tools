@@ -255,14 +255,16 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
 
   /* print the headers which were already read in above */
   extract_and_print_fields(buffer_left, left_keyfields, nkeys, delim, out);
-  if (left_ntomerge > 0)
+  if (left_ntomerge > 0) {
     fputs(delim, out);
-  extract_and_print_fields(buffer_left, left_mergefields, left_ntomerge,
-                           delim, out);
-  if (right_ntomerge > 0)
+    extract_and_print_fields(buffer_left, left_mergefields, left_ntomerge,
+                             delim, out);
+  }
+  if (right_ntomerge > 0) {
     fputs(delim, out);
-  extract_and_print_fields(buffer_right, right_mergefields, right_ntomerge,
-                           delim, out);
+    extract_and_print_fields(buffer_right, right_mergefields, right_ntomerge,
+                             delim, out);
+  }
   fputc('\n', out);
 
   /* we need to have the buffers cleared before the first call to my_getline */
@@ -461,6 +463,8 @@ static void extract_and_print_fields(char *line, int *field_list,
                                      size_t nfields, char *delim, FILE *out) {
   int i;
   char field_buffer[MAX_FIELD_LEN + 1];
+  if (nfields == 0)
+    return;
   for (i = 0; i < nfields - 1; i++) {
     field_buffer[0] = '\0';
     get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);
@@ -485,10 +489,11 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
   if (right_line == NULL) {
     /* just print LEFT line with empty RIGHT merge fields */
     extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
-    if (left_ntomerge > 0)
+    if (left_ntomerge > 0) {
       fputs(delim, out);
-    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
-                             delim, out);
+      extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                               delim, out);
+    }
     for (i = 0; i < right_ntomerge; i++) {
       fprintf(out, "%s%s", delim, merge_default);
     }
@@ -497,21 +502,24 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
     extract_and_print_fields(right_line, right_keyfields, nkeys, delim, out);
     for (i = 0; i < left_ntomerge; i++)
       fprintf(out, "%s%s", delim, merge_default);
-    if (right_ntomerge > 0)
+    if (right_ntomerge > 0) {
       fputs(delim, out);
-    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
-                             delim, out);
+      extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                               delim, out);
+    }
   } else {
     /* keys are equal. */
     extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
-    if (left_ntomerge > 0)
+    if (left_ntomerge > 0) {
       fputs(delim, out);
-    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
-                             delim, out);
-    if (right_ntomerge > 0)
+      extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                               delim, out);
+    }
+    if (right_ntomerge > 0) {
       fputs(delim, out);
-    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
-                             delim, out);
+      extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                               delim, out);
+    }
   }
 
   fputc('\n', out);
