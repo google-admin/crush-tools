@@ -19,11 +19,19 @@ Key-Header	Value-Header
 Key-0	2
 END_TEST_EXPECT
 
+subtest=1
 $bin -p -k 1 -c 2 $infile > $outfile
-
 if [ $? -ne 0 ] || [ "`diff -q $outfile $expected`" ]; then
-  test_status $test_number 1 "$description" FAIL
+  test_status $test_number $subtest "$description (indexes)" FAIL
 else
-  test_status $test_number 1 "$description" PASS
+  test_status $test_number $subtest "$description (indexes)" PASS
+fi
+
+subtest=1
+$bin -K Key-Header -C Value-Header $infile > $outfile
+if [ $? -ne 0 ] || [ "`diff -q $outfile $expected`" ]; then
+  test_status $test_number $subtest "$description (indexes)" FAIL
+else
+  test_status $test_number $subtest "$description (indexes)" PASS
   rm "$infile" "$outfile" "$expected"
 fi

@@ -78,22 +78,44 @@ END_COPYRIGHT
 	  shortopt    => 'k',
 	  longopt     => 'keys',
 	  type        => 'var',
-	  required    => 1,
-	  description => 'list of aggregation keys',
+	  required    => 0,
+	  description => 'indexes of aggregation keys',
+	},
+	{
+	  name        => 'key_labels',
+	  shortopt    => 'K',
+	  longopt     => 'key-labels',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'labels of aggregation key',
 	},
 	{
 	  name        => 'sums',
 	  shortopt    => 's',
 	  longopt     => 'sums',
 	  type        => 'var',
-	  description => 'list of fields to sum',
+	  description => 'indexes of fields to be summed',
+	},
+	{
+	  name        => 'sum_labels',
+	  shortopt    => 'S',
+	  longopt     => 'sum-labels',
+	  type        => 'var',
+	  description => 'labels of fields to be summed',
 	},
 	{
 	  name        => 'counts',
 	  shortopt    => 'c',
 	  longopt     => 'counts',
 	  type        => 'var',
-	  description => 'list of aggregation count',
+	  description => 'indexes of fields to be counted if non-blank'
+	},
+	{
+	  name        => 'count_labels',
+	  shortopt    => 'C',
+	  longopt     => 'count-labels',
+	  type        => 'var',
+	  description => 'labels of fields to be counted if non-blank'
 	},
 	{
 	  name        => 'outfile',

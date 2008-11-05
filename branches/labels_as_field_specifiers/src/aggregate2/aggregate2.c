@@ -15,6 +15,7 @@
  ********************************/
 #include "aggregate2_main.h"
 #include <ffutils.h>
+#include <dbfr.h>
 #include <err.h>                /* warn() */
 
 
@@ -44,8 +45,7 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
   char default_delim[] = { 0xfe, 0x00 };
 
   FILE *in, *out;
-  char *input_line = NULL;
-  size_t input_line_sz = 0;
+  dbfr_t *in_reader;
 
   int *keys = NULL, *sums = NULL, *counts = NULL,
       *sums_precision = NULL; /* output the same precision as in the input */
@@ -65,21 +65,42 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
   double f;                     /* numeric value of sum fields */
   int i;                        /* counter */
 
+  if (! (args->keys || args->key_labels)) {
+    fprintf(stderr, "%s: either -k or -K must be specified.\n", argv[0]);
+    return EXIT_HELP;
+  }
+
+  /* individually these args are not required. */
+  if (!(args->sums || args->sum_labels) &&
+      !(args->counts || args->count_labels)) {
+    fprintf(stderr,
+            "%s: at least one of -s/-S and -c/-C must be specified.\n",
+            argv[0]);
+    return EXIT_HELP;
+  }
+
   if (!args->delim) {
     if ((args->delim = getenv("DELIMITER")) == NULL)
       args->delim = default_delim;
   }
   expand_chars(args->delim);
 
-  /* individually these args are not required. */
-  if (!args->sums && !args->counts) {
-    fprintf(stderr,
-            "%s: at least one of --sums and --counts must be specified.\n",
-            argv[0]);
-    return EXIT_HELP;
+  if (optind < argc) {
+    in = nextfile(argc, argv, &optind, "r");
+    if (! in)
+      return EXIT_FILE_ERR;
+  } else {
+    in = stdin;
   }
+  in_reader = dbfr_init(in);
 
-  nkeys = expand_nums(args->keys, &keys, &keys_sz);
+  if (args->keys) {
+    nkeys = expand_nums(args->keys, &keys, &keys_sz);
+  } else {
+    nkeys = expand_label_list(args->key_labels, in_reader->next_line,
+                              args->delim, &keys, &keys_sz);
+    args->preserve_header = 1;
+  }
   if (nkeys <= 0) {
     fprintf(stderr, "%s: bad key fields specified\n", argv[0]);
     return EXIT_HELP;
@@ -89,30 +110,33 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (args->sums) {
     nsums = expand_nums(args->sums, &sums, &sums_sz);
-    if (nsums < 0) {
-      fprintf(stderr, "%s: bad sum fields specified\n", argv[0]);
-      return EXIT_HELP;
-    }
+  } else if (args->sum_labels) {
+    nsums = expand_label_list(args->sum_labels, in_reader->next_line,
+                              args->delim, &sums, &sums_sz);
+    args->preserve_header = 1;
+  }
+  if (nsums < 0) {
+    fprintf(stderr, "%s: bad sum fields specified\n", argv[0]);
+    return EXIT_HELP;
+  } else if (nsums > 0) {
     for (i = 0; i < nsums; i++)
       sums[i]--;
-
     sums_precision = calloc(nsums, sizeof(int));
   }
 
   if (args->counts) {
     ncounts = expand_nums(args->counts, &counts, &counts_sz);
-    if (ncounts < 0) {
-      fprintf(stderr, "%s: bad count fields specified\n", argv[0]);
-      return EXIT_HELP;
-    }
+  } else if (args->count_labels) {
+    ncounts = expand_label_list(args->count_labels, in_reader->next_line,
+                                args->delim, &counts, &counts_sz);
+    args->preserve_header = 1;
+  }
+  if (ncounts < 0) {
+    fprintf(stderr, "%s: bad count fields specified\n", argv[0]);
+    return EXIT_HELP;
+  } else if (ncounts > 0) {
     for (i = 0; i < ncounts; i++)
       counts[i]--;
-  }
-
-  if (optind < argc) {
-    in = nextfile(argc, argv, &optind, "r");
-  } else {
-    in = stdin;
   }
 
   if (args->outfile) {
@@ -140,13 +164,13 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
     args->preserve_header = 1;
 
   if (args->preserve_header) {
-    if (getline(&input_line, &input_line_sz, in) <= 0) {
+    if (dbfr_getline(in_reader) <= 0) {
       DIE("unexpected end of file");
     }
 
-    chomp(input_line);
-    if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys,
-                     NULL) != 0) {
+    chomp(in_reader->current_line);
+    if (extract_keys(cur_keys, in_reader->current_line, args->delim,
+                     keys, nkeys, NULL) != 0) {
       fprintf(stderr, "%s: malformatted input\n", argv[0]);
       return EXIT_FILE_ERR;
     }
@@ -156,8 +180,8 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
       fprintf(out, "%s%s", args->delim, args->labels);
     } else {
       if (nsums > 0) {
-        if (extract_keys(cur_keys, input_line, args->delim, sums, nsums,
-                        args->auto_label ? "-Sum" : NULL) != 0) {
+        if (extract_keys(cur_keys, in_reader->current_line, args->delim,
+                         sums, nsums, args->auto_label ? "-Sum" : NULL) != 0) {
           fprintf(stderr, "%s: malformatted input\n", argv[0]);
           return EXIT_FILE_ERR;
         }
@@ -165,8 +189,9 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       if (ncounts > 0) {
-        if (extract_keys(cur_keys, input_line, args->delim, counts, ncounts,
-                         args->auto_label ? "-Count" : NULL) != 0) {
+        if (extract_keys(cur_keys, in_reader->current_line, args->delim,
+                         counts, ncounts, args->auto_label ? "-Count" : NULL)
+            != 0) {
           fprintf(stderr, "%s: malformatted input\n", argv[0]);
           return EXIT_FILE_ERR;
         }
@@ -180,30 +205,30 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
   prev_keys[0] = '\0';
 
   while (in) {
-    while (getline(&input_line, &input_line_sz, in) > 0) {
-      chomp(input_line);
-      if (input_line_sz > keybuf_sz) {
+    while (dbfr_getline(in_reader) > 0) {
+      chomp(in_reader->current_line);
+      if (in_reader->current_line_sz > keybuf_sz) {
         char *tmp;
-        tmp = realloc(cur_keys, input_line_sz);
+        tmp = realloc(cur_keys, in_reader->current_line_sz);
         if (!tmp) {
           fprintf(stderr,
                   "%s: out of memory (resizing cur_keys from %d to %d)\n",
-                  argv[0], keybuf_sz, input_line_sz);
+                  argv[0], keybuf_sz, in_reader->current_line_sz);
           return EXIT_MEM_ERR;
         }
         cur_keys = tmp;
 
-        tmp = realloc(prev_keys, input_line_sz);
+        tmp = realloc(prev_keys, in_reader->current_line_sz);
         if (!tmp) {
           fprintf(stderr, "%s: out of memory (resizing prev_keys)\n", argv[0]);
           return EXIT_MEM_ERR;
         }
         prev_keys = tmp;
-        keybuf_sz = input_line_sz;
+        keybuf_sz = in_reader->current_line_sz;
       }
 
-      if (extract_keys(cur_keys, input_line, args->delim, keys, nkeys, NULL)
-          != 0) {
+      if (extract_keys(cur_keys, in_reader->current_line, args->delim,
+                       keys, nkeys, NULL) != 0) {
         fprintf(stderr, "%s: malformatted input\n", argv[0]);
         return EXIT_FILE_ERR;
       }
@@ -217,14 +242,16 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       for (i = 0; i < ncounts; i++) {
-        get_line_field(field_buf, input_line, 63, counts[i], args->delim);
+        get_line_field(field_buf, in_reader->current_line, 63, counts[i],
+                       args->delim);
         if (field_buf[0] != '\0') {
           cur_counts[i]++;
         }
       }
 
       for (i = 0; i < nsums; i++) {
-        get_line_field(field_buf, input_line, 63, sums[i], args->delim);
+        get_line_field(field_buf, in_reader->current_line, 63, sums[i],
+                       args->delim);
         f = atof(field_buf);
         cur_sums[i] += f;
 
@@ -237,7 +264,11 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
       strcpy(prev_keys, cur_keys);
       prev_keys_initialized = 1;
     }
+    dbfr_close(in_reader);
     in = nextfile(argc, argv, &optind, "r");
+    if (in) {
+      in_reader = dbfr_init(in);
+    }
   }
 
   print_line(out, prev_keys, args->delim, cur_counts, ncounts, cur_sums, nsums,
