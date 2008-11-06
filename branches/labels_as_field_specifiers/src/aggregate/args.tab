@@ -65,7 +65,7 @@ END_COPYRIGHT
 	{
 	  name => 'key_labels',
 	  shortopt => 'K',
-	  longopt => 'keys-labels',
+	  longopt => 'key-labels',
 	  type => 'var',
 	  required => 0,
 	  description => 'labels of fields for aggregation levels & output'
