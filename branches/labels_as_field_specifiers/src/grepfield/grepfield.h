@@ -31,6 +31,7 @@
 #endif
 
 #include <ffutils.h>
+#include <dbfr.h>
 
 #ifndef GREPFIELD_H
 #define GREPFIELD_H

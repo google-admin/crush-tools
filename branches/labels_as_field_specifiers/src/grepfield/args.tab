@@ -69,6 +69,14 @@ END_COPYRIGHT
 	  required => 0,
 	  description => 'index of field to scan (1-based)'
 	},
+  {
+	  name => 'field_label',
+	  shortopt => 'F',
+	  longopt => 'field-label',
+	  type => 'var',
+	  required => 0,
+	  description => 'label of field to scan (1-based)'
+	},
 	{
 	  name => 'invert',
 	  shortopt => 'v',
@@ -91,7 +99,7 @@ END_COPYRIGHT
 	  longopt => 'preserve_header',
 	  type => 'flag',
 	  required => 0,
-	  description => 'preserve the header line'
+	  description => 'preserve the header line of the first file and discard all other headers.'
 	}
 
 );
