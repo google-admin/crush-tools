@@ -56,8 +56,16 @@ END_COPYRIGHT
 	  shortopt    => 'f',
 	  longopt     => 'field',
 	  type        => 'var',
-	  required    => 1,
-	  description => 'split on the specified field number (required)'
+	  required    => 0,
+	  description => 'split on the specified field number'
+	},
+  {
+	  name        => 'label',
+	  shortopt    => 'F',
+	  longopt     => 'Field-label',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'split on the specified field label'
 	},
 	{
 	  name        => 'path',
