@@ -19,14 +19,15 @@ use Getopt::Long;
 
 Getopt::Long::Configure("no_ignore_case");
 
-my($help, $debug, $field, $delim, $replace, $append, $prepend, %mapping,
-   $external, $show_version);
+my($help, $debug, $field, $field_label, $delim, $replace, $append, $prepend,
+   %mapping, $external, $show_version);
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
 GetOptions("help" => \$help,
            "Debug" => \$debug,
            "field=n" => \$field,
+           "Field-label=s" => \$field_label,
            "delim=s" => \$delim,
            "append" => \$append,
            "prepend" => \$prepend,
@@ -45,13 +46,12 @@ if ($show_version) {
   exit(0);
 }
 
-if (! defined($field)) {
-  print STDERR "$0: -f must be specified.\n";
+$delim = expand_chars($delim);
+
+if (! defined($field) && ! defined($field_label)) {
+  print STDERR "$0: -f or -F must be specified.\n";
   exit(1);
 }
-
-$field--;
-$delim = expand_chars($delim);
 
 if ($external) {
   print STDERR "sourcing $external\n" if ($debug);
@@ -70,8 +70,28 @@ if ($debug) {
   }
 }
 
-my ($line_str, @line, $field_val, $trans_val, $local_field);
-while ($line_str = <>) {
+my $header;
+if (defined($field)) {
+  $field--;
+} elsif ($field_label) {
+  $header = <>;
+  $field = field_str($field_label, $header, $delim);
+  if (! defined($field)) {
+    warn "$0: field label \"$field_label\" not found in input.\n";
+    exit(1);
+  }
+}
+
+if ($header) {
+  print translate_field($header);
+}
+while (<>) {
+  print translate_field();
+}
+
+sub translate_field {
+  my $line_str = shift || $_;
+  my (@line, $field_val, $trans_val, $local_field);
   $line_str =~ s/([\r\n]+)//m;
 
   @line = split(/\Q$delim\E/, $line_str, -1);
@@ -98,7 +118,7 @@ while ($line_str = <>) {
     $line[$local_field] = $trans_val;
   }
 
-  print join($delim, @line), $1;
+  return join($delim, @line), $1;
 }
 
 exit(0);
