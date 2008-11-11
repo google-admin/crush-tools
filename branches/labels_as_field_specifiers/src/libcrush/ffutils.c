@@ -384,6 +384,7 @@ ssize_t expand_label_list(const char *labels,
     i++;
     pos++;
   }
+  i++; /* count the last token */
 
   /* make sure the array can hold all of the indexes */
   if (*array == NULL) {
@@ -393,10 +394,10 @@ ssize_t expand_label_list(const char *labels,
     *array_sz = i;
   } else {
     if (*array_sz < i) {
-      *array_sz = arr_resize((void **) array,
-			     sizeof(int), *array_sz, i - *array_sz);
+      *array_sz = arr_resize((void **) array, sizeof(int),
+                             *array_sz, i - *array_sz);
       if (*array_sz == 0)
-	return -2;
+        return -2;
     }
   }
 
