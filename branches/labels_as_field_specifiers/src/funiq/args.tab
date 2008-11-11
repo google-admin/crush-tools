@@ -67,8 +67,16 @@ END_COPYRIGHT
 	  shortopt => 'f',
 	  longopt => 'fields',
 	  type => 'var',
-	  required => 1,
-	  description => 'fields to consider in the deduplication'
+	  required => 0,
+	  description => 'indexes of fields to consider in the deduplication'
+	},
+  {
+	  name => 'field_labels',
+	  shortopt => 'F',
+	  longopt => 'field-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of fields to consider in the deduplication'
 	},
 	{
 	  name => 'count',
