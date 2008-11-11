@@ -28,4 +28,22 @@ sub field_str {
   }
   return undef;
 }
+
+=item * fields_in_line()
+
+Counts the number of fields in a delimited string.
+
+=cut
+sub fields_in_line {
+  my $str = shift;
+  my $delim = shift;
+  my $n = 1;
+  my $i = 0;
+  while (($i = index($str, $delim, $i)) > 0) {
+    $n++;
+    $i += length($delim);
+  }
+  return $n;
+}
+
 1;
