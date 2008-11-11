@@ -67,22 +67,46 @@ END_COPYRIGHT
 	  longopt => 'output-fields',
 	  type => 'var',
 	  required => 0,
-	  description => 'fields to output'
+	  description => 'indexes of row fields to output'
+	},
+  {
+	  name => 'key_labels',
+	  shortopt => 'F',
+	  longopt => 'output-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of row fields to output'
 	},
 	{
 	  name => 'pivots',
 	  shortopt => 'p',
 	  longopt => 'pivot-fields',
 	  type => 'var',
-	  required => 1,
-	  description => 'fields to pivot on'
+	  required => 0,
+	  description => 'indexes of column fields to pivot on'
+	},
+  {
+	  name => 'pivot_labels',
+	  shortopt => 'P',
+	  longopt => 'pivot-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of column fields to pivot on'
 	},
 	{
 	  name => 'values',
 	  shortopt => 'v',
 	  longopt => 'value-fields',
 	  type => 'var',
-	  required => 1,
-	  description => 'fields to put into the pivoted cells'
+	  required => 0,
+	  description => 'indexes of data fields to put into the pivoted cells'
+	},
+  {
+	  name => 'value_labels',
+	  shortopt => 'A',
+	  longopt => 'value-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of data fields to put into the pivoted cells'
 	},
 );

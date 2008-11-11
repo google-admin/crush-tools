@@ -14,6 +14,7 @@
    limitations under the License.
  ********************************/
 #include "pivot_main.h"
+#include <dbfr.h>
 #include <ffutils.h>
 #include <hashtbl.h>
 #include <linklist.h>
@@ -25,6 +26,23 @@
 #define PIVOT_HASH_SZ 32
 #define MAX_FIELD_LEN 1024
 
+/* holds the expansions of the -f, -p, and -v arguments, or their
+ * label counterparts. */
+struct pivot_conf {
+  int *keys;
+  size_t keys_sz;
+  ssize_t n_keys;
+  int *pivots;
+  size_t pivots_sz;
+  ssize_t n_pivots;
+  int *values;
+  size_t values_sz;
+  ssize_t n_values;
+  int *value_precisions;
+};
+
+int configure_pivot(struct pivot_conf *conf, struct cmdargs *args,
+                    const char *header, const char *delim);
 void decrement_values(int *array, size_t sz);
 void *realloc_if_needed(char **target, size_t * cur_sz, const size_t new_sz);
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
@@ -57,6 +75,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   hashtbl_t key_hash;           /* outer hash */
   hashtbl_t *pivot_hash;        /* pointer for inner hashes */
 
+  struct pivot_conf conf;
   /* variables for keeping track of the unique pivot strings */
   hashtbl_t uniq_pivots;        /* set of all pivot strings */
   char **pivot_array;           /* list of all pivot keys */
@@ -65,24 +84,20 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   double *line_values;          /* array of values */
 
-  size_t arrsz;
-  int *keys, *pivots, *values;  /* field index lists */
-  size_t n_keys, n_pivots, n_values;  /* list sizes */
-  int *value_precisions;        /* floating-point precision of input values */
-
   char *keystr, *pivstr;        /* hash key strings */
   size_t keystr_sz, pivstr_sz;
 
-  char **headers;               /* array of header labels */
-  size_t n_headers;             /* number of fields */
+  char **headers = NULL;        /* array of header labels */
+  size_t n_headers = 0;         /* number of fields */
 
   char *inbuf;                  /* input line buffer */
   size_t inbuf_sz;              /* size of buffer */
 
-  char *fieldbuf;               /* to hold fields extracted from input */
-  size_t fieldbuf_sz;           /* size of field buffer */
+  char *fieldbuf = NULL;        /* to hold fields extracted from input */
+  size_t fieldbuf_sz = 0;       /* size of field buffer */
 
   FILE *fin;                    /* input file */
+  dbfr_t *in_reader;
 
   char empty_string[] = "";
 
@@ -95,60 +110,56 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   delim = args->delim;
 
-  /* set locale with values from the environment so strcoll()
-     will work correctly. */
-  setlocale(LC_ALL, "");
-  setlocale(LC_COLLATE, "");
-
-  keys = pivots = values = NULL;
-
-  /* turn field list strings into arrays of numbers */
-  arrsz = 0;
-  n_keys = expand_nums(args->keys, &keys, &arrsz);
-  arrsz = 0;
-  n_pivots = expand_nums(args->pivots, &pivots, &arrsz);
-  arrsz = 0;
-  n_values = expand_nums(args->values, &values, &arrsz);
-
-  value_precisions = calloc(n_values, sizeof(int));
-
-  /* decrement all the field numbers to be 0-based */
-  if (n_keys)
-    decrement_values(keys, n_keys);
-  if (n_pivots)
-    decrement_values(pivots, n_pivots);
-  if (n_values)
-    decrement_values(values, n_values);
-
-  /* TODO: get rid of this arbirary field length limitation */
-  fieldbuf = malloc(sizeof(char *) * MAX_FIELD_LEN);
-  fieldbuf_sz = MAX_FIELD_LEN;
-
   /* get first input file pointer - either trailing arg or stdin */
   if (optind == argc)
     fin = stdin;
   else
     fin = nextfile(argc, argv, &optind, "r");
+  if (!fin) {
+    fprintf(stderr, "%s: no valid input files specified.\n", argv[0]);
+    return EXIT_FILE_ERR;
+  }
+  in_reader = dbfr_init(fin);
 
+  /* set locale with values from the environment so strcoll()
+     will work correctly. */
+  setlocale(LC_ALL, "");
+  setlocale(LC_COLLATE, "");
 
-  /* INPUT SECTION */
+  memset(&conf, 0, sizeof(conf));
+  if (configure_pivot(&conf, args, in_reader->next_line, delim) != 0) {
+    fprintf(stderr, "%s: error parsing input field arguments.\n", argv[0]);
+    return EXIT_HELP;
+  }
+  if (conf.n_pivots == 0 || conf.n_values == 0) {
+    fprintf(stderr, "%s: -p/-P and -v/-A must be specified.\n", argv[0]);
+    return EXIT_HELP;
+  }
 
-  inbuf = NULL;                 /* have getline() allocate the buffer for us */
-  inbuf_sz = 0;
+  /* TODO: get rid of this arbirary field length limitation */
+  fieldbuf = malloc(MAX_FIELD_LEN);
+  if (! fieldbuf) {
+    warn("allocating field buffer");
+    return EXIT_MEM_ERR;
+  }
+  fieldbuf_sz = MAX_FIELD_LEN;
 
   /* extract headers from first line of input if necessary */
   if (args->keep_header) {
 
-    if (getline(&inbuf, &inbuf_sz, fin) < 1)
+    if (dbfr_getline(in_reader) < 1) {
+      fprintf(stderr, "%s: unexpected end of file.\n", argv[0]);
       return EXIT_FILE_ERR;
-    chomp(inbuf);
-    n_headers = fields_in_line(inbuf, delim);
+    }
+    chomp(in_reader->current_line);
+    n_headers = fields_in_line(in_reader->current_line, delim);
     headers = malloc(sizeof(char *) * n_headers);
     if (!headers)
       return EXIT_MEM_ERR;
 
     for (i = 0; i < n_headers; i++) {
-      get_line_field(fieldbuf, inbuf, fieldbuf_sz - 1, i, args->delim);
+      get_line_field(fieldbuf, in_reader->current_line, fieldbuf_sz - 1,
+                     i, delim);
       headers[i] = malloc(sizeof(char *) * strlen(fieldbuf) + 1);
       strcpy(headers[i], fieldbuf);
     }
@@ -159,10 +170,6 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
     fprintf(stderr, "\n");
 #endif
-  } else {
-    /* avoid compiler warnings */
-    n_headers = 0;
-    headers = NULL;
   }
 
   /* these two buffers will have enough capacity to hold the entire input line,
@@ -178,41 +185,43 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   n_pivot_keys = 0;
 
   /* no keys specified?  set keystr to an empty string */
-  if (!n_keys) {
+  if (!conf.n_keys) {
     keystr = empty_string;
   }
 
   while (fin != NULL) {
 
-    while (getline(&inbuf, &inbuf_sz, fin) > 0) {
+    while (dbfr_getline(in_reader) > 0) {
       int value_in_hash = 1;
       int pivot_in_hash = 1;
 
-      chomp(inbuf);
-      if (n_keys) {
+      chomp(in_reader->current_line);
+      if (conf.n_keys) {
         /* this could validly return NULL if both sizes are 0 the first time thru,
            when keystr is still NULL, but that shouldn't happen */
-        if (realloc_if_needed(&keystr, &keystr_sz, inbuf_sz) == NULL) {
+        if (realloc_if_needed(&keystr, &keystr_sz,
+                              in_reader->current_line_sz) == NULL) {
           fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           break;
         }
       }
 
-      if (n_pivots) {
-        if (realloc_if_needed(&pivstr, &pivstr_sz, inbuf_sz) == NULL) {
+      if (conf.n_pivots) {
+        if (realloc_if_needed(&pivstr, &pivstr_sz,
+                              in_reader->current_line_sz) == NULL) {
           fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           break;
         }
       }
 
       /* make key string from keys[] */
-      if (n_keys)
-        extract_fields_to_string(inbuf, keystr, keystr_sz, keys, n_keys,
-                                 args->delim);
+      if (conf.n_keys)
+        extract_fields_to_string(in_reader->current_line, keystr, keystr_sz,
+                                 conf.keys, conf.n_keys, delim);
 
       /* make key string from pivots[] */
-      extract_fields_to_string(inbuf, pivstr, pivstr_sz, pivots, n_pivots,
-                               args->delim);
+      extract_fields_to_string(in_reader->current_line, pivstr, pivstr_sz,
+                               conf.pivots, conf.n_pivots, delim);
 
 #ifdef CRUSH_DEBUG
       if (n_keys)
@@ -220,7 +229,6 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       if (n_pivots)
         fprintf(stderr, "pivot string: %s\n", pivstr);
 #endif
-
 
       /* get hashtable value */
       pivot_hash = (hashtbl_t *) ht_get(&key_hash, keystr);
@@ -232,30 +240,30 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
 
       line_values = ht_get(pivot_hash, pivstr);
       if (!line_values) {
-        line_values = malloc(sizeof(double) * n_values);
-        memset(line_values, 0, sizeof(double) * n_values);
+        line_values = malloc(sizeof(double) * conf.n_values);
+        memset(line_values, 0, sizeof(double) * conf.n_values);
         value_in_hash = 0;
       }
 
 
       /* add in values */
-      for (i = 0; i < n_values; i++) {
+      for (i = 0; i < conf.n_values; i++) {
         tmplen =
-          get_line_field(fieldbuf, inbuf, fieldbuf_sz - 1, values[i],
-                         args->delim);
+          get_line_field(fieldbuf, in_reader->current_line, fieldbuf_sz - 1,
+                         conf.values[i], delim);
         if (tmplen > 0) {
           line_values[i] += atof(fieldbuf);
 
-          /* remember the greatest input floating-point precision for each field */
+          /* remember the greatest input floating-point precision for each
+           * field */
           tmplen = float_str_precision(fieldbuf);
-          if (value_precisions[i] < tmplen) {
+          if (conf.value_precisions[i] < tmplen) {
 #ifdef CRUSH_DEBUG
             fprintf(stderr, "setting precision to %d for field %d\n", tmplen,
                     i);
 #endif
-            value_precisions[i] = tmplen;
+            conf.value_precisions[i] = tmplen;
           }
-
         }
       }
 
@@ -271,8 +279,19 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       ht_put(&uniq_pivots, pivstr, (void *) 1);
     }
 
-    fclose(fin);
+    dbfr_close(in_reader);
     fin = nextfile(argc, argv, &optind, "r");
+    if (fin) {
+      in_reader = dbfr_init(fin);
+      /* reconfigure in case the fields are rearranged in the new file */
+      if (configure_pivot(&conf, args, in_reader->next_line, delim) != 0) {
+        fprintf(stderr, "%s: error parsing input field arguments.\n", argv[0]);
+        return EXIT_HELP;
+      }
+      /* throw out headers from all files after the first. */
+      if (args->keep_header)
+        dbfr_getline(in_reader);
+    }
   }
 
   n_key_strings = key_hash.nelems;
@@ -319,25 +338,25 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       exit(EXIT_MEM_ERR);
     }
 
-    if (n_keys) {
-      for (i = 0; i < n_keys; i++)
-        printf("%s%s", headers[keys[i]], delim);
+    if (conf.n_keys) {
+      for (i = 0; i < conf.n_keys; i++)
+        printf("%s%s", headers[conf.keys[i]], delim);
     }
     for (i = 0; i < n_pivot_keys; i++) {
       pivot_label[0] = 0x00;
 
       /* get the current pivot field values & build a label with them */
-      for (j = 0; j < n_pivots; j++) {
+      for (j = 0; j < conf.n_pivots; j++) {
         get_line_field(fieldbuf, pivot_array[i], fieldbuf_sz - 1, j, delim);
         strcat(pivot_label, fieldbuf);
-        if (j != n_pivots - 1)
+        if (j != conf.n_pivots - 1)
           strcat(pivot_label, " - ");
       }
 
       /* get the value field labels & print them with the pivot label */
-      for (j = 0; j < n_values; j++) {
-        printf("%s: %s", pivot_label, headers[values[j]]);
-        if (j != n_values - 1)
+      for (j = 0; j < conf.n_values; j++) {
+        printf("%s: %s", pivot_label, headers[conf.values[j]]);
+        if (j != conf.n_values - 1)
           fputs(delim, stdout);
       }
       /* TODO: segfault is happening around here */
@@ -365,13 +384,13 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     /* construct string for empty value set.  this should be big enough for
        n_values worth of zeros (of the appropriate precision) and delimiters
        in between.  here we'll just guess that a precision of 8 is enough. */
-    empty_value_string = malloc((sizeof(char) * n_values * 8) +
-                                (strlen(delim) * n_values));
+    empty_value_string = malloc((sizeof(char) * conf.n_values * 8) +
+                                (strlen(delim) * conf.n_values));
     empty_value_string[0] = 0x00;
-    for (i = 0; i < n_values; i++) {
+    for (i = 0; i < conf.n_values; i++) {
       sprintf(empty_value_string, "%s%.*f", empty_value_string,
-              value_precisions[i], 0.0F);
-      if (i != n_values - 1)
+              conf.value_precisions[i], 0.0F);
+      if (i != conf.n_values - 1)
         strcat(empty_value_string, delim);
     }
 
@@ -418,9 +437,9 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
         if (!line_values)
           fputs(empty_value_string, stdout);
         else {
-          for (j = 0; j < n_values; j++) {
-            printf("%.*f%s", value_precisions[j], line_values[j],
-                   j != n_values - 1 ? delim : "");
+          for (j = 0; j < conf.n_values; j++) {
+            printf("%.*f%s", conf.value_precisions[j], line_values[j],
+                   j != conf.n_values - 1 ? delim : "");
           }
         }
         if (k != n_pivot_keys - 1)
@@ -445,16 +464,54 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     free(pivot_array);
   if (fieldbuf)
     free(fieldbuf);
-  if (keys)
-    free(keys);
-  if (pivots)
-    free(pivots);
-  if (values)
-    free(values);
-  if (value_precisions)
-    free(value_precisions);
 
   return EXIT_OKAY;
+}
+
+int configure_pivot(struct pivot_conf *conf, struct cmdargs *args,
+                    const char *header, const char *delim) {
+  conf->n_keys = 0;
+  if (args->keys) {
+    conf->n_keys = expand_nums(args->keys, &(conf->keys), &(conf->keys_sz));
+  } else if (args->key_labels) {
+    conf->n_keys = expand_label_list(args->key_labels, header, delim,
+                                     &(conf->keys), &(conf->keys_sz));
+    args->keep_header = 1;
+  }
+  if (conf->n_keys < 0)
+    return -1;
+  else
+    decrement_values(conf->keys, conf->n_keys);
+
+  conf->n_pivots = 0;
+  if (args->pivots) {
+    conf->n_pivots = expand_nums(args->pivots, &(conf->pivots),
+                                 &(conf->pivots_sz));
+  } else if (args->pivot_labels) {
+    conf->n_pivots = expand_label_list(args->pivot_labels, header, delim,
+                                       &(conf->pivots), &(conf->pivots_sz));
+    args->keep_header = 1;
+  }
+  if (conf->n_pivots < 0)
+    return -1;
+  else
+    decrement_values(conf->pivots, conf->n_pivots);
+
+  conf->n_values = 0;
+  if (args->values) {
+    conf->n_values = expand_nums(args->values, &(conf->values),
+                                 &(conf->values_sz));
+  } else if (args->value_labels) {
+    conf->n_values = expand_label_list(args->value_labels, header, delim,
+                                       &(conf->values), &(conf->values_sz));
+    args->keep_header = 1;
+  }
+  if (conf->n_values < 0)
+    return -1;
+  else
+    decrement_values(conf->values, conf->n_values);
+  conf->value_precisions = calloc(conf->n_values, sizeof(int));
+  return 0;
 }
 
 void decrement_values(int *array, size_t sz) {
