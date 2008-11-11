@@ -5,7 +5,7 @@ expected=$test_dir/test_$test_number.expected
 
 subtest=1
 output=$test_dir/test_$test_number.$subtest.out
-$bin -p -f 4 [0-9] $input ${input}2 > $output
+$bin -p -f 4 [0-9] $input $input > $output
 if [ $? -ne 0 ] || [ "`diff -q $expected $output`" ]; then
   test_status $test_number $subtest "$description (index)" FAIL
 else
@@ -15,7 +15,7 @@ fi
 
 subtest=2
 output=$test_dir/test_$test_number.$subtest.out
-$bin -F field3 [0-9] $input ${input}2 > $output
+$bin -F field3 [0-9] $input $input > $output
 if [ $? -ne 0 ] || [ "`diff -q $expected $output`" ]; then
   test_status $test_number $subtest "$description (label)" FAIL
 else
