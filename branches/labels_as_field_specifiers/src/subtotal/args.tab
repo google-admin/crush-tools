@@ -90,15 +90,31 @@ END_COPYRIGHT
 	  shortopt => 'k',
 	  longopt => 'key',
 	  type => 'var',
-	  required => 1,
+	  required => 0,
 	  description => '1-based column number for subtotal key'
+	},
+  {
+	  name => 'key_label',
+	  shortopt => 'K',
+	  longopt => 'key-label',
+	  type => 'var',
+	  required => 0,
+	  description => 'label of column for subtotal key'
 	},
 	{
 	  name => 'sum',
 	  shortopt => 's',
 	  longopt => 'sum',
 	  type => 'var',
-	  required => 1,
+	  required => 0,
 	  description => 'list of 1-based column numbers to be subtotaled'
+	},
+  {
+	  name => 'sum_labels',
+	  shortopt => 'S',
+	  longopt => 'sum-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'list of column labels to be subtotaled'
 	}
 );
