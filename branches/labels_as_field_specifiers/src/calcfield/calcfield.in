@@ -15,188 +15,127 @@
 #  limitations under the License.
 
 use strict;
-use Getopt::Std;
-use vars qw($opt_h $opt_v $opt_d $opt_e $opt_i $opt_p
-            $opt_b $opt_c $opt_r $opt_V);
+use Getopt::Long;
 
-getopts('hVvprd:e:i:b:c:');
+my ($show_help, $show_version, $verbose, $delim, $expression, $insert_idx,
+    $replace_idx, $preserve_header, $fallback_value, $new_label);
 
-# Define default delimiter
-my $delim = $ENV{"DELIMITER"} || chr(0xfe);
+$insert_idx = -1;
+$fallback_value = '';
+$delim = $ENV{'DELIMITER'} || chr(0xfe);
+$new_label = "Calculated-Field";
 
-if ($opt_h) {
-    print << "HELP";
+Getopt::Long::Configure("no_ignore_case");
+GetOptions("help" => \$show_help,
+           "Version" => \$show_version,
+           "verbose" => \$verbose,
+           "delim=s" => \$delim,
+           "expression=s" => \$expression,
+           "insert=n" => \$insert_idx,
+           "replace=n" => \$replace_idx,
+           "preserve-header" => \$preserve_header,
+           "b|fallback-value=s" => \$fallback_value,
+           "c|new-label=s" => \$new_label,
+          );
 
-usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] \
-       -e <expression> -b <fallback_result> [-c <column_name>]
-
- -h              print this message and exit
- -v              produce verbose runtime messages (for debugging)
- -p              preserve the first line (header) in the input
- -i <I>          insert the calculated result at index I.  
-                     (default: append the new field to the line)
- -r              replace the value at the index specified in -i instead
-                     of inserting a new field at that position.
- -d <D>          specifies D as the field separator
- -e <EXPR>       the expression to calculate (see below)
- -b <FALLBACK>   use FALLBACK as the field value if the formula is not properly
-                   evaluated (required)
- -c <LABEL>      the name of the column for the calculated field; only
-                   used in conjuction with -p
-
-the expression specified in -e may contain references to fields, e.g.
-
-  -e '[1] + [2]'
-
-if the -p option is active, you may also use the field names, e.g.
-  
-  -e '[Clicks] + [Impressions]'
-
-HELP
-
-   exit(0);
+if ($show_help) {
+  usage();
+  exit 1;
 }
 
-if ($opt_V) {
+if ($show_version) {
   crush_version();
   exit(0);
 }
 
-# Evaluate event ids
+if ($insert_idx > 0) {
+  $insert_idx--;
+}
+if (defined($replace_idx) && $replace_idx > 0) {
+  $replace_idx--;
+}
+
+$delim = expand_chars($delim);
+
+if (! $expression) {
+  warn "$0: -e is required.\n";
+  exit 1;
+}
+
 my $line = "";
 my @parts = ();
 my $i = 0;
 my $result = 0;
-my %header = ();
-
-if ($opt_d) {
-  $delim = $opt_d;
-} else {
-  print "No delimiter given, assuming $delim\n" if (defined($opt_v));
-}
-$delim = expand_chars($delim);
-
-# Check index option. Set default if not provided.
-if (!defined($opt_i) || !$opt_i =~ m/[1-9][0-9]*/) {
-  $opt_i = -1;
-  print "No index for the calculated field given, appending the field at the end of the row.\n" if (defined($opt_v));
-}
-
-# Check formula. Bail out if it is not given. If given, check the formulas validity.
-if (!defined($opt_e)) {
-  die "$0: No formula given. Please use option -f to provide one.\n";
-} else {
-  print "Using formula \"" . $opt_e . "\".\n" if (defined($opt_v));
-}
-
-# require a -b (fallback) value
-if (!defined($opt_b)) {
-  die "$0: No fallback result given. Please use option -b to provide one.\n";
-}
-
-# Check the column description
-if (!defined($opt_c)) {
-  $opt_c = "Calculated-Field";
-  print "No column name given - using \"$opt_c\"\n" if (defined($opt_v));
-}
+my %header_map;
 
 # Should we preserve the header line?
-if (defined($opt_p)) {
+if ($preserve_header) {
   if ($line = <>) {
     $line = trim($line);  
     @parts = split(/\Q$delim\E/, $line);
     
     # map header labels to indexes (needed during the expressions evaluation).
-    for (0 .. $#parts ) {
-      $header{$parts[$_]} = $_;
+    for (0 .. $#parts) {
+      $header_map{$parts[$_]} = $_;
     }
 
-    print put_field($line, \@parts, $delim, $opt_c, $opt_i, $opt_r) . "\n";
+    print put_field(\@parts, $delim, $new_label,
+                    $insert_idx, $replace_idx) . "\n";
   }
 }
 
-my $calc_func;
+my  $calc_func = create_calc_func($expression, \%header_map);
 
 while ($line = <>) {
   $line = trim($line);
   @parts = split(/\Q$delim\E/, $line, -1);
 
-  $calc_func = create_calc_func($opt_e, \@parts, $opt_b)
-    unless $calc_func;
-  $result = $calc_func->(\@parts, $opt_b);
+  $result = $calc_func->(\@parts, $fallback_value);
 
-  print put_field($line, \@parts, $delim, $result, $opt_i, $opt_r) . "\n";
+  print put_field(\@parts, $delim, $result,
+                  $insert_idx, $replace_idx) . "\n";
 }
 
 
 # creates a new line with the calculated value in place.
 sub put_field {
-  my ($line, $parts, $delim, $value, $pos, $repl) = @_;
+  my ($parts, $delim, $value, $pos, $repl) = @_;
 
-  if ($pos == -1 ||
-      $pos > scalar @{$parts} ||
-      (defined($opt_r) && $pos == scalar @{$parts})) {
-    # Put the new value at the end of the line.
-
-    if (defined($repl)) {
-      # replace the existing field.
-      pop(@{$parts});
-      $line = join($delim, @{$parts}) . $delim . $value;
-    } else {
-      $line = $line . $delim . $value;
-    }
-  } elsif ($pos == 1) {
-    # Put the new value at the beginning of the line.
-
-    if (defined($repl)) {
-      # replace the existing field.
-      shift(@{$parts});
-      $line = $value . $delim . join($delim, @{$parts});
-    } else {
-      $line = $value . $delim . $line;
-    }
+  if (defined($repl)) {
+    $parts->[$repl] = $value;
+    return join($delim, @{$parts});
   } else {
-    # Put the new value somewhere in the middle of the line.
-
-    if (defined($repl)) {
-      # replace the existing field.
-      my @result = split(/\Q$delim\E/, $line, $pos + 1);
-      my $suffix = pop(@result);
-      my $old    = pop(@result);
-
-      $line = join($delim, @result) . $delim . $value . $delim . $suffix;
-    } else {
-      my @result = split(/\Q$delim\E/, $line, $pos);
-      my $suffix = pop(@result);
-
-      $line = join($delim, @result) . $delim . $value . $delim . $suffix;
+    if ($pos < 0) {
+      $pos = scalar(@{$parts}) + $pos + 1;
     }
+    my @tmp = splice(@{$parts}, 0, $pos + 1);
+    push @tmp, $value, @{$parts};
+    return join($delim, @tmp);
   }
-
-  return $line;
 }
 
 sub create_calc_func {
-  my($formula, $parts, $fallback) = @_;
+  my $formula = shift;
+  my $header_map = shift;
 
   my $i = 0;
-
-  $formula = "\$result = " . $formula;
 
   # [ N ] -> $_[N-1]
   $formula =~ s/\[\s*(\d+)\s*\]/\$parts->[$1 - 1]/g;
 
-  if (%header ) {
-    # [ FieldName ] -> $_[ indexOf(FieldName) ]
-    while ($formula =~ /\[\s*([-a-zA-Z]+)\s*\]/g) {
-      my $label_idx = $header{$1};
-      if (defined($label_idx) ) {
-        $formula =~ s/\[\s*[-a-zA-Z]+\s*\]/\$parts->[$label_idx]/;
+  if ($header_map) {
+    # [ FieldName ] -> $parts->[ indexOf(FieldName) ]
+    while ($formula =~ /(\[\s*)([A-Za-z][^\]]+)(\s*\])/g) {
+      my $label_idx = $header_map->{$2};
+      if (defined($label_idx)) {
+        $formula =~ s/\Q$1$2$3\E/\$parts->\[$label_idx\]/;
       }
       else {
-        die "$0: undefined header label: $1\n";
+        die "$0: undefined header label: $2\n";
       }
     }
+  } else {
+    warn "no header map supplied";
   }
 
   my $calc_func_txt = <<CALC_FUNC;
@@ -204,7 +143,7 @@ sub create_calc_func {
   my(\$parts, \$fallback) = \@_;
   my \$result;
 
-  eval { $formula };
+  eval { \$result = $formula };
 
   if (\$@) {
     \$result = \$fallback;
@@ -226,6 +165,40 @@ sub trim {
   $text =~ s/\s+$//;
 
   return $text;
+}
+
+sub usage {
+  print << "HELP";
+
+usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] \
+       -e <expression> -b <fallback_result> [-c <column_name>]
+
+ -h, --help             print this message and exit
+ -v, --verbose          produce verbose runtime messages (for debugging)
+ -p, --preserve-header  preserve the first line (header) in the input
+ -i, --insert=<I>       insert the calculated result at index I.  
+                          (default: append the new field to the line)
+ -r, --replace=<I>      replace the value at the index specified in -i instead
+                        of inserting a new field at that position.
+ -d, --delim=<D>        specifies D as the field separator
+ -e, --expression <EXPR>
+                        the expression to calculate (see below)
+ -b, --fallback-value=<FALLBACK>
+                        use FALLBACK as the field value if the formula is not
+                          properly evaluated (default: empty string)
+ -c, --new-label=<LABEL>
+                        the name of the column for the calculated field; only
+                          used in conjuction with -p
+
+the expression specified in -e may contain references to fields, e.g.
+
+  -e '[1] + [2]'
+
+if the -p option is active, you may also use the field names, e.g.
+  
+  -e '[Clicks] + [Impressions]'
+
+HELP
 }
 
 m4_include(utils.pl)
