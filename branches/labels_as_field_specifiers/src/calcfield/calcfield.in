@@ -18,12 +18,11 @@ use strict;
 use Getopt::Long;
 
 my ($show_help, $show_version, $verbose, $delim, $expression, $insert_idx,
-    $replace_idx, $preserve_header, $fallback_value, $new_label);
+    $replace_idx, $insert_before_label, $insert_after_label, $preserve_header,
+    $fallback_value, $new_label);
 
-$insert_idx = -1;
 $fallback_value = '';
 $delim = $ENV{'DELIMITER'} || chr(0xfe);
-$new_label = "Calculated-Field";
 
 Getopt::Long::Configure("no_ignore_case");
 GetOptions("help" => \$show_help,
@@ -33,6 +32,8 @@ GetOptions("help" => \$show_help,
            "expression=s" => \$expression,
            "insert=n" => \$insert_idx,
            "replace=n" => \$replace_idx,
+           "Before=s" => \$insert_before_label,
+           "After=s" => \$insert_after_label,
            "preserve-header" => \$preserve_header,
            "b|fallback-value=s" => \$fallback_value,
            "c|new-label=s" => \$new_label,
@@ -48,11 +49,14 @@ if ($show_version) {
   exit(0);
 }
 
-if ($insert_idx > 0) {
+if (defined($insert_idx) && $insert_idx > 0) {
   $insert_idx--;
-}
-if (defined($replace_idx) && $replace_idx > 0) {
+} elsif (defined($replace_idx) && $replace_idx > 0) {
   $replace_idx--;
+} elsif ($insert_before_label || $insert_after_label) {
+  $preserve_header = 1;
+} else {
+  $insert_idx = -1;
 }
 
 $delim = expand_chars($delim);
@@ -60,6 +64,14 @@ $delim = expand_chars($delim);
 if (! $expression) {
   warn "$0: -e is required.\n";
   exit 1;
+} elsif ($expression =~ /\[\s*[A-Za-z][^\]]*\s*\]/) {
+  $preserve_header = 1;
+}
+
+if ($new_label) {
+  $preserve_header = 1;
+} elsif ($preserve_header) {
+  $new_label = "Calculated-Field";
 }
 
 my $line = "";
@@ -79,6 +91,19 @@ if ($preserve_header) {
       $header_map{$parts[$_]} = $_;
     }
 
+    if ($insert_before_label) {
+      if (! defined $header_map{$insert_before_label}) {
+        print STDERR "$0: label specified in -B was not found.\n";
+        exit 1;
+      }
+      $insert_idx = $header_map{$insert_before_label};
+    } elsif ($insert_after_label) {
+      if (! defined $header_map{$insert_after_label}) {
+        print STDERR "$0: label specified in -A was not found.\n";
+        exit 1;
+      }
+      $insert_idx = $header_map{$insert_after_label} + 1;
+    }
     print put_field(\@parts, $delim, $new_label,
                     $insert_idx, $replace_idx) . "\n";
   }
@@ -108,7 +133,7 @@ sub put_field {
     if ($pos < 0) {
       $pos = scalar(@{$parts}) + $pos + 1;
     }
-    my @tmp = splice(@{$parts}, 0, $pos + 1);
+    my @tmp = splice(@{$parts}, 0, $pos);
     push @tmp, $value, @{$parts};
     return join($delim, @tmp);
   }
@@ -190,14 +215,15 @@ usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] \
                         the name of the column for the calculated field; only
                           used in conjuction with -p
 
-the expression specified in -e may contain references to fields, e.g.
+The expression specified in -e may contain indexes of fields, e.g.
 
   -e '[1] + [2]'
 
-if the -p option is active, you may also use the field names, e.g.
+You may also use the field names, e.g.
   
   -e '[Clicks] + [Impressions]'
 
+Use of the latter form implies that the header should be preserved.
 HELP
 }
 
