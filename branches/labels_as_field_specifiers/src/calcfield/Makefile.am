@@ -14,7 +14,11 @@ EXTRA_DIST = args.tab calcfield.in test.conf \
              test/test_00.sh test/test_00.expected \
              test/test_01.sh test/test_01.expected \
              test/test_02.sh test/test_02.expected \
-             test/test_03.sh test/test_03.expected
+             test/test_03.sh test/test_03.expected \
+             test/test_04.sh test/test_04.0.expected \
+             test/test_04.1.expected test/test_04.2.expected \
+             test/test_04.3.expected
+
 man1_MANS = calcfield.1
 calcfield.1 : args.tab
 	../bin/genman.pl args.tab > $@

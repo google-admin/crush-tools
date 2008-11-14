@@ -16,7 +16,8 @@ EXTRA_DIST = args.tab test.conf test/test.in \
              test/test_00.sh test/test_00.expected \
              test/test_01.sh test/test_01.expected \
              test/test_02.sh test/test_02.expected \
-             test/test_03.sh test/test_03.expected
+             test/test_03.sh test/test_03.expected \
+						 test/test_04.sh test/test_04.expected
 
 man1_MANS = grepfield.1
 grepfield.1 : args.tab
