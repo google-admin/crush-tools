@@ -97,5 +97,13 @@ ENDCODE
  	  type => 'var',
  	  required => 0,
  	  description => 'specifies fields to use to create a new string (ex: -f 3,4,1,5,2)',
-	}
+	},
+  {
+    name => 'field_labels',
+    shortopt => 'F',
+    longopt => 'field-labels',
+    type => 'var',
+    required => 0,
+    description => 'a list of labels specifying the output field order',
+  },
 );

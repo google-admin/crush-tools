@@ -16,7 +16,7 @@
 #include "funiq_main.h"
 
 #include <ffutils.h>
-
+#include <dbfr.h>
 
 #define FIELD_LEN_LIMIT 255
 
@@ -33,17 +33,17 @@
 int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   char delim[] = { 0xfe, 0x00 };  /* the delimiter */
-  int *fields;                  /* array of field indexes */
-  size_t fields_sz;             /* the size of the array */
-  size_t n_fields;              /* the number of things in the array */
+  int *fields = NULL;   /* array of field indexes */
+  size_t fields_sz = 0; /* the size of the array */
+  size_t n_fields;      /* the number of things in the array */
 
-  FILE *in;                     /* input file pointer */
+  FILE *in;
+  dbfr_t *in_reader;
+
   char **prev_line;             /* fields from previous line of input */
   char cur_field[FIELD_LEN_LIMIT];
 
   int i;
-  char *buf;
-  size_t bufsz;
 
   int dup_count = 1;            /* used with -c option */
   char linebreak[3];
@@ -56,15 +56,26 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
   expand_chars(args->delim);
 
-  /* turn the user-provided list of field numbers
-     into an array of ints */
-  fields = malloc(sizeof(int) * 32);
-  if (!fields) {
-    fprintf(stderr, "%s: out of memory\n", getenv("_"));
-    return (EXIT_MEM_ERR);
+  /* get the first file */
+  if (optind < argc)
+    in = nextfile(argc, argv, &optind, "r");
+  else
+    in = stdin;
+  if (!in) {
+    fprintf(stderr, "%s: no valid input files\n", argv[0]);
+    return EXIT_HELP;
   }
-  fields_sz = 32;
-  n_fields = expand_nums(args->fields, &fields, &fields_sz);
+  in_reader = dbfr_init(in);
+
+  if (args->fields)
+    n_fields = expand_nums(args->fields, &fields, &fields_sz);
+  else if (args->field_labels)
+    n_fields = expand_label_list(args->field_labels, in_reader->next_line,
+                                 args->delim, &fields, &fields_sz);
+  if (n_fields < 0) {
+    fprintf(stderr, "%s: error expanding field list\n", argv[0]);
+    return EXIT_HELP;
+  }
 
   /* prepare the array of previous field values */
   prev_line = malloc(sizeof(char *) * n_fields);
@@ -72,48 +83,39 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
     prev_line[i] = malloc(sizeof(char *) * FIELD_LEN_LIMIT);
   }
 
-  /* get the first file */
-  if (optind < argc)
-    in = nextfile(argc, argv, &optind, "r");
-  else
-    in = stdin;
-
   /* get the first line to seed the prev_line array */
-  buf = NULL;
-  bufsz = 0;
+  i = dbfr_getline(in_reader);
 
-  i = getline(&buf, &bufsz, in);
-
-  /* ASSUMPTION: there can only be 1 or 2 chars in a linebreak
-   * sequence */
-  if (buf[i - 2] == '\r' || buf[i - 2] == '\n') {
-    linebreak[0] = buf[i - 2];
-    linebreak[1] = buf[i - 1];
+  /* preserve input linebreak style.  assume there can only be 1 or 2 chars
+   * in a linebreak sequence */
+  if (in_reader->current_line[i - 2] == '\r' ||
+      in_reader->current_line[i - 2] == '\n') {
+    linebreak[0] = in_reader->current_line[i - 2];
+    linebreak[1] = in_reader->current_line[i - 1];
     linebreak[2] = '\0';
   } else {
-    linebreak[0] = buf[i - 1];
+    linebreak[0] = in_reader->current_line[i - 1];
     linebreak[1] = '\0';
   }
-  chomp(buf);
+  chomp(in_reader->current_line);
 
   for (i = 0; i < n_fields; i++) {
-    get_line_field(prev_line[i], buf, FIELD_LEN_LIMIT - 1,
+    get_line_field(prev_line[i], in_reader->current_line, FIELD_LEN_LIMIT - 1,
                    fields[i] - 1, args->delim);
   }
-  printf("%s", buf);            /* first line is never a dup */
+  printf("%s", in_reader->current_line); /* first line is never a dup */
 
   while (in) {
     int matching_fields;
 
-    while (getline(&buf, &bufsz, in) > 0) {
-
-      chomp(buf);
+    while (dbfr_getline(in_reader) > 0) {
+      chomp(in_reader->current_line);
 
       matching_fields = 0;
 
       for (i = 0; i < n_fields; i++) {
         /* extract the field from the input line */
-        get_line_field(cur_field, buf, FIELD_LEN_LIMIT - 1,
+        get_line_field(cur_field, in_reader->current_line, FIELD_LEN_LIMIT - 1,
                        fields[i] - 1, args->delim);
 
         /* see if the field is a duplicate */
@@ -136,15 +138,17 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
           /* give the previous output line a linebreak */
           printf("%s", linebreak);
         }
-        printf("%s", buf);
+        printf("%s", in_reader->current_line);
         dup_count = 1;
       } else {
         dup_count++;
       }
     }
 
-    fclose(in);
+    dbfr_close(in_reader);
     in = nextfile(argc, argv, &optind, "r");
+    if (in)
+      in_reader = dbfr_init(in);
   }
 
   if (args->count) {

@@ -16,42 +16,11 @@
 #include "reorder_main.h"
 #include "reorder.h"
 
-size_t n_swap = 0;
-
-/* TODO: get rid of arbitrary limit on number of swaps */
-int swap[32][3];
-
-/** @brief copies ct into s, swapping fields in the process.
-  * 
-  * @param s destination buffer
-  * @param ct source buffer
-  * @param d delimiter
-  */
-void doswap(char *s, char *ct, const char *d);
-
-/** @brief creates in s a new string delimited by d, containing the fields
-  * from ct in the order specified by o.
-  *
-  * because a field may be included multiple times in the destination buffer,
-  * it is entirely possible for the output to be larger than the input, so
-  * this function may dynamically resize s as necessary.
-  *
-  * @param s address of destination buffer
-  * @param ct source buffer
-  * @param s_sz address of the size of destination buffer
-  * @param d delimiter
-  * @param o array of field numbers
-  * @param n number of elements in o
-  *
-  * @return the length of s on success; < 0 on error
-  */
-int docut(char **s, const char *ct, size_t * s_sz, const char *d,
-          const int *order, const size_t n);
+llist_t *swap_arg_list = NULL;
 
 int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *fp, *fpout;
-  char *lbuf = NULL;            /* line buffer */
-  size_t lbs = 0;               /* line buffer size */
+  dbfr_t *reader;
 
   char *wbuf = NULL;            /* working buffer */
   size_t wbs = 0;               /* working buffer size */
@@ -60,17 +29,9 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
   size_t order_sz = 0;
   size_t order_elems = 0;
 
-  char default_delim[] = { 0xfe, 0x00 };
+  llist_t swap_list;
 
-#ifdef CRUSH_DEBUG
-  int i;
-  for (i = 0; i < n_swap; i++) {
-    if (swap[i][2] == REORDER_TYPE_SWAP)
-      printf("swap %d with %d\n", swap[i][0], swap[i][1]);
-    else
-      printf("move %d to %d\n", swap[i][0], swap[i][1]);
-  }
-#endif
+  char default_delim[] = { 0xfe, 0x00 };
 
   if (!args->delim) {
     args->delim = getenv("DELIMITER");
@@ -87,86 +48,121 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
   else
     fp = nextfile(argc, argv, &optind, "r");
 
-  if (fp == NULL)
+  reader = dbfr_init(fp);
+
+  if (reader == NULL)
     return EXIT_FILE_ERR;
 
   if (args->fields) {
-
     order_elems = expand_nums(args->fields, &order, &order_sz);
 
     if (args->verbose) {
       int i;
-      fprintf(stderr, "there are %d fields: ", order_sz);
+      fprintf(stderr, "there are %d fields: ", order_elems);
       for (i = 0; i < order_elems; i++) {
         fprintf(stderr, " %d", order[i]);
       }
       fprintf(stderr, "\n");
     }
+  } else if (args->field_labels) {
+    order_elems = expand_label_list(args->field_labels, reader->next_line,
+                                    args->delim, &order, &order_sz);
+    if (order_elems == -1) {
+      fprintf(stderr, "%s: one or more labels in -F were not found.\n",
+              getenv("_"));
+      return EXIT_FAILURE;
+    } else if (order_elems < 1) {
+      fprintf(stderr, "%s: error translating labels in -F.\n",
+              getenv("_"));
+      return EXIT_FAILURE;
+    }
+    if (args->verbose) {
+    	int idx;
+    	fprintf(stderr, "%s: %d field translated from labels: ",
+              getenv("_"), order_elems);
+    	for (idx = 0; idx < order_elems; idx++) {
+    		fprintf(stderr, " %d", order[idx]);
+      }
+      fputs("\n", stderr);
+    }
+  } else if (swap_arg_list) {
+    ll_list_init(&swap_list, free, NULL);
+    if (parse_swap_list(swap_arg_list, &swap_list, reader->next_line,
+                        args->delim) != 0) {
+      return EXIT_FAILURE;
+    }
   }
 
   while (fp != NULL) {
-    while (getline(&lbuf, &lbs, fp) > 0) {
-
+    while (dbfr_getline(reader) > 0) {
       /* make sure there's enough room in the working buffer */
       if (wbuf == NULL) {
-        if ((wbuf = malloc(lbs)) == NULL)
-          goto memerror;
-        wbs = lbs;
-      } else if (wbs < lbs) {
+        if ((wbuf = malloc(reader->current_line_sz)) == NULL) {
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
+          return EXIT_MEM_ERR;
+        }
+        wbs = reader->current_line_sz;
+      } else if (wbs < reader->current_line_sz) {
         /* if realloc unsuccessful, we don't want wbuf to end up being NULL */
         char *tmp_ptr;
-        if ((tmp_ptr = realloc(wbuf, lbs)) == NULL)
-          goto memerror;
+        if ((tmp_ptr = realloc(wbuf, reader->current_line_sz)) == NULL) {
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
+          return EXIT_MEM_ERR;
+        }
         wbuf = tmp_ptr;
-        wbs = lbs;
+        wbs = reader->current_line_sz;
       }
 
-      if (!args->fields) {
-        doswap(wbuf, lbuf, args->delim);
+      if (!args->fields && !args->field_labels) {
+        doswap(&swap_list, wbuf, reader->current_line, args->delim);
       } else {
-        if (docut(&wbuf, lbuf, &wbs, args->delim, order, order_elems) < 0)
-          goto memerror;
+        if (docut(&wbuf, reader->current_line, &wbs, args->delim,
+                  order, order_elems) < 0) {
+          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
+          return EXIT_MEM_ERR;
+        }
       }
       fputs(wbuf, fpout);
-      memset(lbuf, 0, lbs);
       memset(wbuf, 0, wbs);
     }
 
-    fclose(fp);
+    dbfr_close(reader);
     fp = nextfile(argc, argv, &optind, "r");
+    if (fp) {
+      reader = dbfr_init(fp);
+      if (args->field_labels) {
+        order_elems = expand_label_list(args->field_labels, reader->next_line,
+                                        args->delim, &order, &order_sz);
+        if (order_elems == -1) {
+          fprintf(stderr, "%s: one or more labels in -F were not found.\n",
+                  getenv("_"));
+          return EXIT_FAILURE;
+        } else if (order_elems < 1) {
+          fprintf(stderr, "%s: error translating labels in -F.\n",
+                  getenv("_"));
+          return EXIT_FAILURE;
+        }
+      } else if (swap_arg_list) {
+        ll_destroy(&swap_list);
+        ll_list_init(&swap_list, free, NULL);
+        if (parse_swap_list(swap_arg_list, &swap_list, reader->next_line,
+                            args->delim) != 0) {
+          return EXIT_FAILURE;
+        }
+      }
+      /* TODO(jhinds): should the first line of subsequent files be tossed
+       * if labels were used? */
+    }
   }
 
   fflush(fpout);
   fclose(fpout);
-
-  if (order)
-    free(order);
-  free(lbuf);
-  free(wbuf);
-
   return EXIT_OKAY;
-
-  /* cleanup stuff in case of an error with malloc or realloc */
-memerror:
-  fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-  if (order)
-    free(order);
-  if (lbuf)
-    free(lbuf);
-  if (wbuf)
-    free(wbuf);
-  if (fp)
-    fclose(fp);
-  if (fpout) {
-    fflush(fpout);
-    fclose(fpout);
-  }
-  return EXIT_MEM_ERR;
 }
 
-void doswap(char *s, char *ct, const char *d) {
-  int i;
-
+void doswap(llist_t *list, char *s, char *ct, const char *d) {
+  llist_node_t *cur_node;
+  struct swap_pair *pair;
   /* beginning and end positions for fields a and b */
   char *as, *ae, *bs, *be;
 
@@ -179,26 +175,27 @@ void doswap(char *s, char *ct, const char *d) {
 
   chomp(ct);
 
-  for (i = 0; i < n_swap; i++) {
-    if (swap[i][0] > num_fields || swap[i][1] > num_fields)
+  for (cur_node = list->head; cur_node; cur_node = cur_node->next) {
+    pair = (struct swap_pair *) cur_node->data;
+    if (pair->pair[0] > num_fields || pair->pair[1] > num_fields)
       continue;
 
     memset(s, 0, sl + 1);
     as = bs = ct;
 
-    as = field_start(ct, (size_t) swap[i][0], d);
+    as = field_start(ct, (size_t) pair->pair[0], d);
     assert(as != NULL);
 
-    bs = field_start(ct, (size_t) swap[i][1], d);
+    bs = field_start(ct, (size_t) pair->pair[1], d);
     assert(bs != NULL);
 
     ae = strstr(as, d);
     be = strstr(bs, d);
 
     /* end of A is end of string - should never happen for swaps */
-    if (ae == NULL && swap[i][2] == REORDER_TYPE_SWAP)
+    if (ae == NULL && pair->action_type == REORDER_TYPE_SWAP)
       continue;
-    else if (ae != NULL && swap[i][2] == REORDER_TYPE_MOVE)
+    else if (ae != NULL && pair->action_type == REORDER_TYPE_MOVE)
       ae += dl;
     else if (ae == NULL)
       ae = ct + sl;
@@ -206,7 +203,7 @@ void doswap(char *s, char *ct, const char *d) {
     /* end of B is end of string - B is last field */
     if (be == NULL)
       be = ct + sl;
-    else if (swap[i][2] == REORDER_TYPE_MOVE)
+    else if (pair->action_type == REORDER_TYPE_MOVE)
       be += dl;
 
 #ifdef CRUSH_DEBUG
@@ -218,7 +215,7 @@ void doswap(char *s, char *ct, const char *d) {
 
     /* note: the use of strncpy() below is safe because
        s has been nulled out above */
-    if (swap[i][2] == REORDER_TYPE_SWAP) {
+    if (pair->action_type == REORDER_TYPE_SWAP) {
       /* A is lower-indexed field, B is higher-indexed field */
 
       strncpy(s, ct, as - ct);  /* copy up to field A */
@@ -227,7 +224,7 @@ void doswap(char *s, char *ct, const char *d) {
       strncat(s, as, ae - as);  /* append field A */
       strcat(s, be);            /* append everything after b */
 
-    } else if (swap[i][2] == REORDER_TYPE_MOVE) {
+    } else if (pair->action_type == REORDER_TYPE_MOVE) {
 
       /* A is field to be moved, B is destination field */
 
@@ -259,14 +256,13 @@ void doswap(char *s, char *ct, const char *d) {
         if (ae != ct + sl)      /* if A was the last field, no need to copy stuff after it */
           strcat(s, ae);
       }
-
-    }
-
-    /* end REORDER_TYPE_MOVE */
-    /* copy the modified version into original */
+    } /* end REORDER_TYPE_MOVE */
+    
+    /* copy the modified version into original.  required for multiple
+     * moves/swaps */
     strcpy(ct, s);
 
-  }                             /* end for loop through all swap/move field pairs */
+  }  /* end for loop through all swap/move field pairs */
 
   strcat(ct, "\n");
   strcat(s, "\n");
@@ -326,53 +322,87 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
 }
 
 
-/* validates swap arg from commandline and pushes values into the array
-   of swaps to be performed */
+/* stores --swap and --move options in an ordered list for parsing later. */
 int pushswap(char *s, int action_type) {
-  int ret = 0;
-  regex_t s_re;
-  unsigned int a, b;
-  char errbuf[1024];
+  struct swap_arg *p = malloc(sizeof(struct swap_arg));
+  p->pair_str = strdup(s);
+  p->action_type = action_type;
 
-  /* better if s_re could be static & compiled just once, but
-     performance here isn't all that critical anyway */
-
-  /* compile the expression to match N,N */
-  if ((ret = regcomp(&s_re, "^[0-9]+,[0-9]+$", REG_EXTENDED)) != 0) {
-    regerror(ret, NULL, errbuf, 1024);
-    fprintf(stderr, "%s: %s\n", getenv("_"), errbuf);
-    return ret;
+  if (swap_arg_list == NULL) {
+    swap_arg_list = malloc(sizeof(llist_t));
+    ll_list_init(swap_arg_list, free, NULL);
   }
 
-  /* execute the expression */
-  if ((ret = regexec(&s_re, s, 0, NULL, 0)) != 0) {
-    regerror(ret, &s_re, errbuf, 1024);
-    fprintf(stderr, "%s: %s\n", getenv("_"), errbuf);
-    regfree(&s_re);
-    return ret;
-  }
-  regfree(&s_re);
-  sscanf(s, "%d,%d", &a, &b);
+  ll_append_elem(swap_arg_list, p);
 
-  /* don't bother with the idiocy of swapping equal fields */
-  if (a == b)
-    return ret;
+  return 0;
+}
 
-  /* TODO: get rid of arbitrary limit on number of swaps */
-  if (n_swap < 32) {
+int parse_swap_list(llist_t *args, llist_t *pairs,
+                    const char *header, const char *delim) {
+  /* for each move/swap argument in args, 
+   * 1) identify substrings before and after the comma.
+   * 2) if a substring is strictly numeric, treat it as an index,
+   *    else treat it as a label.
+   * 3) store the pair of indexes as a struct swap_pair in the pairs list.
+   */
 
-    /* if swapping, go ahead & order these so as
-       not to have to worry about it later.  order must
-       be preserved for moving */
-    if (action_type == REORDER_TYPE_MOVE || a < b) {
-      swap[n_swap][0] = a;
-      swap[n_swap][1] = b;
-    } else {
-      swap[n_swap][0] = b;
-      swap[n_swap][1] = a;
+  llist_node_t *cur_node;
+  char *pair_elem_a, *pair_elem_b;
+
+  for (cur_node = args->head; cur_node; cur_node = cur_node->next) {
+    struct swap_arg *p = (struct swap_arg *) cur_node->data;
+    struct swap_pair *cur_pair;
+
+    pair_elem_a = p->pair_str;
+    pair_elem_b = strchr(p->pair_str, ',');
+    if (! pair_elem_b) {
+      fprintf(stderr, "%s: invalid field pair: %s\n",
+              getenv("_"), p->pair_str);
+      return 1;
     }
-    swap[n_swap][2] = action_type;
-    n_swap++;
+    *pair_elem_b = '\0';
+    pair_elem_b++;
+
+    cur_pair = malloc(sizeof(struct swap_pair));
+    cur_pair->action_type = p->action_type;
+
+    if (strspn(pair_elem_a, "0123456789") == strlen(pair_elem_a)) {
+      cur_pair->pair[0] = atoi(pair_elem_a);
+    } else {
+      cur_pair->pair[0] = field_str(pair_elem_a, header, delim) + 1;
+    }
+    if (cur_pair->pair[0] < 1) {
+      fprintf(stderr, "%s: invalid field pair: %s,%s\n",
+              getenv("_"), pair_elem_a, pair_elem_b);
+      return 1;
+    }
+
+    if (strspn(pair_elem_b, "0123456789") == strlen(pair_elem_b)) {
+      cur_pair->pair[1] = atoi(pair_elem_b);
+    } else {
+      cur_pair->pair[1] = field_str(pair_elem_b, header, delim) + 1;
+    }
+    if (cur_pair->pair[1] < 1) {
+      fprintf(stderr, "%s: invalid field pair: %s,%s => %d,%d\n",
+              getenv("_"), pair_elem_a, pair_elem_b);
+      return 1;
+    }
+
+    if (cur_pair->pair[0] == cur_pair->pair[1]) {
+      /* this swap/move is a no-op */
+      free(cur_pair);
+      continue;
+    }
+
+    if (p->action_type == REORDER_TYPE_SWAP &&
+        cur_pair->pair[0] > cur_pair->pair[1]) {
+      /* for swaps, doswap() assumes the fields are ordered */
+      int tmp = cur_pair->pair[0];
+      cur_pair->pair[0] = cur_pair->pair[1];
+      cur_pair->pair[1] = tmp;
+    }
+    ll_append_elem(pairs, cur_pair);
   }
-  return ret;
+  return 0;
 }

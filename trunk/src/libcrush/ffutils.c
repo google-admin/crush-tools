@@ -367,6 +367,53 @@ ssize_t expand_nums(char *arg, int **array, size_t * array_size) {
 }
 
 
+ssize_t expand_label_list(const char *labels,
+                          const char *line,
+                          const char *delim,
+                          int **array, size_t *array_sz) {
+  int i = 0, j = 0;
+  char *labels_copy = strdup(labels);
+  char *pos = labels_copy;
+  char *labels_end = labels_copy + strlen(labels_copy);
+
+  chomp(labels_copy);
+
+  /* "tokenize" the list of labels */
+  while ((pos = strchr(pos, ',')) != NULL) {
+    *pos = '\0';
+    i++;
+    pos++;
+  }
+  i++; /* count the last token */
+
+  /* make sure the array can hold all of the indexes */
+  if (*array == NULL) {
+    *array = malloc(sizeof(int) * i);
+    if (! *array)
+      return -2;
+    *array_sz = i;
+  } else {
+    if (*array_sz < i) {
+      *array_sz = arr_resize((void **) array, sizeof(int),
+                             *array_sz, i - *array_sz);
+      if (*array_sz == 0)
+        return -2;
+    }
+  }
+
+  /* search for each label in the header line */
+  for (pos = labels_copy; pos != labels_end + 1; pos += strlen(pos) + 1) {
+    i = field_str(pos, line, delim);
+    if (i < 0)
+      return -1;
+    (*array)[j++] = i + 1;
+  }
+
+  free(labels_copy);
+  return j;
+}
+
+
 int get_line_pos(const char *ct, const int field_no, const char *d, int *start,
                  int *end) {
   char *field, *field_end;

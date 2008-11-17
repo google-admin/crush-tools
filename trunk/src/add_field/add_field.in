@@ -17,16 +17,18 @@
 use strict;
 use Getopt::Long;
 
-my ($help, $header, $value, $location, $delim, $copy_field, $show_version);
+my ($help, $header, $value, $location, $delim, $copy_field, $show_version,
+    $label_before, $label_after);
 
 $value = '';
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
-$location = 1;
 Getopt::Long::Configure("no_ignore_case");
 &GetOptions("help" => \$help,
             "label=s" => \$header,
             "value=s" => \$value,
             "field=n" => \$location,
+            "Before=s" => \$label_before,
+            "After=s" => \$label_after,
             "delim=s" => \$delim,
             "copy=n" => \$copy_field,
             "Version" => \$show_version);
@@ -46,15 +48,31 @@ if ($copy_field) {
 }
 
 my $expected_fields;
+if (! defined $location) {
+  if ($label_before || $label_after) {
+    my $header_line = <>;
+    $header_line =~ s/[\r\n]//g;
+    $expected_fields = fields_in_line($header_line, $delim);
+
+    my $find_label = $label_before ? $label_before : $label_after;
+    $location = field_str($find_label, $header_line, $delim);
+    if (! defined($location)) {
+      warn "$0: unable to find the field labelled \"$find_label\"\n";
+      exit 1;
+    }
+    $location++;
+    $location++ if ($label_after);
+    print add_field($header_line, defined($header) ? $header : $value,
+                    $location, $delim), qq(\n);
+  } else {
+    $location = 1;
+  }
+}
+
 while (my $line = <>) {
   $line =~ s/[\r\n]//g;
   if (! defined($expected_fields)) {
-    $expected_fields = 1;
-    my $i = 0;
-    while (($i = index($line, $delim, $i)) > 0) {
-      $expected_fields++;
-      $i += length($delim);
-    }
+    $expected_fields = fields_in_line($line, $delim);
     if ($location < 0) {
       $location = $expected_fields + $location + 2;
     }
@@ -69,7 +87,7 @@ while (my $line = <>) {
 
 exit(0);
 
-# (line, value, position, delimiter)
+# (line, value, position, delimiter, [copy])
 sub add_field {
   my ($l, $v, $p, $d, $c) = @_;
 
@@ -106,11 +124,15 @@ adds a field to a flat-file.
 usage: $0 [hdflv] [file(s)]
 
   -h, --help  print this message and exit
-  -d, --delim <S>  the field delimiter string (default: 0xfe)
-  -f, --field <N>  the 1-based index for the new field (default: 1)
-  -l, --label <S>  label the new field as S on the first line
-  -v, --value <S>  the value to place in the new field (default: emtpy)
-  -c, --copy <N>  copy the value from field N into the new field
+  -d, --delim <S>    the field delimiter string (default: 0xfe)
+  -f, --field <N>    the 1-based index for the new field (default: 1)
+  -B, --Before <S>   place the new field before the field with the specified
+                       label.
+  -A, --After <S>    place the new field after the field with the specified
+                       label.
+  -l, --label <S>    label the new field as S on the first line
+  -v, --value <S>    the value to place in the new field (default: emtpy)
+  -c, --copy <N>     copy the value from field N into the new field
 
  * if no "label" is provided, the "value" will be used.
  * for -f, a field of either 0 or 1 may be used to indicate the first

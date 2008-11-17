@@ -13,18 +13,81 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+#include <dbfr.h>
+
 #include "aggregate_main.h"
 #include "aggregate.h"
 
 #define AGG_TMP_BUF_SIZE 64
 
-int ncounts;                    /* the number of count fields */
-int nsums;                      /* the number of sum fields */
-int naverages;                  /* the number of average fields */
-int *sum_precisions;            /* array of precisions for the sum fields */
-int *average_precisions;        /* array of precisions for the average fields */
 char *delim;
+struct agg_conf conf;
 
+int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
+                          const char *header, const char *delim) {
+  if (args->keys) {
+    conf->nkeys = expand_nums(args->keys, &(conf->key_fields),
+                              &(conf->key_fields_sz));
+  } else if (args->key_labels) {
+    conf->nkeys = expand_label_list(args->key_labels, header,
+                                    delim, &(conf->key_fields),
+                                    &(conf->key_fields_sz));
+    args->preserve = 1;
+  }
+  if (conf->nkeys < 0)
+    return conf->nkeys;
+  decrement_values(conf->key_fields, conf->nkeys);
+
+  if (args->sums) {
+    conf->nsums = expand_nums(args->sums, &(conf->sum_fields),
+                              &(conf->sum_fields_sz));
+  } else if (args->sum_labels) {
+    conf->nsums = expand_label_list(args->sum_labels, header,
+                                    delim, &(conf->sum_fields),
+                                    &(conf->sum_fields_sz));
+    args->preserve = 1;
+  }
+  if (conf->nsums < 0) {
+    return conf->nsums;
+  } else if (conf->nsums > 0) {
+    decrement_values(conf->sum_fields, conf->nsums);
+    conf->sum_precisions = malloc(sizeof(int) * conf->nsums);
+    memset(conf->sum_precisions, 0, sizeof(int) * conf->nsums);
+  }
+
+  if (args->counts) {
+    conf->ncounts = expand_nums(args->counts, &(conf->count_fields),
+                                &(conf->count_fields_sz));
+  } else if (args->count_labels) {
+    conf->ncounts = expand_label_list(args->count_labels, header,
+                                      delim, &(conf->count_fields),
+                                      &(conf->count_fields_sz));
+    args->preserve = 1;
+  }
+  if (conf->ncounts < 0)
+    return conf->ncounts;
+  else if (conf->ncounts > 0)
+    decrement_values(conf->count_fields, conf->ncounts);
+
+  if (args->averages) {
+    conf->naverages = expand_nums(args->averages, &(conf->average_fields),
+                                  &(conf->average_fields_sz));
+  } else if (args->average_labels) {
+    conf->naverages = expand_label_list(args->average_labels, header,
+                                        delim, &(conf->average_fields),
+                                        &(conf->average_fields_sz));
+    args->preserve = 1;
+  }
+  if (conf->naverages < 0) {
+    return conf->naverages;
+  } else if (conf->naverages > 0) {
+    decrement_values(conf->average_fields, conf->naverages);
+    conf->average_precisions = malloc(sizeof(int) * conf->naverages);
+    memset(conf->average_precisions, 0, sizeof(int) * conf->naverages);
+  }
+
+  return 0;
+}
 
 /** @brief  
   * 
@@ -42,23 +105,20 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   hashtbl_t aggregations;
   llist_t *hash_keys;
 
-  int nkeys;                    /* the number of key fields */
-  int *key_fields;              /* array of key field indexes */
-  int *count_fields;            /* array of count field indexes */
-  int *sum_fields;              /* array of sum field indexes */
-  int *average_fields;          /* array of average field indexes */
-  size_t arsz = 0;              /* size of array allocated by expand_nums() */
-
   size_t n_hash_elems;
 
   FILE *in;                     /* input file */
-  char *inbuf;                  /* buffer for a line of input */
-  size_t inbuf_sz;              /* size of the input buffer */
+  dbfr_t *in_reader;
 
   char *outbuf;                 /* buffer for a line of output */
   size_t outbuf_sz;             /* size of the output buffer */
 
   char default_delim[] = { 0xFE, 0x00 };  /* default delimiter string */
+
+  if (! args->keys && ! args->key_labels) {
+    fprintf(stderr, "%s: -k or -K must be specified\n", argv[0]);
+    return EXIT_HELP;
+  }
 
   delim = args->delim;
   if (!delim)
@@ -69,53 +129,6 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   else
     delim = default_delim;
 
-  nkeys = ncounts = nsums = naverages = 0;
-  key_fields = count_fields = sum_fields = average_fields = NULL;
-
-  arsz = 0;
-  nkeys = expand_nums(args->keys, &key_fields, &arsz);
-
-  assert(nkeys != 0);
-
-  decrement_values(key_fields, nkeys);
-
-  if (args->sums) {
-    arsz = 0;
-    nsums = expand_nums(args->sums, &sum_fields, &arsz);
-    decrement_values(sum_fields, nsums);
-    sum_precisions = malloc(sizeof(int) * nsums);
-    memset(sum_precisions, 0, sizeof(int) * nsums);
-  }
-
-  if (args->counts) {
-    arsz = 0;
-    ncounts = expand_nums(args->counts, &count_fields, &arsz);
-    decrement_values(count_fields, ncounts);
-  }
-
-  if (args->averages) {
-    arsz = 0;
-    naverages = expand_nums(args->averages, &average_fields, &arsz);
-    decrement_values(average_fields, naverages);
-    average_precisions = malloc(sizeof(int) * naverages);
-    memset(average_precisions, 0, sizeof(int) * naverages);
-  }
-#ifdef CRUSH_DEBUG
-  fprintf(stderr, "%d keys: ", nkeys);
-  for (i = 0; i < nkeys; i++)
-    fprintf(stderr, "%d ", key_fields[i]);
-  fprintf(stderr, "\n%d sums: ", nsums);
-  for (i = 0; i < nsums; i++)
-    fprintf(stderr, "%d ", sum_fields[i]);
-  fprintf(stderr, "\n%d averages: ", naverages);
-  for (i = 0; i < naverages; i++)
-    fprintf(stderr, "%d ", average_fields[i]);
-  fprintf(stderr, "\n%d counts: ", ncounts);
-  for (i = 0; i < ncounts; i++)
-    fprintf(stderr, "%d ", count_fields[i]);
-  fprintf(stderr, "\n\n");
-#endif
-
   if (optind == argc)
     in = stdin;
   else
@@ -124,8 +137,29 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (in == NULL)
     return EXIT_FILE_ERR;
 
-  inbuf = NULL;
-  inbuf_sz = 0;
+  in_reader = dbfr_init(in);
+
+  memset(&conf, 0, sizeof(conf));
+  if (configure_aggregation(&conf, args, in_reader->next_line, delim) != 0) {
+    fprintf(stderr, "%s: error parsing field arguments.\n", argv[0]);
+    return EXIT_HELP;
+  }
+
+#ifdef CRUSH_DEBUG
+  fprintf(stderr, "%d keys: ", conf.nkeys);
+  for (i = 0; i < conf.nkeys; i++)
+    fprintf(stderr, "%d ", conf.key_fields[i]);
+  fprintf(stderr, "\n%d sums: ", conf.nsums);
+  for (i = 0; i < conf.nsums; i++)
+    fprintf(stderr, "%d ", conf.sum_fields[i]);
+  fprintf(stderr, "\n%d averages: ", conf.naverages);
+  for (i = 0; i < conf.naverages; i++)
+    fprintf(stderr, "%d ", conf.average_fields[i]);
+  fprintf(stderr, "\n%d counts: ", conf.ncounts);
+  for (i = 0; i < conf.ncounts; i++)
+    fprintf(stderr, "%d ", conf.count_fields[i]);
+  fprintf(stderr, "\n\n");
+#endif
 
   outbuf = NULL;
   outbuf_sz = 0;
@@ -138,42 +172,42 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (args->preserve) {
     size_t str_len;
 
-    if (getline(&inbuf, &inbuf_sz, in) <= 0) {
+    if (dbfr_getline(in_reader) <= 0) {
       fprintf(stderr, "%s: unexpected end of file\n", getenv("_"));
       exit(EXIT_FILE_ERR);
     }
-    chomp(inbuf);
+    chomp(in_reader->current_line);
 
-    outbuf = malloc(inbuf_sz);
+    outbuf = malloc(in_reader->current_line_len);
     if (!outbuf) {
       fprintf(stderr, "%s: out of memory.\n", getenv("_"));
       exit(EXIT_MEM_ERR);
     }
-    outbuf_sz = inbuf_sz;
+    outbuf_sz = in_reader->current_line_len;
 
-    extract_fields_to_string(inbuf, outbuf, outbuf_sz,
-                             key_fields, nkeys, delim, NULL);
+    extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                             conf.key_fields, conf.nkeys, delim, NULL);
     fputs(outbuf, stdout);
     if (args->labels) {
     	printf("%s%s", delim, args->labels);
     } else {
-      if (nsums) {
-        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
-                                 sum_fields, nsums, delim,
+      if (conf.nsums) {
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.sum_fields, conf.nsums, delim,
                                  args->auto_label ? "-Sum" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (ncounts) {
-        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
-                                 count_fields, ncounts, delim,
+      if (conf.ncounts) {
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.count_fields, conf.ncounts, delim,
                                  args->auto_label ? "-Count" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (naverages) {
-        extract_fields_to_string(inbuf, outbuf, outbuf_sz,
-                                 average_fields, naverages, delim,
+      if (conf.naverages) {
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.average_fields, conf.naverages, delim,
                                  args->auto_label ? "-Average" : NULL);
         printf("%s%s", delim, outbuf);
       }
@@ -195,67 +229,67 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     int in_hash;
 
     /* loop through each line of the file */
-    while (getline(&inbuf, &inbuf_sz, in) > 0) {
-      chomp(inbuf);
-      if (inbuf_sz > outbuf_sz) {
-        char *tmp_outbuf = realloc(outbuf, inbuf_sz + 32);
+    while (dbfr_getline(in_reader) > 0) {
+      chomp(in_reader->current_line);
+      if (in_reader->current_line_len > outbuf_sz) {
+        char *tmp_outbuf = realloc(outbuf, in_reader->current_line_len + 32);
         if (!tmp_outbuf) {
           fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          goto aggregate_cleanup;
+          return EXIT_MEM_ERR;
         }
         outbuf = tmp_outbuf;
-        outbuf_sz = inbuf_sz + 32;
+        outbuf_sz = in_reader->current_line_len + 32;
       }
 
-      extract_fields_to_string(inbuf, outbuf, outbuf_sz, key_fields, nkeys,
-                               delim, NULL);
+      extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                               conf.key_fields, conf.nkeys, delim, NULL);
 
       value = (struct aggregation *) ht_get(&aggregations, outbuf);
       if (!value) {
         in_hash = 0;
-        value = alloc_agg(nsums, ncounts, naverages);
+        value = alloc_agg(conf.nsums, conf.ncounts, conf.naverages);
         /* value = malloc(sizeof(struct aggregation));
            memset(value, 0, sizeof(struct aggregation)); */
         if (!value) {
           fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          goto aggregate_cleanup;
+          return EXIT_MEM_ERR;
         }
       } else {
         in_hash = 1;
       }
 
       /* sums */
-      for (i = 0; i < nsums; i++) {
+      for (i = 0; i < conf.nsums; i++) {
         tmplen =
-          get_line_field(tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, sum_fields[i],
-                         delim);
+          get_line_field(tmpbuf, in_reader->current_line,
+                         AGG_TMP_BUF_SIZE - 1, conf.sum_fields[i], delim);
         if (tmplen > 0) {
           n = float_str_precision(tmpbuf);
-          if (sum_precisions[i] < n)
-            sum_precisions[i] = n;
+          if (conf.sum_precisions[i] < n)
+            conf.sum_precisions[i] = n;
           value->sums[i] += atof(tmpbuf);
         }
       }
 
       /* averages */
-      for (i = 0; i < naverages; i++) {
-        tmplen =
-          get_line_field(tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, average_fields[i],
-                         delim);
+      for (i = 0; i < conf.naverages; i++) {
+        tmplen = get_line_field(tmpbuf, in_reader->current_line,
+                                AGG_TMP_BUF_SIZE - 1, conf.average_fields[i],
+                                delim);
         if (tmplen > 0) {
           n = float_str_precision(tmpbuf);
-          if (average_precisions[i] < n)
-            average_precisions[i] = n;
+          if (conf.average_precisions[i] < n)
+            conf.average_precisions[i] = n;
           value->average_sums[i] += atof(tmpbuf);
           value->average_counts[i] += 1;
         }
       }
 
       /* counts */
-      for (i = 0; i < ncounts; i++) {
-        tmplen =
-          get_line_field(tmpbuf, inbuf, AGG_TMP_BUF_SIZE - 1, count_fields[i],
-                         delim);
+      for (i = 0; i < conf.ncounts; i++) {
+        tmplen = get_line_field(tmpbuf, in_reader->current_line,
+                                AGG_TMP_BUF_SIZE - 1, conf.count_fields[i],
+                                delim);
         if (tmplen > 0) {
           value->counts[i] += 1;
         }
@@ -269,8 +303,18 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
     }
-    fclose(in);
+    dbfr_close(in_reader);
     in = nextfile(argc, argv, &optind, "r");
+    if (in) {
+      in_reader = dbfr_init(in);
+      /* reconfigure fields (needed if labels were used) */
+      if (configure_aggregation(&conf, args, in_reader->next_line, delim) != 0) {
+        fprintf(stderr, "%s: error parsing field arguments.\n", argv[0]);
+        return EXIT_HELP;
+      }
+      if (args->preserve)
+        dbfr_getline(in_reader);
+    }
   }
 
   /* print all of the output */
@@ -315,20 +359,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     free(key_array);
   }
 
-
-aggregate_cleanup:
   ht_destroy(&aggregations);
-
-  if (key_fields)
-    free(key_fields);
-  if (sum_fields)
-    free(sum_fields);
-  if (count_fields)
-    free(count_fields);
-  if (inbuf)
-    free(inbuf);
-  if (outbuf)
-    free(outbuf);
 
   return EXIT_OKAY;
 }
@@ -377,14 +408,14 @@ int float_str_precision(char *d) {
 int print_keys_sums_counts_avgs(char *key, struct aggregation *val) {
   int i;
   fputs(key, stdout);
-  for (i = 0; i < nsums; i++) {
-    printf("%s%.*f", delim, sum_precisions[i], val->sums[i]);
+  for (i = 0; i < conf.nsums; i++) {
+    printf("%s%.*f", delim, conf.sum_precisions[i], val->sums[i]);
   }
-  for (i = 0; i < ncounts; i++) {
+  for (i = 0; i < conf.ncounts; i++) {
     printf("%s%d", delim, val->counts[i]);
   }
-  for (i = 0; i < naverages; i++) {
-    printf("%s%.*f", delim, average_precisions[i] + 2,
+  for (i = 0; i < conf.naverages; i++) {
+    printf("%s%.*f", delim, conf.average_precisions[i] + 2,
            val->average_sums[i] / val->average_counts[i]);
   }
   fputs("\n", stdout);

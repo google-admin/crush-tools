@@ -35,6 +35,23 @@ struct aggregation {
 };
 */
 
+struct agg_conf {
+  int *key_fields;
+  size_t key_fields_sz;
+  int nkeys;
+  int *count_fields;
+  size_t count_fields_sz;
+  int ncounts;
+  int *sum_fields;
+  size_t sum_fields_sz;
+  int nsums;
+  int *sum_precisions;
+  int *average_fields;
+  size_t average_fields_sz;
+  int naverages;
+  int *average_precisions;
+};
+
 struct aggregation {
   u_int32_t *counts;
   double *sums;
@@ -42,6 +59,8 @@ struct aggregation {
   double *average_sums;
 };
 
+int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
+                          const char *header, const char *delim);
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
                               int *fields, size_t nfields, char *delim,
                               char *suffix);

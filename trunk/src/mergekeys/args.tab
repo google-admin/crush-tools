@@ -66,11 +66,25 @@ END_COPYRIGHT
     description => 'list of key fields in left-hand file'
   },
   {
+    name => 'left_key_labels',
+    shortopt => 'A',
+    longopt => 'left-labels',
+    type => 'var',
+    description => 'list of key labels in left-hand file'
+  },
+  {
     name => 'right_keys',
     shortopt => 'b',
     longopt => 'right-keys',
     type => 'var',
     description => 'list of key fields in right-hand file'
+  },
+  {
+    name => 'right_key_labels',
+    shortopt => 'B',
+    longopt => 'right-labels',
+    type => 'var',
+    description => 'list of key labels in right-hand file'
   },
 	{
 	  name => 'inner',

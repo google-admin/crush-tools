@@ -21,7 +21,9 @@ EXTRA_DIST = args.tab test.conf \
              tests/test_02.sh tests/test_02-full.txt \
 						 tests/test_02-delta.txt tests/test_02.expected \
              tests/test_03.sh tests/test_03-full.txt \
-						 tests/test_03-delta.txt tests/test_03.expected
+						 tests/test_03-delta.txt tests/test_03.expected \
+             tests/test_04.sh tests/test_04-full.txt \
+						 tests/test_04-delta.txt tests/test_04.expected
 man1_MANS = deltaforce.1
 deltaforce.1 : args.tab
 	../bin/genman.pl args.tab > $@

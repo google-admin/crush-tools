@@ -34,10 +34,9 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
   int err_code;                 /* holds the return value of regcomp() */
 
   FILE *in, *out;               /* input & output files */
+  dbfr_t *in_reader;
   int field_no;                 /* the field number specified by the user */
 
-  char *buffer = NULL;          /* buffer for file input & its size */
-  ssize_t bufsz = 0;
   char *fieldval = NULL;        /* buffer for the field to scan & its size */
   ssize_t fldsz = 0;
 
@@ -46,18 +45,6 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
      the same as the normal case inside the file reading loop.
    */
   char *(*field_to_scan) (char **, ssize_t *, char *, char *, int f);
-
-  if (!args->field) {
-    field_no = -1;
-    field_to_scan = scan_wholeline;
-  } else {
-    field_no = atoi(args->field) - 1;
-    field_to_scan = scan_field;
-    if (field_no < 0) {
-      fprintf(stderr, "%s: %d: invalid field number.\n", getenv("_"), field_no);
-      return EXIT_HELP;
-    }
-  }
 
   if (optind >= argc) {
     usage(argv[0]);
@@ -94,6 +81,30 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
     in = nextfile(argc, argv, &optind, "r");
   else
     in = stdin;
+  if (! in)
+    return EXIT_FILE_ERR;
+  in_reader = dbfr_init(in);
+
+  if (args->field) {
+    field_no = atoi(args->field) - 1;
+    field_to_scan = scan_field;
+    if (field_no < 0) {
+      fprintf(stderr, "%s: %d: invalid field number.\n", getenv("_"), field_no);
+      return EXIT_HELP;
+    }
+  } else if (args->field_label) {
+    field_no = field_str(args->field_label, in_reader->next_line, args->delim);
+    field_to_scan = scan_field;
+    if (field_no < 0) {
+      fprintf(stderr, "%s: %s: invalid field label.\n",
+              getenv("_"), args->field_label);
+      return EXIT_HELP;
+    }
+    args->preserve_header = 1;
+  } else {
+    field_no = -1;
+    field_to_scan = scan_wholeline;
+  }
 
 
   /* set the flags variable to the expected return value
@@ -103,35 +114,30 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
   else
     reg_flags = 0;
 
-  while (in != NULL) {
-
-    // Should we preserve the header line?
-    if (args->preserve_header) {
-      // Yes => Do we have a line at all?
-      if (getline(&buffer, &bufsz, in) > 0) {
-        // Yes => Just print this to the output file
-        fprintf(out, "%s", buffer);
-      }
+  if (args->preserve_header) {
+    if (dbfr_getline(in_reader) > 0) {
+      fprintf(out, "%s", in_reader->current_line);
     }
-
-    while (getline(&buffer, &bufsz, in) > 0) {
-      chomp(buffer);
-      if (field_to_scan(&fieldval, &fldsz, buffer, args->delim, field_no) ==
-          NULL)
-        continue;
-      if (regexec(&pattern, fieldval, 0, NULL, 0) == reg_flags)
-        fprintf(out, "%s\n", buffer);
-    }
-
-    fclose(in);
-    in = nextfile(argc, argv, &optind, "r");
   }
 
-  if (fieldval != buffer)
-    free(fieldval);
+  while (in != NULL) {
+    while (dbfr_getline(in_reader) > 0) {
+      chomp(in_reader->current_line);
+      if (field_to_scan(&fieldval, &fldsz, in_reader->current_line,
+                        args->delim, field_no) == NULL)
+        continue;
+      if (regexec(&pattern, fieldval, 0, NULL, 0) == reg_flags)
+        fprintf(out, "%s\n", in_reader->current_line);
+    }
 
-  if (buffer)
-    free(buffer);
+    dbfr_close(in_reader);
+    if((in = nextfile(argc, argv, &optind, "r"))) {
+      in_reader = dbfr_init(in);
+      /* discard header from subsequent files */
+      if (args->preserve_header)
+        dbfr_getline(in_reader);
+    }
+  }
 
   regfree(&pattern);
   fclose(out);

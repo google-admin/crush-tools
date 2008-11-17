@@ -14,11 +14,19 @@
    limitations under the License.
  *****************************************/
 
-#include <stdlib.h>
-#include <sys/types.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#else
+#  ifdef HAVE_SYS_TYPES_H
+#    include <sys/types.h>
+#  endif
+#endif
+
 #include <time.h>
 #include <string.h>
-#include "ffutils.h"
+#include <stdlib.h>
+#include <ffutils.h>
+#include <dbfr.h>
 
 #ifndef CONVDATE_H
 #define CONVDATE_H

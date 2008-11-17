@@ -19,6 +19,7 @@
 #endif
 
 #include <ffutils.h>
+#include <dbfr.h>
 
 #if HAVE_FCNTL_H
 # include <fcntl.h>             /* open64(), O_RDONLY, etc. */
@@ -67,7 +68,7 @@
 #define LEFT_RIGHT_EQUAL   0
 
 
-int merge_files(FILE * a, FILE * b, FILE * out, struct cmdargs *args);
+int merge_files(dbfr_t *left, dbfr_t *right, FILE * out, struct cmdargs *args);
 int compare_keys(char *buffer_left, char *buffer_right);
 
 #endif /* DELTAFORCE_H */

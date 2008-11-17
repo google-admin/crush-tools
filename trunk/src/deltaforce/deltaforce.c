@@ -47,7 +47,9 @@ ssize_t nkeys;
 int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
   char default_delimiter[] = { 0xfe, 0x00 };
   FILE *left, *right, *out;     /* the two inputs & the output file ptrs */
+  dbfr_t *left_reader, *right_reader;
   int fd_tmp, retval;           /* file descriptor and return value */
+  int i;
 
   if (argc - optind != 2) {
     fprintf(stderr,
@@ -73,6 +75,7 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
       return EXIT_FILE_ERR;
     }
   }
+  left_reader = dbfr_init(left);
 
   if (str_eq(argv[optind + 1], "-")) {
     right = stdin;
@@ -86,10 +89,11 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
       return EXIT_FILE_ERR;
     }
   }
+  right_reader = dbfr_init(right);
 
-  if (!args->outfile)
+  if (!args->outfile) {
     out = stdout;
-  else {
+  } else {
     if ((fd_tmp = open64(args->outfile, O_WRONLY | O_CREAT | O_TRUNC)) < 0) {
       perror(args->outfile);
       return EXIT_FILE_ERR;
@@ -110,27 +114,31 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
   delim = args->delim;
 
   if (args->keys) {
-    int i;
     nkeys = expand_nums(args->keys, &keyfields, &keyfields_sz);
-    if (nkeys < 1) {
-      fprintf(stderr, "%s: bad key specified: \"%s\"\n",
-              getenv("_"), args->keys);
-      return EXIT_HELP;
-    }
-    for (i = 0; i < nkeys; i++)
-      keyfields[i]--;
+  } else if (args->key_labels) {
+    nkeys = expand_label_list(args->key_labels, left_reader->next_line, delim,
+                              &keyfields, &keyfields_sz);
   } else {
     keyfields = malloc(sizeof(int));
-    keyfields[0] = 0;
+    keyfields[0] = 1;
+    keyfields_sz = sizeof(int);
     nkeys = 1;
   }
+
+  if (nkeys < 1) {
+    fprintf(stderr, "%s: bad key specified: \"%s\"\n",
+            getenv("_"), args->keys ? args->keys : args->key_labels);
+    return EXIT_HELP;
+  }
+  for (i = 0; i < nkeys; i++)
+    keyfields[i]--;
 
   /* set locale with values from the environment so strcoll()
      will work correctly. */
   setlocale(LC_ALL, "");
   setlocale(LC_COLLATE, "");
 
-  retval = merge_files(left, right, out, args);
+  retval = merge_files(left_reader, right_reader, out, args);
 
   fclose(left);
   fclose(right);
@@ -140,17 +148,10 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
 }
 
 
-int merge_files(FILE * left, FILE * right, FILE * out, struct cmdargs *args) {
+int merge_files(dbfr_t *left_reader, dbfr_t *right_reader, FILE * out,
+                struct cmdargs *args) {
 
   int retval = EXIT_OKAY;
-
-  /* input line buffers for first & second files */
-  char *buffer_left = NULL;
-  char *buffer_right = NULL;
-
-  /* size of the buffers */
-  size_t buffer_left_size = 0;
-  size_t buffer_right_size = 0;
 
   char field_right[MAX_FIELD_LEN + 1];  /* buffer for holding field values */
 
@@ -164,44 +165,47 @@ int merge_files(FILE * left, FILE * right, FILE * out, struct cmdargs *args) {
   /* assume that if there is a header line, it exists
      in both files. */
 
-  while (!feof(left)) {
+  while (!left_reader->eof) {
 
-    if (buffer_left == NULL || buffer_left[0] == '\0') {
+    if (left_reader->current_line == NULL ||
+        left_reader->current_line[0] == '\0') {
       /* get a line from the full set */
-      if (getline(&buffer_left, &buffer_left_size, left) <= 0) {
-        free(buffer_left);
-        buffer_left = NULL;
+      if (dbfr_getline(left_reader) <= 0) {
+        free(left_reader->current_line);
+        left_reader->current_line = NULL;
         break;
       }
     }
 
-    if (buffer_right == NULL || buffer_right[0] == '\0') {
-      if (feof(right)) {
+    if (right_reader->current_line == NULL ||
+        right_reader->current_line[0] == '\0') {
+      if (right_reader->eof) {
         /* no more delta data to merge in: just dump
            the rest of the full data set. */
-        Fputs(buffer_left, out);
-        while (getline(&buffer_left, &buffer_left_size, left) > 0)
-          Fputs(buffer_left, out);
+        Fputs(left_reader->current_line, out);
+        while (dbfr_getline(left_reader) > 0)
+          Fputs(left_reader->current_line, out);
         continue;
       }
 
       /* get a line from the delta set */
-      if (getline(&buffer_right, &buffer_right_size, right) <= 0) {
-        free(buffer_right);
-        buffer_right = NULL;
+      if (dbfr_getline(right_reader) <= 0) {
+        free(right_reader->current_line);
+        right_reader->current_line = NULL;
         continue;
       }
     }
 
-    keycmp = compare_keys(buffer_left, buffer_right);
+    keycmp = compare_keys(left_reader->current_line,
+                          right_reader->current_line);
 
     switch (keycmp) {
         /* keys equal - print the delta line and scan
            forward in both files the next time around. */
       case 0:
-        Fputs(buffer_right, out);
-        buffer_right[0] = '\0';
-        buffer_left[0] = '\0';
+        Fputs(right_reader->current_line, out);
+        right_reader->current_line[0] = '\0';
+        left_reader->current_line[0] = '\0';
         break;
 
         /* delta line greater than full-set line.
@@ -209,33 +213,29 @@ int merge_files(FILE * left, FILE * right, FILE * out, struct cmdargs *args) {
            line for later.
          */
       case -1:
-        Fputs(buffer_left, out);
-        buffer_left[0] = '\0';
+        Fputs(left_reader->current_line, out);
+        left_reader->current_line[0] = '\0';
         break;
 
         /* delta line less than full-set line: the full
            set did not previously contain the key from
            delta. */
       case 1:
-        Fputs(buffer_right, out);
-        buffer_right[0] = '\0';
+        Fputs(right_reader->current_line, out);
+        right_reader->current_line[0] = '\0';
         break;
     }
   }
 
-  if (buffer_right != NULL && buffer_right[0] != '\0')
-    Fputs(buffer_right, out);
+  if (right_reader->current_line != NULL &&
+      right_reader->current_line[0] != '\0')
+    Fputs(right_reader->current_line, out);
 
-  if (!feof(right)) {
-    while (getline(&buffer_right, &buffer_right_size, right) > 0)
-      Fputs(buffer_right, out);
+  if (! right_reader->eof) {
+    while (dbfr_getline(right_reader) > 0)
+      Fputs(right_reader->current_line, out);
   }
 
-cleanup:
-  if (buffer_left)
-    free(buffer_left);
-  if (buffer_right)
-    free(buffer_right);
   if (keyfields)
     free(keyfields);
 

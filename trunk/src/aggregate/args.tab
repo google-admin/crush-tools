@@ -5,7 +5,8 @@
 	description => "aggregates data from delimited files",
 	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "[file ...]",
-	usage_extra => "all column indexes are 1-based.",
+	usage_extra =>
+"All column indexes are 1-based.  Either -k or -K must be specified.\\n\\nThe use of label options -K, -S, -A, or -C implies that the header row should\\nbe preserved (-p).",
 	do_long_opts => 1,
 	preproc_extra => '#include <crush_version.h>',
 	copyright => <<END_COPYRIGHT
@@ -58,8 +59,16 @@ END_COPYRIGHT
 	  shortopt => 'k',
 	  longopt => 'keys',
 	  type => 'var',
-	  required => 1,
-	  description => 'cells for aggregation levels & output (required)'
+	  required => 0,
+	  description => 'cells for aggregation levels & output'
+	},
+	{
+	  name => 'key_labels',
+	  shortopt => 'K',
+	  longopt => 'key-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of fields for aggregation levels & output'
 	},
 	{
 	  name => 'sums',
@@ -70,6 +79,14 @@ END_COPYRIGHT
 	  description => 'fields of numeric values to be summed'
 	},
 	{
+	  name => 'sum_labels',
+	  shortopt => 'S',
+	  longopt => 'sum-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of numeric fields to be summed'
+	},
+	{
 	  name => 'averages',
 	  shortopt => 'a',
 	  longopt => 'average-fields',
@@ -78,12 +95,28 @@ END_COPYRIGHT
 	  description => 'fields of numeric values to be averaged'
 	},
 	{
+	  name => 'average_labels',
+	  shortopt => 'A',
+	  longopt => 'average-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of numeric fields to be averaged'
+	},
+	{
 	  name => 'counts',
 	  shortopt => 'c',
 	  longopt => 'count-fields',
 	  type => 'var',
 	  required => 0,
 	  description => 'fields to be counted if non-blank'
+	},
+	{
+	  name => 'count_labels',
+	  shortopt => 'C',
+	  longopt => 'count-label',
+	  type => 'var',
+	  required => 0,
+	  description => 'labels of fields to be counted if non-blank'
 	},
 	{
 	  name => 'delim',

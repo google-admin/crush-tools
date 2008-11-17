@@ -75,6 +75,13 @@ END_COPYRIGHT
 	  shortopt    => 'k',
 	  longopt     => 'keys',
 	  type        => 'var',
-	  description => 'primary key field(s) in both input files (default: 1)'
+	  description => 'indexes of primary key field(s) in both input files (default: 1)'
+	},
+  {
+	  name        => 'key_labels',
+	  shortopt    => 'K',
+	  longopt     => 'key-labels',
+	  type        => 'var',
+	  description => 'labels of primary key field(s) in both input files'
 	},
 );

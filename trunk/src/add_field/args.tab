@@ -56,6 +56,22 @@ END_COPYRIGHT
 	  required    => 0,
 	  description => 'the 1-based index for the new field (default: 1)'
 	},
+  {
+    name        => 'before',
+    shortopt    => 'B',
+    longopt     => 'Before',
+    type        => 'var',
+    required    => 0,
+    description => 'place the new field before the field with the specified label',
+  },
+  {
+    name        => 'after',
+    shortopt    => 'A',
+    longopt     => 'After',
+    type        => 'var',
+    required    => 0,
+    description => 'place the new field after the field with the specified label',
+  },
 	{
 	  name        => 'label',
 	  shortopt    => 'l',

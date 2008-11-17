@@ -21,7 +21,7 @@ use Memoize;
 
 memoize('transform_splitfield');
  
-my ($help, $d, $f, $keep, $dir, $prefix, $suffix, $xform_outnames,
+my ($help, $d, $f, $label, $keep, $dir, $prefix, $suffix, $xform_outnames,
     $show_version, $buckets);
 $d = $ENV{'DELIMITER'} || chr(0xfe);
 $dir = './';
@@ -31,6 +31,7 @@ Getopt::Long::Configure("no_ignore_case");
             "keepheader"   => \$keep,
             "delim=s"      => \$d,
             "field=n"      => \$f,
+            "Field-label=s"=> \$label,
             "path=s"       => \$dir,
             "name=s"       => \$prefix,
             "suffix=s"     => \$suffix,
@@ -47,24 +48,38 @@ if ($help) {
   usage();
   exit(0);
 }
-if (! defined($f)) {
-  warn "$0: -f option is required.  see $0 --help for details.\n";
+
+if (! defined($f) && ! defined($label)) {
+  warn "$0: -f or -F option is required.  see $0 --help for details.\n";
   exit(1);
 }
 
 $d = expand_chars($d);
-$f--;
+
+my $header;
+if ($keep || $label) {
+  $header = <>;
+}
+
+if ($f) {
+  if ($f <= 0) {
+    warn "$0: bad field index: $f\n";
+    exit(1);
+  }
+  $f--;
+} elsif ($label) {
+  $f = field_str($label, $header, $d);
+  if (! defined($f)) {
+    warn "$0: field label not found: $label\n";
+    exit(1);
+  }
+}
 
 # allow flush threshold to come from env so it can be tested
 # with smaller input files
 my $flush = $ENV{FIELDSPLIT_FLUSH} || 10000;
 my %fdat = ();
 my $lineno = 0;
-
-my $header;
-if ( $keep ) {
-  $header = <>;
-}
 
 # this is the sprintf format string for "bucketized" split keys, defined here
 # to avoid recalculating length($buckets) inside the file loop.

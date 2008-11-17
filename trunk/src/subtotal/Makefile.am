@@ -12,7 +12,8 @@ TESTS = test.conf
 
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab test.conf test/test_01.sh
+EXTRA_DIST = args.tab test.conf test/test_01.sh test/test_02.sh \
+						 test/test_03.sh test/test_04.sh
 
 man1_MANS = subtotal.1
 subtotal.1 : args.tab

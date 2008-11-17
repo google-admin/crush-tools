@@ -5,8 +5,13 @@
 	name => "calcfield",
 	description => "calculates the value for a new field based on existing fields",
 	version => "0.1",
-	trailing_opts => "[-h] [-v] [-p] [-d <delimiter>] [-i <index>] -e <expression> -b <fallback_result> [-c <column_name>]",
-	usage_extra => "",
+	trailing_opts => "[file...]",
+	usage_extra =>
+  "The expression specified in -e may contain indexes of fields, e.g.\\n\\n" .
+  "  -e '[1] + [2]'\\n\\n" .
+  "You may also use column labels in the expression:\\n\\n" .
+  "  -e '[Clicks] + [Impressions]'\\n\\n" .
+  "Use of the latter form implies that the header should be preserved.",
 	do_long_opts => 1,
 	preproc_extra => '',
 	copyright => <<END_COPYRIGHT
@@ -36,6 +41,12 @@ END_COPYRIGHT
 	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
 	  description => 'print this message and exit'
 	},
+  { name => 'version',
+    shortopt => 'V',
+    longopt => 'Version',
+    type => 'flag',
+    description => 'show version information and exit.'
+  },
 	{
 	  name => 'verbose',
 	  shortopt => 'v',
@@ -56,7 +67,7 @@ END_COPYRIGHT
 	{
 	  name        => 'preserve_header',
 	  shortopt    => 'p',
-	  longopt     => '',
+	  longopt     => 'preserve-header',
 	  type        => 'flag',
 	  required    => 0,
 	  description => 'preserve the header line (just passes the first line through to the output file)'
@@ -64,7 +75,7 @@ END_COPYRIGHT
 	{
 	  name        => 'replace',
 	  shortopt    => 'r',
-	  longopt     => '',
+	  longopt     => 'replace',
 	  type        => 'flag',
 	  required    => 0,
 	  description => 'replace the value at the given index (instead of adding a new column)'
@@ -72,34 +83,50 @@ END_COPYRIGHT
 	{
 	  name        => 'index',
 	  shortopt    => 'i',
-	  longopt     => '',
+	  longopt     => 'insert',
 	  type        => 'var',
 	  required    => 0,
 	  description => 'index for the new fields (1-based); if not given the new field will be appended'
 	},
 	{
-	  name        => 'expression',
+	  name        => 'label',
+	  shortopt    => 'B',
+	  longopt     => 'Before',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'place the new field before the field with the specified label'
+	},
+	{
+	  name        => 'label',
+	  shortopt    => 'A',
+	  longopt     => 'After',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'place the new field after the field with the specified label'
+	},
+	{
+	  name        => 'expr',
 	  shortopt    => 'e',
-	  longopt     => '',
+	  longopt     => 'expression',
 	  type        => 'var',
 	  required    => 1,
-	  description => 'the expression to calculate; the expression may contain references to fields, e.g. [1] + [2].  if the -p option is active, you may also use the field names, e. g. [Clicks] + [Impressions]'
+	  description => 'the expression to calculate (see below)'
 	},
 	{
 	  name        => 'fallback',
 	  shortopt    => 'b',
-	  longopt     => '',
+	  longopt     => 'fallback',
 	  type        => 'var',
-	  required    => 1,
+	  required    => 0,
 	  description => 'if the formula is not properly evaluated use this result as the fallback'
 	},
 	{
 	  name        => 'column_name',
 	  shortopt    => 'c',
-	  longopt     => '',
+	  longopt     => 'new-label',
 	  type        => 'var',
 	  required    => 0,
-	  description => 'the name of the column for the calculated field; only used with option -p'
+	  description => 'the name of the column for the calculated field; implies -p'
 	},
 );
 

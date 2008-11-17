@@ -35,7 +35,6 @@ int *right_mergefields = NULL;
 size_t left_ntomerge, right_ntomerge;
 
 
-
 /** @brief opens all the files necessary, sets a default
   * delimiter if none was specified, and calls the
   * merge_files() function.
@@ -49,14 +48,17 @@ size_t left_ntomerge, right_ntomerge;
   */
 int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   char default_delimiter[] = { 0xfe, 0x00 };
-  FILE *left, *right, *out;     /* the two inputs & the output file ptrs */
-  int fd_tmp, retval;           /* file descriptor and return value */
+  FILE *out; /* the output file ptrs */
+  dbfr_t *left_reader, *right_reader;
+  int fd_tmp, retval; /* file descriptor and return value */
 
   enum join_type_t join_type;
 
-  if (args->left_keys && ! args->right_keys ||
-      ! args->left_keys && args->right_keys) {
-    fprintf(stderr, "%s: if -a or -b is specified, the other must be also.\n",
+  if ((args->left_keys || args->left_key_labels) &&
+      ! (args->right_keys || args->right_key_labels) ||
+      ! (args->left_keys || args->left_key_labels) &&
+      (args->right_keys || args->right_key_labels)) {
+    fprintf(stderr, "%s: if -a/-A or -b/-B is specified, the other must be also.\n",
             argv[0]);
     return EXIT_HELP;
   }
@@ -77,35 +79,21 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
     return EXIT_HELP;
   }
 
-  if (str_eq(argv[optind], "-"))
-    left = stdin;
-  else {
-    if ((fd_tmp = open64(argv[optind], O_RDONLY)) < 0) {
-      perror(argv[optind]);
-      return EXIT_FILE_ERR;
-    }
-    if ((left = fdopen(fd_tmp, "r")) == NULL) {
-      perror(argv[optind]);
-      return EXIT_FILE_ERR;
-    }
+  left_reader = dbfr_open(argv[optind]);
+  if (! left_reader) {
+    perror(argv[optind]);
+    return EXIT_FILE_ERR;
   }
 
-  if (str_eq(argv[optind + 1], "-"))
-    right = stdin;
-  else {
-    if ((fd_tmp = open64(argv[optind + 1], O_RDONLY)) < 0) {
-      perror(argv[optind + 1]);
-      return EXIT_FILE_ERR;
-    }
-    if ((right = fdopen(fd_tmp, "r")) == NULL) {
-      perror(argv[optind + 1]);
-      return EXIT_FILE_ERR;
-    }
+  right_reader = dbfr_open(argv[optind + 1]);
+  if (! right_reader) {
+    perror(argv[optind + 1]);
+    return EXIT_FILE_ERR;
   }
 
-  if (!args->outfile)
+  if (!args->outfile) {
     out = stdout;
-  else {
+  } else {
     if ((fd_tmp = open64(args->outfile, O_WRONLY | O_CREAT | O_TRUNC)) < 0) {
       perror(args->outfile);
       return EXIT_FILE_ERR;
@@ -143,36 +131,20 @@ int mergekeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   setlocale(LC_ALL, "");
   setlocale(LC_COLLATE, "");
 
-  retval = merge_files(left, right, join_type, out, args);
+  retval = merge_files(left_reader, right_reader, join_type, out, args);
 
-  fclose(left);
-  fclose(right);
+  dbfr_close(left_reader);
+  dbfr_close(right_reader);
   fclose(out);
 
   return retval;
 }
 
 
-int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
+int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
                 FILE * out, struct cmdargs *args) {
 
   int retval = EXIT_OKAY;
-
-  /* input line buffers for first & second files */
-  char *buffer_left = NULL;
-  char *buffer_right = NULL;
-  char *peek_buffer_left = NULL;
-  char *peek_buffer_right = NULL;
-
-  /* size of the buffers */
-  size_t buffer_left_size = 0;
-  size_t buffer_right_size = 0;
-  size_t peek_buffer_left_size = 0;
-  size_t peek_buffer_right_size = 0;
-
-  /* end of file flags */
-  int eof_left = 0;
-  int eof_right = 0;
 
   /* buffer for holding field values */
   char field_right[MAX_FIELD_LEN + 1];
@@ -180,32 +152,29 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
   /* general-purpose counter */
   int i;
 
-  /** @todo take into account that files a & b might have the same fields in
-	  * a different order.
-	  */
   int keycmp = 0;
 
-  if (getline(&buffer_left, &buffer_left_size, left) <= 0) {
+  if (dbfr_getline(left) <= 0) {
     fprintf(stderr, "%s: no header found in left-hand file\n", getenv("_"));
     retval = EXIT_FILE_ERR;
     goto cleanup;
   }
-  if (getline(&buffer_right, &buffer_right_size, right) <= 0) {
+  if (dbfr_getline(right) <= 0) {
     fprintf(stderr, "%s: no header found in right-hand file\n", getenv("_"));
     retval = EXIT_FILE_ERR;
     goto cleanup;
   }
 
-  chomp(buffer_left);
-  chomp(buffer_right);
+  chomp(left->current_line);
+  chomp(right->current_line);
 
-  nfields_left = fields_in_line(buffer_left, delim);
-  nfields_right = fields_in_line(buffer_right, delim);
+  nfields_left = fields_in_line(left->current_line, delim);
+  nfields_right = fields_in_line(right->current_line, delim);
 
   if (args->verbose) {
     fprintf(stderr,
             "VERBOSE: fields in left: %s\nVERBOSE: fields in right: %s\n",
-            buffer_left, buffer_right);
+            left->current_line, right->current_line);
   }
 
   if ((left_keyfields = malloc(sizeof(int) * nfields_left)) == NULL) {
@@ -230,16 +199,18 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
     goto cleanup;
   }
 
-  if (args->left_keys && args->right_keys) {
-    if (set_field_types(args->left_keys, args->right_keys) < 0) {
+  if ((args->left_keys || args->left_key_labels) &&
+      (args->right_keys ||args->right_key_labels)) {
+    int has_error = set_key_lists(args, left->current_line,
+                                  right->current_line, delim);
+    if (has_error) {
       retval = EXIT_FAILURE;
       goto cleanup;
     }
   } else {
     /* use headers to figure out which fields are keys or need to be merged */
-    classify_fields(buffer_left, buffer_right);
+    classify_fields(left->current_line, right->current_line);
   }
-
 
   if (nkeys == 0) {
     fprintf(stderr, "%s: no common fields found\n", getenv("_"));
@@ -254,61 +225,61 @@ int merge_files(FILE * left, FILE * right, enum join_type_t join_type,
   }
 
   /* print the headers which were already read in above */
-  extract_and_print_fields(buffer_left, left_keyfields, nkeys, delim, out);
+  extract_and_print_fields(left->current_line, left_keyfields, nkeys,
+                           delim, out);
   if (left_ntomerge > 0) {
     fputs(delim, out);
-    extract_and_print_fields(buffer_left, left_mergefields, left_ntomerge,
-                             delim, out);
+    extract_and_print_fields(left->current_line, left_mergefields,
+                             left_ntomerge, delim, out);
   }
   if (right_ntomerge > 0) {
     fputs(delim, out);
-    extract_and_print_fields(buffer_right, right_mergefields, right_ntomerge,
-                             delim, out);
+    extract_and_print_fields(right->current_line, right_mergefields,
+                             right_ntomerge, delim, out);
   }
   fputc('\n', out);
 
-  /* we need to have the buffers cleared before the first call to my_getline */
-  free(buffer_left);
-  buffer_left = NULL;
-  buffer_left_size = 0;
-  free(buffer_right);
-  buffer_right = NULL;
-  buffer_right_size = 0;
-
-  /* force a line-read from RIGHT the first time around.
+  /* force a line-read from LEFT the first time around.
      if eof is reached here, we still need to process
      the left-hand file.
    */
   keycmp = LEFT_RIGHT_EQUAL;
-  my_getline(&buffer_right, &buffer_right_size,
-             &peek_buffer_right, &peek_buffer_right_size, right, &eof_right);
+  
+  if (dbfr_getline(right) <= 0) {
+    free(right->current_line);
+    right->current_line = NULL;
+  }
 
 left_file_loop:
 
-  while (!eof_left) {
+  while (!left->eof) {
     int left_line_printed = 0;
 
     if (LEFT_LE_RIGHT(keycmp)) {
-      if (my_getline(&buffer_left, &buffer_left_size, &peek_buffer_left,
-                     &peek_buffer_left_size, left, &eof_left) <= 0) {
-        keycmp = compare_keys(buffer_left, buffer_right);
+      if (dbfr_getline(left) <= 0) {
+        if (join_type == join_type_inner || join_type == join_type_left_outer)
+          break;
+        free(left->current_line);
+        left->current_line = NULL;
+        keycmp = compare_keys(left->current_line, right->current_line);
         goto right_file_loop;
       }
     }
 
-    keycmp = compare_keys(buffer_left, buffer_right);
+    keycmp = compare_keys(left->current_line, right->current_line);
 
     if (LEFT_LT_RIGHT(keycmp)) {
       if (join_type == join_type_outer || join_type == join_type_left_outer)
-        join_lines(buffer_left, NULL, args->merge_default, out);
+        join_lines(left->current_line, NULL, args->merge_default, out);
       goto left_file_loop;
     }
 
     if (LEFT_EQ_RIGHT(keycmp)) {
       /* everybody likes an inner join */
-      join_lines(buffer_left, buffer_right, args->merge_default, out);
+      join_lines(left->current_line, right->current_line,
+                 args->merge_default, out);
 
-      if (peek_keys(peek_buffer_left, buffer_left) == 0) {
+      if (peek_keys(left->next_line, left->current_line) == 0) {
         /* the keys in the next line of LEFT are the same.
            handle "many:1"
          */
@@ -320,15 +291,17 @@ left_file_loop:
 
   right_file_loop:
 
-    while (!eof_right) {
+    while (!right->eof) {
       if (LEFT_GT_RIGHT(keycmp)) {
         if (join_type == join_type_outer || join_type == join_type_right_outer)
-          join_lines(NULL, buffer_right, args->merge_default, out);
+          join_lines(NULL, right->current_line, args->merge_default, out);
       }
 
-      my_getline(&buffer_right, &buffer_right_size, &peek_buffer_right,
-                 &peek_buffer_right_size, right, &eof_right);
-      keycmp = compare_keys(buffer_left, buffer_right);
+      if(dbfr_getline(right) <= 0) {
+        free(right->current_line);
+        right->current_line = NULL;
+      }
+      keycmp = compare_keys(left->current_line, right->current_line);
 
       if (LEFT_LT_RIGHT(keycmp)) {
 
@@ -336,21 +309,21 @@ left_file_loop:
             (join_type == join_type_outer
              || join_type == join_type_left_outer)) {
 
-          join_lines(buffer_left, NULL, args->merge_default, out);
+          join_lines(left->current_line, NULL, args->merge_default, out);
         }
 
         goto left_file_loop;
       }
 
       if (LEFT_EQ_RIGHT(keycmp)) {
-        join_lines(buffer_left, buffer_right, args->merge_default, out);
+        int peek_cmp;
+        join_lines(left->current_line, right->current_line,
+                   args->merge_default, out);
         left_line_printed = 1;
 
-
         /* if the keys in the next line of LEFT are the same,
-           handle "many:1".
-         */
-        int peek_cmp = peek_keys(peek_buffer_left, buffer_left);
+           handle "many:1". */
+        peek_cmp = peek_keys(left->next_line, left->current_line);
         if ((args->inner && peek_cmp <= 0) || peek_cmp == 0) {
           goto left_file_loop;
         }
@@ -359,10 +332,12 @@ left_file_loop:
            handle "1:many" by staying in this inner loop.  otherwise,
            go back to the outer loop. */
 
-        if (peek_keys(peek_buffer_right, buffer_right) != 0) {
+        if (peek_keys(right->next_line, right->current_line) != 0) {
           /* need a new line from RIGHT */
-          my_getline(&buffer_right, &buffer_right_size, &peek_buffer_right,
-                     &peek_buffer_right_size, right, &eof_right);
+          if (dbfr_getline(right) <= 0) {
+            free(right->current_line);
+            right->current_line = NULL;
+          }
           goto left_file_loop;
         }
       }
@@ -370,14 +345,6 @@ left_file_loop:
   } /* feof( left ) */
 
 cleanup:
-  if (buffer_left)
-    free(buffer_left);
-  if (buffer_right)
-    free(buffer_right);
-  if (peek_buffer_left)
-    free(peek_buffer_left);
-  if (peek_buffer_right)
-    free(peek_buffer_right);
   if (left_keyfields)
     free(left_keyfields);
   if (right_keyfields)
@@ -388,72 +355,6 @@ cleanup:
     free(right_mergefields);
 
   return retval;
-}
-
-
-/* wrapper for get line with peek */
-int my_getline(char **buffer, size_t *size, char **peek_buffer,
-               size_t *peek_size, FILE *in, int *eof_flag) {
-
-  /* if both buffers are empty, we are at the very beginning */
-  if (*peek_buffer == NULL && *buffer == NULL) {
-
-    /* first get the actual line to work with */
-    if (getline(buffer, size, in) <= 0) {
-      free(*buffer);
-      *buffer = NULL;
-      *eof_flag = 1;
-      return 0;
-    }
-    chomp(*buffer);
-
-    /* then get the peek line */
-    if (getline(peek_buffer, peek_size, in) <= 0) {
-      free(*peek_buffer);
-      *peek_buffer = NULL;
-    } else {
-      chomp(*peek_buffer);
-    }
-
-    return 1;
-  }
-  /* if the peek buffer is not empty, we are right in the middle */
-  else if (*peek_buffer != NULL) {
-
-    /* make sure we have enough memory for the copy */
-    if (*size < *peek_size) {
-      char *tmp;
-      tmp = (char *) realloc(*buffer, *peek_size);
-      if (tmp == NULL) {
-        warn("error reallocating the current-line buffer.");
-        exit(2);
-      }
-      *buffer = tmp;
-      *size = *peek_size;
-    }
-
-    /* first copy the peek line into the actual line buffer */
-    memcpy(*buffer, *peek_buffer, *peek_size);
-
-    /* then read a new peek line */
-    if (getline(peek_buffer, peek_size, in) <= 0) {
-      free(*peek_buffer);
-      *peek_buffer = NULL;
-    } else {
-      chomp(*peek_buffer);
-    }
-
-    return 1;
-  }
-  /* here we are at the end of the file */
-  else {
-    if (*buffer) {
-      free(*buffer);
-      *buffer = NULL;
-    }
-    *eof_flag = 1;
-    return 0;
-  }
 }
 
 
@@ -489,11 +390,10 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
   if (right_line == NULL) {
     /* just print LEFT line with empty RIGHT merge fields */
     extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
-    if (left_ntomerge > 0) {
+    if (left_ntomerge > 0)
       fputs(delim, out);
-      extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
-                               delim, out);
-    }
+    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                             delim, out);
     for (i = 0; i < right_ntomerge; i++) {
       fprintf(out, "%s%s", delim, merge_default);
     }
@@ -502,24 +402,21 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
     extract_and_print_fields(right_line, right_keyfields, nkeys, delim, out);
     for (i = 0; i < left_ntomerge; i++)
       fprintf(out, "%s%s", delim, merge_default);
-    if (right_ntomerge > 0) {
+    if (right_ntomerge > 0)
       fputs(delim, out);
-      extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
-                               delim, out);
-    }
+    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                             delim, out);
   } else {
     /* keys are equal. */
     extract_and_print_fields(left_line, left_keyfields, nkeys, delim, out);
-    if (left_ntomerge > 0) {
+    if (left_ntomerge > 0)
       fputs(delim, out);
-      extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
-                               delim, out);
-    }
-    if (right_ntomerge > 0) {
+    extract_and_print_fields(left_line, left_mergefields, left_ntomerge,
+                             delim, out);
+    if (right_ntomerge > 0)
       fputs(delim, out);
-      extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
-                               delim, out);
-    }
+    extract_and_print_fields(right_line, right_mergefields, right_ntomerge,
+                             delim, out);
   }
 
   fputc('\n', out);
@@ -548,20 +445,33 @@ static void decrement_each(int *array, size_t n) {
   }
 }
 
-
-int set_field_types(const char *left_keys, const char *right_keys) {
+int set_key_lists(struct cmdargs *args, const char *left_line,
+                  const char *right_line, const char *delim) {
   ssize_t nkeys_left, nkeys_right;
-  int i;
+  size_t key_array_sz = 0;
 
-  nkeys_left = Expand_nums(left_keys, &left_keyfields,
-                           &nfields_left, "left");
-  if (nkeys_left < 1)
+  if (args->left_key_labels) {
+    nkeys_left = expand_label_list(args->left_key_labels, left_line,
+                                   delim, &left_keyfields, &nfields_left);
+  } else {
+    nkeys_left = expand_nums(args->left_keys, &left_keyfields, &nfields_left);
+  }
+  if (nkeys_left <= 0) {
+    fprintf(stderr, "%s: error parsing left keys\n", getenv("_"));
     return -1;
+  }
 
-  nkeys_right = Expand_nums(right_keys, &right_keyfields,
-                            &nfields_right, "right");
-  if (nkeys_right < 1)
+  if (args->right_key_labels) {
+    nkeys_right = expand_label_list(args->right_key_labels, right_line,
+                                   delim, &right_keyfields, &nfields_right);
+  } else {
+    nkeys_right = expand_nums(args->right_keys, &right_keyfields,
+                              &nfields_right);
+  }
+  if (nkeys_right <= 0) {
+    fprintf(stderr, "%s: error parsing right keys\n", getenv("_"));
     return -1;
+  }
 
   if (nkeys_left != nkeys_right) {
     fprintf(stderr,
@@ -572,13 +482,18 @@ int set_field_types(const char *left_keys, const char *right_keys) {
 
   decrement_each(left_keyfields, nkeys_left);
   decrement_each(right_keyfields, nkeys_right);
-
   nkeys = nkeys_left;
+  set_field_types();
+  return 0;
+}
+
+int set_field_types() {
+  int i;
   left_ntomerge = right_ntomerge = 0;
 
   for (i = 0; i < nfields_left; i++) {
     int j, found = 0;
-    for (j = 0; j < nkeys_left; j++) {
+    for (j = 0; j < nkeys; j++) {
       if (left_keyfields[j] == i) {
         found = 1;
         break;
@@ -590,7 +505,7 @@ int set_field_types(const char *left_keys, const char *right_keys) {
 
   for (i = 0; i < nfields_right; i++) {
     int j, found = 0;
-    for (j = 0; j < nkeys_right; j++) {
+    for (j = 0; j < nkeys; j++) {
       if (right_keyfields[j] == i) {
         found = 1;
         break;
