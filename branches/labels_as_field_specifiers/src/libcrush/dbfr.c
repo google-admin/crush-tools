@@ -63,11 +63,15 @@ static void * xmalloc(size_t size) {
 }
 
 dbfr_t * dbfr_open(char *filename) {
-  int fd;
+  int fd, flags;
   FILE *fp;
+  flags = O_RDONLY;
+#ifdef O_LARGEFILE
+  flags |= O_LARGEFILE;
+#endif
   if (filename == NULL || strcmp(filename, "-") == 0)
     return dbfr_init(stdin);
-  if ((fd = open64(filename, O_RDONLY | O_LARGEFILE)) < 0)
+  if ((fd = open64(filename, flags)) < 0)
     return NULL;
   if ((fp = fdopen(fd, "r")) == NULL)
     return NULL;
