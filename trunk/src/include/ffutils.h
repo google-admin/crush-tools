@@ -161,6 +161,9 @@ void trim(char *str);
 /** @brief goes through a list of file names, attempting to open them.
   * it loops through trying to open each file until one is successfully
   * opened or there are no more file names in the list.
+  *
+  * If the filename "-" is in the list, either stdin or stdout will be
+  * returned.
   * 
   * @param argc the number of arguments from the commandline
   * @param argv the array of arguments from the commandline

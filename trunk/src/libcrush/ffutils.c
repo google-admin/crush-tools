@@ -216,6 +216,14 @@ FILE *nextfile(int argc, char *argv[], int *optind, const char *mode) {
   fd_flags |= O_LARGEFILE;
 #endif
 
+  if (*optind < argc && str_eq("-", argv[*optind])) {
+    (*optind)++;
+    if (fd_flags & (O_WRONLY | O_RDWR))
+      return stdout;
+    else
+      return stdin;
+  }
+
   while (*optind < argc) {
     if ((fd = open64(argv[(*optind)++], fd_flags)) != -1) {
       fp = fdopen(fd, mode);
