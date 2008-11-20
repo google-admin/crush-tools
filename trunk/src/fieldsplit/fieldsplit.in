@@ -13,17 +13,23 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+#
 
 use strict;
-
 use Getopt::Long;
 use Memoize;
 
 memoize('transform_splitfield');
  
+my $MAX_FILE_HANDLES = 1023;
+my $PRESERVE_FILE_HANDLES_PCT = 10;
+my (%handles, %priority) = ();
 my ($help, $d, $f, $label, $keep, $dir, $prefix, $suffix, $xform_outnames,
     $show_version, $buckets);
 $d = $ENV{'DELIMITER'} || chr(0xfe);
+# allow flush threshold to come from env so it can be tested
+# with smaller input files
+my $num_flush_buffer_lines = $ENV{FIELDSPLIT_FLUSH} || 10000;
 $dir = './';
 $prefix = $suffix = '';
 Getopt::Long::Configure("no_ignore_case");
@@ -38,6 +44,7 @@ Getopt::Long::Configure("no_ignore_case");
             "xform-name=s" => \$xform_outnames,
             "Version"      => \$show_version,
             "buckets=n"    => \$buckets,
+            "S=n" => \$num_flush_buffer_lines,
            );
 
 if ($show_version) {
@@ -75,9 +82,6 @@ if ($f) {
   }
 }
 
-# allow flush threshold to come from env so it can be tested
-# with smaller input files
-my $flush = $ENV{FIELDSPLIT_FLUSH} || 10000;
 my %fdat = ();
 my $lineno = 0;
 
@@ -91,33 +95,33 @@ if ($buckets) {
 while (my $lstr = <>) {
   $lineno++;
 
-  my @line = split(/\Q$d\E/, $lstr, -1);
-
-  my $split_key = transform_splitfield($line[$f]);
+  my $split_key = transform_splitfield(get_line_field($lstr, $f, $d));
 
   if ($buckets) {
     $split_key = sprintf($fmt_str, hash($split_key) % $buckets);
   }
   push @{ $fdat{$split_key} }, $lstr;
+  $priority{ $split_key }++;
 
-  if ($lineno == $flush) {
+  if ($lineno == $num_flush_buffer_lines) {
     flush_data(\%fdat);
     $lineno = 0;
   }
 }
 
 flush_data(\%fdat);
+close_handles();
 
 exit(0);
 
 sub transform_splitfield {
     my $k = shift;
 
-    $k =~ s/[\r\n]//g;
+    $k =~ s/[\r\n]//go;
     return '_blank_value' if ( ! length $k );
 
-    $k =~ s/\s/_/g;
-    $k =~ s/\//_/g;
+    $k =~ s/\s/_/go;
+    $k =~ s/\//_/go;
 
     if ($xform_outnames) {
         eval "\$k =~ $xform_outnames;";
@@ -125,28 +129,57 @@ sub transform_splitfield {
     return $k;
 }
 
-
 sub flush_data {
   my $fdat = shift;
   foreach my $key (keys %{ $fdat }){
     my $fname = $dir . '/' . $prefix . $key . $suffix;
+    my $msk;
+    if ($keep && ! -f $fname) {
+      $msk = "> $fname";
+    } else {
+      $msk = ">> $fname";
+    }
 
+    if (! exists $handles{$key}) {
+      my $fh;
+      if (! open($fh, $msk)) {
+                # real max
+        $MAX_FILE_HANDLES = scalar keys %handles;
+        my $tp = {};
+        get_priority_hash($tp);
+        close_handles($tp);
+        open($fh, $msk) || die "unable to open $msk: $!";
+      }
+      $handles{$key} = $fh;
+      print { $handles{$key} } $header if $keep;
+    }
     # if keeping the header and the file doesn't
     # exist yet open it & print the header to it
-    if ($keep && ! -f $fname) {
-      open(F, "> $fname") or die "$0: $fname: $!\n";
-      print F $header;
-    } else {
-      open(F, ">> $fname") or die "$0: $fname: $!\n";
-    }
-    foreach my $l (@{ $fdat->{$key} }){
-      print F $l;
-    }
-    close(F);
-    delete $fdat->{$key}
+    print { $handles{$key} } @{ $fdat->{$key} };
+    delete $fdat->{$key};
   }
 }
 
+sub get_priority_hash {
+  my $tp = shift;
+  my $i = 0;
+  my $x_percent = $MAX_FILE_HANDLES / $PRESERVE_FILE_HANDLES_PCT;
+  for my $k (sort { $priority{$b} <=> $priority{$a} } keys %priority) {
+    last if $i >= $x_percent;
+    $tp->{$k} = 1;
+    $i++;
+  }
+}
+
+sub close_handles {
+  my $tp = shift || {}; # null arg closes all FH
+  for my $k (keys %handles) {
+    if (! exists $tp->{$k}) {
+      close($handles{$k});
+      delete $handles{$k};
+    }
+  }
+}
 
 # based on the hashing algorithm used in Perl 5.005
 # see http://www.perl.com/lpt/a/679
@@ -180,6 +213,8 @@ usage: $0 [-h] <-f N> [-d D] [-p dir] [file(s)]
                         output names (e.g. 's/[^-\\w]//g')
   -b, --buckets <N>     split data into at most N files, guaranteeing that
                         like field values are in the same output file.
+  -S <N>                number of lines to store in memory before flushing
+                        to disk. (default: 10000)
 
 filenames will be the -n prefix argument (if any) followed by whatever the
 value of the field was (with spaces and slashes replaced with underscores),
@@ -194,3 +229,8 @@ __USAGE__
 }
 
 m4_include(utils.pl)
+
+# Local Variables:
+# mode: perl
+# End:
+
