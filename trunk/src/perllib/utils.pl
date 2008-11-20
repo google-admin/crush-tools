@@ -54,12 +54,14 @@ $field_index is 0 based
 
 =cut    
 sub get_line_field {
-  my $pos = 0; my $ret;
+  my $pos = 0;
   for (my $i = 0; $i < $_[1]; $i++) {
     $pos = index($_[0], $_[2], $pos);
     $pos++;
   }
-  return substr($_[0], $pos, index($_[0], $_[2], $pos) - $pos );
+  my $end_pos = index($_[0], $_[2], $pos) - $pos;
+  $end_pos = length($_[0]) - $pos if $end_pos <= 0;
+  return substr($_[0], $pos, $end_pos);
 }
 
 1;
