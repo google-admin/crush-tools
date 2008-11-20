@@ -50,17 +50,16 @@ sub fields_in_line {
 
 Get the data at position field from the delim deliminated string line.
 
-This is perf optimized for fields that occur in the first N positions
-of the line, where N is some low number. The alorithm builds an array
-for each field in the line and returns the one at the requested
-index. So the smaller the array, the faster the function.
-
 $field_index is 0 based
 
 =cut    
 sub get_line_field {
-  # the field index increment is 1 for 0-based index + 1 for next pos
-  return (split(/\Q$_[2]\E/o, $_[0], $_[1] + 2))[$_[1]];
+  my $pos = 0; my $ret;
+  for (my $i = 0; $i < $_[1]; $i++) {
+    $pos = index($_[0], $_[2], $pos);
+    $pos++;
+  }
+  return substr($_[0], $pos, index($_[0], $_[2], $pos) - $pos );
 }
 
 1;
