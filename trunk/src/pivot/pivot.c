@@ -90,9 +90,6 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   char **headers = NULL;        /* array of header labels */
   size_t n_headers = 0;         /* number of fields */
 
-  char *inbuf;                  /* input line buffer */
-  size_t inbuf_sz;              /* size of buffer */
-
   char *fieldbuf = NULL;        /* to hold fields extracted from input */
   size_t fieldbuf_sz = 0;       /* size of field buffer */
 
@@ -332,7 +329,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
        than the combined length of all pivot field values and a 3-char
        separator.  safe assumption?  probably not if every input field
        is used as a pivot field. */
-    pivot_label = malloc(inbuf_sz);
+    pivot_label = malloc(in_reader->current_line_sz);
     if (! pivot_label) {
       warn("allocating memory for the labels");
       exit(EXIT_MEM_ERR);

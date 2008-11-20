@@ -43,7 +43,7 @@ int subtotal(struct cmdargs *args, int argc, char *argv[], int optind) {
   size_t nsums = 0;         /* the number of columns to be subtotaled */
   int *sum_cols = NULL,     /* array of column indexes to subtotal */
       *sums = NULL;         /* array to hold the sums */
-  size_t sum_cols_sz;       /* capacity of sums_cols */
+  size_t sum_cols_sz = 0;   /* capacity of sums_cols */
 
   size_t n_fields;          /* the number of fields in the input line */
   int current_line, starting_line;
