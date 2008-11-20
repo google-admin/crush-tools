@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <linklist.h>
 
-#include "ffutils.h"
+#include <ffutils.h>
 
 int XFAIL(int n) {
   if (n == 0)

@@ -15,8 +15,7 @@
  *****************************************/
 
 #include <stdio.h>
-
-#include "ffutils.h"
+#include <ffutils.h>
 
 int main(int argc, char *argv[]) {
 

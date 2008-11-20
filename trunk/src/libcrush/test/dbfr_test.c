@@ -179,6 +179,8 @@ int main (int argc, char *argv[]) {
   RUN_TEST(test_dbfr_getline_2);
 
   teardown();
+  if (has_failures)
+    return 1;
   return 0;
 }
 
