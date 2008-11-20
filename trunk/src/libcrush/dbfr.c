@@ -27,7 +27,7 @@
 #    define open64 open
 #  endif
 #else
-#  define HAVE_FCNTL 1
+#  define HAVE_FCNTL_H 1
 #  include <unistd.h>
 #  include <fcntl.h>
 #  include <stdlib.h>
@@ -39,7 +39,7 @@
 
 #include <dbfr.h>
 
-#ifdef HAVE_FCNTL
+#ifdef HAVE_FCNTL_H || HAVE_SYS_FCNTL_H
 int dbfr_is_readable(FILE *fp) {
   int fd = fileno(fp);
   int flags = fcntl(fd, F_GETFL);

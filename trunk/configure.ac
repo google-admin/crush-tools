@@ -44,7 +44,7 @@ AC_SUBST([MKDIR], ["$INSTALL -d"])
 AC_PROG_LIBTOOL
 
 # cygwin has fcntl.h under sys/
-AC_CHECK_HEADERS([fnctl.h sys/fcntl.h unistd.h err.h locale.h sys/types.h \
+AC_CHECK_HEADERS([fcntl.h sys/fcntl.h unistd.h err.h locale.h sys/types.h \
                   sys/stat.h regex.h assert.h])
 AC_HEADER_STDC
 AC_C_CONST
