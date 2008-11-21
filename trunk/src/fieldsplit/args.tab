@@ -107,5 +107,13 @@ END_COPYRIGHT
 	  required    => 0,
 	  description => 'user-supplied substitution regex to transform output names (e.g. \'s/[^-\\w]//g\')'
 	},
+	{
+	  name        => 'num_flush_buffer_lines',
+	  shortopt    => 'S',
+	  longopt     => '',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'override the number of lines stored in memory before flushing. (default: 10000)'
+	},
 );
 

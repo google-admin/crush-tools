@@ -23,14 +23,26 @@ foreach my $opt (@args) {
     $optional_opts .= $opt->{shortopt};
   }
   if ($opt->{type} eq 'flag' || $opt->{type} eq 'custom_flag') {
-    $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                    '  \-\-' . $opt->{longopt} . '\fR' .
-                    "\n" . $opt->{description} . "\n";
+    if ($opt->{longopt}) {
+      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
+                      '  \-\-' . $opt->{longopt} . '\fR' .
+                      "\n" . $opt->{description} . "\n";
+    } else {
+      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
+                      '\fR' .
+                      "\n" . $opt->{description} . "\n";
+    }
   } else {
-    $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                    '\fR ' . $opt->{name} .
-                    '  \fB \-\-' . $opt->{longopt} . '\fR=' . $opt->{name} .
-                    "\n" . $opt->{description} . "\n";
+    if ($opt->{longopt}) {
+      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
+                      '\fR ' . $opt->{name} .
+                      '  \fB \-\-' . $opt->{longopt} . '\fR=' . $opt->{name} .
+                      "\n" . $opt->{description} . "\n";
+    } else {
+      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
+                      '\fR ' . $opt->{name} .
+                      "\n" . $opt->{description} . "\n";
+    }
   }
 }
 
