@@ -17,123 +17,104 @@
 #include <mempool.h>
 #include <string.h>             /* memcpy() */
 
-/** @brief creates a memory pool of the given size.
-  * 
-  * @param capacity how many bytes the memory pool should be able to hold
-  * 
-  * @return a newly-allocated memory pool
-  */
-mempool_t *mempool_create(size_t capacity) {
+/* returns the amount of memory remaining within a given page. */
+#define bytes_available_in_page(pool, page_idx) \
+  ((pool)->page_size - (pool)->pages[page_idx].next)
+
+/* Add a page of memory to the pool. */
+static void * _mempool_add_page(mempool_t *pool) {
+  void *tmp;
+  int i = pool->n_pages;
+  if (! pool->pages) {
+    tmp = malloc(sizeof(struct _mempool_page));
+  } else {
+    tmp = realloc(pool->pages,
+                  sizeof(struct _mempool_page) * (pool->n_pages + 1));
+  }
+  if (! tmp)
+    return NULL;
+  pool->pages = tmp;
+  pool->n_pages++;
+
+  pool->pages[i].next = 0;
+  pool->pages[i].buffer = malloc(pool->page_size);
+  if (! pool->pages[i].buffer)
+    return NULL;
+  return pool->pages;
+}
+
+/* Allocate and initialize a mempool. */
+mempool_t *mempool_create(size_t page_size) {
   mempool_t *pool;
 
   pool = malloc(sizeof(mempool_t));
   if (!pool) {
     return NULL;
   }
+  memset(pool, 0, sizeof(mempool_t));
+  pool->page_size = page_size;
 
-  pool->buffer = malloc(capacity);
-  if (!pool->buffer) {
+  if (! _mempool_add_page(pool)) {
     free(pool);
     return NULL;
   }
-
-  pool->next = 0;
-  pool->capacity = capacity;
-
+  pool->next_unfull = 0;
   return pool;
 }
 
-/** @brief tells how much space is left in a memory pool.
-  * 
-  * @param pool the memory pool to be queried.
-  * 
-  * @return the number of unused bytes in the memory pool
-  */
-size_t mempool_available(mempool_t * pool) {
-  if (!pool)
-    return 0;
-
-  return pool->capacity - pool->next;
+/* Allocate memory in the pool and copy something into it. */
+void * mempool_add(mempool_t * pool, const void *thing, size_t thing_size) {
+  void *location;
+  if (!pool || !thing || thing_size == 0)
+    return NULL;
+  location = mempool_alloc(pool, thing_size);
+  if (location)
+    memcpy(location, thing, thing_size);
+  return location;
 }
 
-/** @brief adds something to the memory pool.
-  * 
-  * @param pool the pool to which the thing should be added
-  * @param thing the thing to add to the pool
-  * @param thing_size the size of the thing to add
-  * 
-  * @return the address in the memory pool where the thing was stored,
-  * or NULL if there wasn't enough room for the thing.
-  */
-void *mempool_add(mempool_t * pool, const void *thing, size_t thing_size) {
-  void *location;
-
-  if (!pool)
+/* Reserve memory within the mempool */
+void * mempool_alloc(mempool_t * pool, size_t n_bytes) {
+  void *location = NULL;
+  int i;
+  if (!pool || n_bytes == 0 || n_bytes > pool->page_size)
     return NULL;
 
-  if (!thing || thing_size == 0)
-    return NULL;
-
-  if (mempool_available(pool) < thing_size)
-    return NULL;
-
-  /* calculate the offset into the buffer where the thing should be
-     stored.
-   */
-  location = pool->buffer + pool->next;
-
-  if (memcpy(location, thing, thing_size) != location) {
-    return NULL;
+  /* find a page with enough room, or make a new page. */
+  for (i = pool->next_unfull; i < pool->n_pages; i++) {
+    if (bytes_available_in_page(pool, i) >= n_bytes)
+      break;
   }
 
-  pool->next += thing_size;
+  if (i == pool->n_pages) {
+    if (! _mempool_add_page(pool))
+      return NULL;
+  }
+
+  location = pool->pages[i].buffer + pool->pages[i].next;
+  pool->pages[i].next += n_bytes;
+
+  /* reduce search time for subsequent allocations */
+  for (i = pool->next_unfull;
+       i < pool->n_pages && bytes_available_in_page(pool, i) == 0;
+       i++) {
+    pool->next_unfull++;
+  }
 
   return location;
 }
 
-/** @brief reserves space within a memory pool
-  * 
-  * @param pool in which the space should be reserved
-  * @param n_bytes the number of bytes to reserve
-  * 
-  * @return the address in the memory pool where the thing was stored,
-  * or NULL if there wasn't enough room.
-  */
-void *mempool_alloc(mempool_t * pool, size_t n_bytes) {
-  void *location;
-
-  if (!pool)
-    return NULL;
-  if (!n_bytes || n_bytes > pool->capacity - pool->next)
-    return NULL;
-
-  location = pool->buffer + pool->next;
-
-  pool->next += n_bytes;
-  return location;
-}
-
-/** @brief zeroes out pool usage.
-  * 
-  * @param pool the pool to be cleared.
-  */
-void mempool_reset(mempool_t * pool) {
-  if (!pool)
-    return;
-  /* waste of time to zero out the buffer */
-  pool->next = 0;
-}
-
-/** @brief frees resources associated with a memory pool.
-  * 
-  * @param pool 
-  */
+/* Free resources associated with a mempool. */
 void mempool_destroy(mempool_t * pool) {
+  int i;
   if (!pool)
     return;
 
-  if (pool->buffer)
-    free(pool->buffer);
-
+  for (i = 0; i < pool->n_pages; i++) {
+    if (pool->pages[i].buffer) {
+      free(pool->pages[i].buffer);
+    }
+  }
+  free(pool->pages);
   free(pool);
 }
