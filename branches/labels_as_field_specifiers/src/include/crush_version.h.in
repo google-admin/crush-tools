@@ -1,9 +1,0 @@
-#ifndef CRUSH_VERSION_H
-#define CRUSH_VERSION_H
-/** The version of the CRUSH utility collection.
-  */
-#define CRUSH_VERSION "@PACKAGE_VERSION@"
-#define CRUSH_BUILD_DATE "@BUILD_DATE_TIME@"
-#define CRUSH_PACKAGE_VERSION "CRUSH tools release " CRUSH_VERSION \
-	                            " compiled at " CRUSH_BUILD_DATE
-#endif

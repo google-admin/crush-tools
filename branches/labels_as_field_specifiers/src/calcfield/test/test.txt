@@ -1,4 +1,0 @@
-Text1;Metric-0;Metric-1;Text2
-hello;1;3;world
-tobias;7;1;wolff
-bla;400;0;test
