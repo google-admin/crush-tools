@@ -19,17 +19,18 @@
   *
   * This is a chained hashtable implementation, internally utilizing the
   * linklist library.  Note that for all key comparisons (in ht_put(), ht_get(),
-  * ht_delete(), etc.) strcmp() is used for comparing the keys.  So while there's
-  * nothing to stop you from using some other data type as a lookup key, that 
-  * data item cannot contain any NULL bytes before the end if the key comparison 
-  * is going to behave as expected.
+  * ht_delete(), etc.) strcmp() is used for comparing the keys.  If support for
+  * keys containing null bytes is a requirement, use hashtbl2 instead.
   *
+  * Because of the use of a mempool for key allocation, there is a
+  * 4095-character limit on key length.
   */
 
 #include <stdlib.h>
 #include <string.h>             /* strcmp(), strlen() */
 #include <linklist.h>
 #include <hashfuncs.h>
+#include <mempool.h>
 
 
 #ifndef HASHTBL_H
@@ -37,11 +38,15 @@
 
 /** @brief the hashtable data type. */
 typedef struct _hashtbl {
-  size_t nelems;        /**< number of elements in the hashtable */
-  size_t arrsz;       /**< size of the array */
-  llist_t **arr;        /**< array of linked lists */
-  unsigned int (*hash) (unsigned char *); /**< hash function to use - see hashfuncs.h */
-  void (*free) (void *);      /**< memory freeing function to call against an entry's data */
+  size_t nelems;  /**< number of elements in the hashtable */
+  size_t arrsz;   /**< size of the following array */
+  llist_t **arr;  /**< array of linked lists */
+  /** hash function to use - see hashfuncs.h */
+  unsigned int (*hash) (unsigned char *);
+  /** memory-freeing function to call against an entry's data */
+  void (*free) (void *);
+  mempool_t *ht_elem_pool; /**< a pool for allocating elements */
+  mempool_t *key_pool;     /**< a pool for allocating key strings */
 } hashtbl_t;
 
 /** @brief a key/value pair within the hashtable */

@@ -26,20 +26,24 @@ int ht_init(hashtbl_t * tbl,
   if (tbl == NULL || sz == 0)
     return 1;
 
-/** @todo find out if it's better to init all of the lists now or when they're needed.
- *	i suppose it depends on whether performance or memory usage is more important.
- *	from a performance standpoint, it would be better to do it now as a one-time
- *	cost rather than a comparison plus possible list initialization for every insert.
- */
   /* allocate memory for the table */
   if ((tbl->arr = malloc(sizeof(llist_t *) * sz)) == NULL)
     return -1;
   memset(tbl->arr, 0, sizeof(llist_t *) * sz);
 
+  tbl->ht_elem_pool = mempool_create(sizeof(ht_elem_t) * 128);
+  if (tbl->ht_elem_pool == NULL)
+    return -1;
+
+  /* since keys are free-form text, the pool size is arbitrary. */
+  tbl->key_pool = mempool_create(4096);
+  if (tbl->key_pool == NULL)
+    return -1;
+
   tbl->nelems = 0;
   tbl->arrsz = sz;
-  tbl->free = memfree;          /* NULL ok here */
-  if (hash)                     /* set a default hash function if none specified */
+  tbl->free = memfree;  /* NULL ok here */
+  if (hash)             /* set a default hash function if none specified */
     tbl->hash = hash;
   else
     tbl->hash = BKDRHash;
@@ -58,11 +62,9 @@ void ht_destroy(hashtbl_t * tbl) {
     /* if there's anything in this list, loop through its
        members */
     if (tbl->arr[i] && tbl->arr[i]->nnodes) {
-      for (listnode = tbl->arr[i]->head; listnode; listnode = listnode->next) {
-        /* free the key (allocated from ht_put) */
-        free(((ht_elem_t *) listnode->data)->key);
-        /* free the data if appropriate */
-        if (tbl->free)
+      /* free the data if appropriate */
+      if (tbl->free) {
+        for (listnode = tbl->arr[i]->head; listnode; listnode = listnode->next)
           tbl->free(((ht_elem_t *) listnode->data)->data);
       }
       /* deallocate the list & its elements */
@@ -71,6 +73,8 @@ void ht_destroy(hashtbl_t * tbl) {
     free(tbl->arr[i]);
   }
   free(tbl->arr);
+  mempool_destroy(tbl->ht_elem_pool);
+  mempool_destroy(tbl->key_pool);
   memset(tbl, 0, sizeof(hashtbl_t));
 }
 
@@ -80,9 +84,10 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   llist_node_t *listnode;
   ht_elem_t *elem;
 
-  if ((elem = malloc(sizeof(ht_elem_t))) == NULL)
+  if ((elem = mempool_alloc(tbl->ht_elem_pool, sizeof(ht_elem_t))) == NULL)
     return -1;
-  if ((elem->key = malloc(sizeof(char) * strlen(key) + 1)) == NULL) {
+  if ((elem->key = mempool_alloc(tbl->key_pool,
+                                 sizeof(char) * strlen(key) + 1)) == NULL) {
     free(elem);
     return -1;
   }
@@ -92,14 +97,10 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   /** @todo get rid of the modulo for better performance (if it matters) */
   h = tbl->hash(elem->key) % tbl->arrsz;
 
-
   if (!tbl->arr[h]) {
     tbl->arr[h] = malloc(sizeof(llist_t));
-    ll_list_init(tbl->arr[h], free, NULL);
-    /* using the normal free() function here because we just
-       want the list to deallocate the ht_elem_t data - we'll
-       deallocate the inner data elements from here.
-     */
+    /* non free() fn for the list, since the list elems are in a mempool. */
+    ll_list_init(tbl->arr[h], NULL, NULL);
     ll_add_elem(tbl->arr[h], elem, end);
     tbl->nelems++;
     return 0;
@@ -154,7 +155,7 @@ void ht_delete(hashtbl_t * tbl, char *key) {
   h = tbl->hash(key) % tbl->arrsz;
   list = tbl->arr[h];
 
-  if (!list)                    /* invalid key - nothing in this slot yet */
+  if (!list)  /* unknown key - nothing in this slot yet */
     return;
 
   /* find the node in the list with a matching key */
@@ -162,12 +163,12 @@ void ht_delete(hashtbl_t * tbl, char *key) {
     if (strcmp(((ht_elem_t *) listnode->data)->key, key) == 0)
       break;
 
-  if (!listnode)                /* not found - do nothing */
+  if (!listnode)  /* ht key not found - do nothing */
     return;
 
   /* free the value data inside the node */
   tbl->free(((ht_elem_t *) listnode->data)->data);
-  /* free the node itself along with the key string */
+  /* remove the node itself from the list */
   ll_rm_elem(list, listnode);
   /* indicate that the hashtable is smaller now */
   tbl->nelems--;
