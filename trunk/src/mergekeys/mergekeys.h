@@ -85,7 +85,7 @@ int set_field_types();
 int compare_keys(char *buffer_left, char *buffer_right);
 void join_lines(char *left_line, char *right_line, char *merge_default,
                 FILE * out);
-int peek_keys(char *peek_line, char *current_line);
+int peek_keys(char *peek_line, char *current_line, const int *keyfields);
 
 /* extract each element of fields from line and print them, separated by delim.
    the delimiter will not be printed after the last field. */

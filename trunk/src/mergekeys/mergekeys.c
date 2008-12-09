@@ -279,7 +279,7 @@ left_file_loop:
       join_lines(left->current_line, right->current_line,
                  args->merge_default, out);
 
-      if (peek_keys(left->next_line, left->current_line) == 0) {
+      if (peek_keys(left->next_line, left->current_line, left_keyfields) == 0) {
         /* the keys in the next line of LEFT are the same.
            handle "many:1"
          */
@@ -323,7 +323,8 @@ left_file_loop:
 
         /* if the keys in the next line of LEFT are the same,
            handle "many:1". */
-        peek_cmp = peek_keys(left->next_line, left->current_line);
+        peek_cmp = peek_keys(left->next_line, left->current_line,
+                             left_keyfields);
         if ((args->inner && peek_cmp <= 0) || peek_cmp == 0) {
           goto left_file_loop;
         }
@@ -332,7 +333,8 @@ left_file_loop:
            handle "1:many" by staying in this inner loop.  otherwise,
            go back to the outer loop. */
 
-        if (peek_keys(right->next_line, right->current_line) != 0) {
+        if (peek_keys(right->next_line, right->current_line, right_keyfields)
+            != 0) {
           /* need a new line from RIGHT */
           if (dbfr_getline(right) <= 0) {
             free(right->current_line);
@@ -595,13 +597,25 @@ int compare_keys(char *buffer_left, char *buffer_right) {
 }
 
 
-/* compares kees of the current and the next line */
-int peek_keys(char *peek_line, char *current_line) {
-  int result = 1;
+/* compares keys of the current and the next line.  Basically the same
+ * as compare_keys(), but using the same keyfield list for both lines. */
+int peek_keys(char *peek_line, char *current_line, const int *keyfields) {
+  int keycmp = 0;
+  int i;
+  char field_cur[MAX_FIELD_LEN + 1];
+  char field_next[MAX_FIELD_LEN + 1];
 
-  if (peek_line != NULL) {
-    result = compare_keys(current_line, peek_line);
+  /* no next line, so current line's fields are greater. */
+  if (peek_line == NULL)
+    return 1;
+
+  for (i = 0; i < nkeys; i++) {
+    get_line_field(field_cur, current_line, MAX_FIELD_LEN,
+                   keyfields[i], delim);
+    get_line_field(field_next, peek_line, MAX_FIELD_LEN,
+                   keyfields[i], delim);
+    if ((keycmp = strcoll(field_cur, field_next)) != 0)
+      break;
   }
-
-  return result;
+  return keycmp;
 }
