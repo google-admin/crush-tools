@@ -116,18 +116,17 @@ int grepfield(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (args->preserve_header) {
     if (dbfr_getline(in_reader) > 0) {
-      fprintf(out, "%s", in_reader->current_line);
+      fputs(in_reader->current_line, out);
     }
   }
 
   while (in != NULL) {
     while (dbfr_getline(in_reader) > 0) {
-      chomp(in_reader->current_line);
       if (field_to_scan(&fieldval, &fldsz, in_reader->current_line,
                         args->delim, field_no) == NULL)
         continue;
       if (regexec(&pattern, fieldval, 0, NULL, 0) == reg_flags)
-        fprintf(out, "%s\n", in_reader->current_line);
+        fputs(in_reader->current_line, out);
     }
 
     dbfr_close(in_reader);
