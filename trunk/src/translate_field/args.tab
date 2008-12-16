@@ -107,5 +107,13 @@ END_COPYRIGHT
 	  required    => 0,
 	  description => 'specifies a file containing perl expressions which define mappings in the hashtable "%mapping"'
 	},
+	{
+	  name        => 'xpression',
+	  shortopt    => 'x',
+	  longopt     => 'xpression',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'specifies a list of regular expressions to apply to the specified input field'
+	},
 );
 
