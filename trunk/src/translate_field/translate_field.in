@@ -20,7 +20,7 @@ use Getopt::Long;
 Getopt::Long::Configure("no_ignore_case");
 
 my($help, $debug, $field, $field_label, $delim, $replace, $append, $prepend,
-   %mapping, $external, $show_version);
+   %mapping, $external, $show_version, @xpressions);
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
@@ -35,6 +35,7 @@ GetOptions("help" => \$help,
            "map=s" => \%mapping,
            "external=s" => \$external,
            "Version" => \$show_version,
+           "xpression=s" => \@xpressions,
           );
 
 if ($help) {
@@ -103,7 +104,15 @@ sub translate_field {
   if (defined($mapping{$field_val})) {
     $trans_val = $mapping{$field_val};
   } else {
-    $trans_val = $line[$local_field];
+    $trans_val = $field_val;
+    if (@xpressions) {
+      for my $xpression (@xpressions) {
+        eval "\$trans_val =~ $xpression;";
+        if ($@) {
+          die "bad expression: $xpression on '$trans_val': line $.: $@";
+        }
+      }
+    }
   }
 
   # if no mapping defined, the field value is passed through unchanged
@@ -140,6 +149,7 @@ usage: $0 <-f <N>> [options] [file ...]
                    field value
   -e, --external <F> specifies a file containing perl expressions which
       define mappings in the hashtable "\%mapping"
+  -x, --xpression <s/x/y/> apply a regular expression as the translation
 
 see `perldoc $0` for more details.
 
@@ -162,6 +172,7 @@ usage: $0 <-f <N>> [options] [file ...]
                    field value
   -e, --external <F> specifies a file containing perl expressions which
       define mappings in the hashtable "\%mapping"
+  -x, --xpression <s/x/y/> apply a regular expression as the translation
 
 =head1 DETAILS
 
@@ -179,9 +190,14 @@ possible value for the field, and V is the translation.
 
 =item *
 
-If no mapping is supplied for a field value, the value is unchanged
-(the header is preserved unless a mapping is specified for the header
-value).
+Expressions are applied only if a mapping does not match the input
+field value.
+
+=item *
+
+If no mapping or xpression is supplied for a field value, the value is
+unchanged (the header is preserved unless a mapping is specified for
+the header value).
 
 =item *
 
