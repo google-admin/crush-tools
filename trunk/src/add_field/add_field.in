@@ -44,12 +44,12 @@ if ($show_version) {
 }
 $delim = expand_chars($delim);
 
-my ($expected_fields, $header_line);
+my ($input_field_count, $header_line);
 if (! defined $location) {
   if ($label_before || $label_after) {
     $header_line = <>;
     $header_line =~ s/[\r\n]//g;
-    $expected_fields = fields_in_line($header_line, $delim);
+    $input_field_count = fields_in_line($header_line, $delim);
 
     my $find_label = $label_before ? $label_before : $label_after;
     $location = field_str($find_label, $header_line, $delim);
@@ -70,9 +70,9 @@ if ($copy_field) {
   if (! defined $header_line) {
     $header_line = <>;
     $header_line =~ s/[\r\n]//g;
-    $expected_fields = fields_in_line($header_line, $delim);
+    $input_field_count = fields_in_line($header_line, $delim);
     if ($location < 0) {
-      $location = $expected_fields + $location + 2;
+      $location = $input_field_count + $location + 2;
     }
   }
   $copy_field = field_str($copy_label, $header_line, $delim);
@@ -91,10 +91,10 @@ if ($header_line) {
 
 while (my $line = <>) {
   $line =~ s/[\r\n]//g;
-  if (! defined($expected_fields)) {
-    $expected_fields = fields_in_line($line, $delim);
+  if (! defined($input_field_count)) {
+    $input_field_count = fields_in_line($line, $delim);
     if ($location < 0) {
-      $location = $expected_fields + $location + 2;
+      $location = $input_field_count + $location + 2;
     }
   }
   if ($header && $. == 1) {
@@ -113,22 +113,22 @@ sub add_field {
 
   my @a;
   if (defined($c)) {
-    @a = split(/\Q$d\E/, $l, -1);
+    @a = split(/\Q$d\E/o, $l, -1);
     $v = $a[$c];
   }
 
   # simple case: prepending the field
-  if ($p == 1 || $p == 0) {
+  if ($p <= 1) {
     return $v . $d . $l;
   }
 
   # simple case: appending the field
-  if ($expected_fields < $p) {
+  if ($input_field_count < $p) {
     return $l . $d . $v;
   }
 
   if (! @a) {
-    @a = split(/\Q$d\E/, $l, -1);
+    @a = split(/\Q$d\E/o, $l, -1);
   }
 
   # put the field somewhere in the middle
