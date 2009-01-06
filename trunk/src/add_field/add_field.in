@@ -17,8 +17,8 @@
 use strict;
 use Getopt::Long;
 
-my ($help, $header, $value, $location, $delim, $copy_field, $show_version,
-    $label_before, $label_after);
+my ($help, $header, $value, $location, $delim, $copy_field, $copy_label,
+    $show_version, $label_before, $label_after);
 
 $value = '';
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
@@ -31,6 +31,7 @@ Getopt::Long::Configure("no_ignore_case");
             "After=s" => \$label_after,
             "delim=s" => \$delim,
             "copy=n" => \$copy_field,
+            "Copy-label=s" => \$copy_label,
             "Version" => \$show_version);
 
 if ($help) {
@@ -43,14 +44,10 @@ if ($show_version) {
 }
 $delim = expand_chars($delim);
 
-if ($copy_field) {
-  $copy_field--;
-}
-
-my $expected_fields;
+my ($expected_fields, $header_line);
 if (! defined $location) {
   if ($label_before || $label_after) {
-    my $header_line = <>;
+    $header_line = <>;
     $header_line =~ s/[\r\n]//g;
     $expected_fields = fields_in_line($header_line, $delim);
 
@@ -62,11 +59,34 @@ if (! defined $location) {
     }
     $location++;
     $location++ if ($label_after);
-    print add_field($header_line, defined($header) ? $header : $value,
-                    $location, $delim), qq(\n);
   } else {
     $location = 1;
   }
+}
+
+if ($copy_field) {
+  $copy_field--;
+} elsif ($copy_label) {
+  if (! defined $header_line) {
+    $header_line = <>;
+    $header_line =~ s/[\r\n]//g;
+    $expected_fields = fields_in_line($header_line, $delim);
+    if ($location < 0) {
+      $location = $expected_fields + $location + 2;
+    }
+  }
+  $copy_field = field_str($copy_label, $header_line, $delim);
+  if (! defined $copy_field) {
+    warn "$0: unable to find the field labelled \"$copy_label\"\n";
+    exit 1;
+  }
+}
+
+
+if ($header_line) {
+  print add_field($header_line, defined($header) ? $header : $value,
+                  $location, $delim, defined($header) ? undef : $copy_field),
+        qq(\n);
 }
 
 while (my $line = <>) {
@@ -124,15 +144,16 @@ adds a field to a flat-file.
 usage: $0 [hdflv] [file(s)]
 
   -h, --help  print this message and exit
-  -d, --delim <S>    the field delimiter string (default: 0xfe)
-  -f, --field <N>    the 1-based index for the new field (default: 1)
-  -B, --Before <S>   place the new field before the field with the specified
-                       label.
-  -A, --After <S>    place the new field after the field with the specified
-                       label.
-  -l, --label <S>    label the new field as S on the first line
-  -v, --value <S>    the value to place in the new field (default: emtpy)
-  -c, --copy <N>     copy the value from field N into the new field
+  -d, --delim <S>        the field delimiter string (default: 0xfe)
+  -f, --field <N>        the 1-based index for the new field (default: 1)
+  -B, --Before <S>       place the new field before the field with the specified
+                           label.
+  -A, --After <S>        place the new field after the field with the specified
+                           label.
+  -l, --label <S>        label the new field as S on the first line
+  -v, --value <S>        the value to place in the new field (default: emtpy)
+  -c, --copy <N>         copy the value from field N into the new field
+  -C, --Copy-label <S>   copy the new value from field labelled S
 
  * if no "label" is provided, the "value" will be used.
  * for -f, a field of either 0 or 1 may be used to indicate the first
