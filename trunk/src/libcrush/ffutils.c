@@ -380,35 +380,63 @@ ssize_t expand_label_list(const char *labels,
                           const char *delim,
                           int **array, size_t *array_sz) {
   int i = 0, j = 0;
-  char *labels_copy = strdup(labels);
-  char *pos = labels_copy;
-  char *labels_end = labels_copy + strlen(labels_copy);
+  size_t labels_len = strlen(labels);
+  char *labels_copy = malloc(labels_len + 1);
+  size_t tokens = 0;
+  char *pos, *labels_end;
 
-  chomp(labels_copy);
-
-  /* "tokenize" the list of labels */
-  while ((pos = strchr(pos, ',')) != NULL) {
-    *pos = '\0';
-    i++;
-    pos++;
+  /* Tokenize the list of labels.  Possible escape sequences are
+   * \\ - translates to a literal backslash
+   * \, - translates to a literal comma
+   *
+   * Back-slash literals aren't required to be escaped unless they are
+   * followed by a label-separating comma.
+   */
+  while (i < labels_len + 1) {
+    if (labels[i] == '\0' || labels[i] == '\n' || labels[i] == '\r') {
+      labels_copy[j] = '\0';
+      tokens++; 
+      break;
+    } else if (labels[i] == '\\') {
+      if (labels[i+1] == '\\') {
+        labels_copy[j] = '\\';
+      } else if (labels[i+1] == ',') {
+        labels_copy[j] = ',';
+      } else {
+        /* untranslatable escape sequence - copy it verbatim. */
+        labels_copy[j++] = labels[i];
+        labels_copy[j] = labels[i+1];
+      }
+      i += 2;
+    } else if (labels[i] == ',') {
+      /* label-separator comma */
+      labels_copy[j] = '\0';
+      tokens++;
+      i++;
+    } else {
+      labels_copy[j] = labels[i];
+      i++;
+    }
+    j++;
   }
-  i++; /* count the last token */
+  labels_end = labels_copy + j;
 
   /* make sure the array can hold all of the indexes */
   if (*array == NULL) {
-    *array = malloc(sizeof(int) * i);
+    *array = malloc(sizeof(int) * tokens);
     if (! *array)
       return -2;
-    *array_sz = i;
+    *array_sz = tokens;
   } else {
-    if (*array_sz < i) {
+    if (*array_sz < tokens) {
       *array_sz = arr_resize((void **) array, sizeof(int),
-                             *array_sz, i - *array_sz);
+                             *array_sz, tokens - *array_sz);
       if (*array_sz == 0)
         return -2;
     }
   }
 
+  j = 0;
   /* search for each label in the header line */
   for (pos = labels_copy; pos != labels_end + 1; pos += strlen(pos) + 1) {
     i = field_str(pos, line, delim);

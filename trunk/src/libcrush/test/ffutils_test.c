@@ -491,7 +491,7 @@ int test_expand_nums(void) {
 
 int test_expand_label_list(void) {
 	int n_errors = 0;
-	char *line = "L1|L2|L3|L4|L5\n";
+	char *line = "L1|L2|L3|L4|L5|L,6\n";
   char *delim = "|";
   int *array = NULL;
   size_t array_sz = 0;
@@ -503,6 +503,10 @@ int test_expand_label_list(void) {
 
 	char *T1_labels = "L1,L7";
 	int T1_retval = -1;
+
+  char *T2_labels = "L\\,6";
+  int T2_retval = 1;
+  int T2_elems[] = {6};
 
   retval = expand_label_list(T0_labels, line, delim, &array, &array_sz);
   if (retval != T0_retval) {
@@ -529,6 +533,24 @@ int test_expand_label_list(void) {
             ": failed (test 1)\n\treturned %u instead of %u\n",
             "expand_label_list()", retval, T0_retval);
   	n_errors++;
+  }
+
+  retval = expand_label_list(T2_labels, line, delim, &array, &array_sz);
+  if (retval != T2_retval) {
+    fprintf(stderr,
+            FUNC_NAME_FMT
+            ": failed (test 2)\n\treturned %u instead of %u\n",
+            "expand_label_list()", retval, T2_retval);
+  	n_errors++;
+  } else {
+    for (i = 0; i < retval; i++) {
+    	if (T2_elems[i] != array[i]) {
+        fprintf(stderr,
+                FUNC_NAME_FMT
+                ": failed (test 2)\n\telem %d is %d instead of %d\n",
+                "expand_label_list()", i, array[i], T2_elems[i]);
+      }
+    }
   }
 
   if (n_errors == 0) {
