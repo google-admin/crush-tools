@@ -15,20 +15,15 @@ $Author$
   path.
 
 
-* src/calcfield
-
-  tests are disabled because they are failing.
-
-
 * These utilities need tests:
 
-  src/add_field/
   src/buffer/
   src/dates_in_range/
   src/deltadays/
-  src/fieldsplit/
   src/findfiles/
   src/range/
   src/tochar/
-  src/translate_field/
+
+
+* 2008-12-02: malformatted man page for convdate.
 
