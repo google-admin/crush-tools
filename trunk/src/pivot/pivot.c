@@ -95,6 +95,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   FILE *fin;                    /* input file */
   dbfr_t *in_reader;
+  size_t max_line_sz = 0;
 
   char empty_string[] = "";
 
@@ -276,6 +277,9 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       ht_put(&uniq_pivots, pivstr, (void *) 1);
     }
 
+    if (in_reader->current_line_sz > max_line_sz)
+      max_line_sz = in_reader->current_line_sz;
+
     dbfr_close(in_reader);
     fin = nextfile(argc, argv, &optind, "r");
     if (fin) {
@@ -329,7 +333,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
        than the combined length of all pivot field values and a 3-char
        separator.  safe assumption?  probably not if every input field
        is used as a pivot field. */
-    pivot_label = malloc(in_reader->current_line_sz);
+    pivot_label = malloc(max_line_sz);
     if (! pivot_label) {
       warn("allocating memory for the labels");
       exit(EXIT_MEM_ERR);
