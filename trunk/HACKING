@@ -10,6 +10,18 @@ To build CRUSH from a repository checkout...
 To build from a distribution tarball, only steps 3 and 4 are necessary.
 
 
+-- Contributer License Agreement --
+
+Contributers must sign a CLA which defines the terms by which Google (the
+copyright holder of CRUSH) can use the contributions.  If you would like to
+submit patches, please read and sign
+
+  http://code.google.com/legal/individual-cla-v1.0.html
+
+This just documents that the project has the right to include the code you
+send us.
+
+
 -- Coding Standards --
 
 CRUSH uses the portion of the Google C++ coding standards which applies to C.
