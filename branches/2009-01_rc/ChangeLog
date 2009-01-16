@@ -1,0 +1,42 @@
+Changes in the "2008-10" release (2008-07-15 thru 2008-10-04):
+
+* Make sure m4 is available at configure-time.  Previously it was assumed that
+  the install host had m4 installed, but then the Perl scripts would fail to
+  build.
+
+* Check for presence of non-standard Perl modules, and only build scripts with
+  those dependencies if the modules are installed.
+
+* Allow escape sequences to be specified as delimiter arguments in utilities
+  written in Perl.
+
+* Add a "contrib" directory for non-core utilities, etc.
+
+* Add options to mergekeys to allow user-specified key fields as an alternative
+  to auto-detection of keys.  This currently does NOT remove the requirement
+  that both files have a header line.
+
+* Prepend all error messages with the name of the executable.
+
+* Improve testing, and include test files in the distribution package.
+
+* Bug-fix in find_not_processed - printed file names were not space-separated
+  when -p option was specified.
+
+* Avoid Perl warnings in csvformat when there is no linebreak at EOF, and fix
+  commandline option specifications to avoid ambiguity.
+
+* Make cutfield correctly handle empty fields.  It previously failed to output
+  fields which were empty in the input.
+
+* Fix a bug in reorder which causes a seg-fault when large ranges are 
+  specified in the -f option.
+
+* Bug fix in aggregate2 - print the header correctly line when the last field
+  is one of the keys.  This bug was introducing a line break in the header line.
+
+* Bug fix in aggregate2 - handle empty key fields correctly.
+
+* Standardize and centralize the version reported by the applications.
+
+* Add --Header option to dbstream to print the sql header fields if specified.

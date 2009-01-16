@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+import random
+import sys
+import time
+
+class UnknownFieldTypeException (Exception):
+  pass
+
+class Field:
+  """Base class for data cell generators."""
+  def __init__(self, range_low, range_high, n_distinct):
+    """Apply attributes shared by all Field types.  RANGE_LOW and RANGE_HIGH
+    define the lower and upper limits of values which may be generated.  If
+    N_DISTINCT is greater than 0, it defines the upper limit on how many
+    distinct values will be generated.
+    """
+    self.lo = range_low
+    self.hi = range_high
+    self.n = n_distinct
+    self.vals = []
+
+  def GetValue(self):
+    """Get a new output value for the field.  This is the only method really
+    called by user code."""
+    if self.n < 1:
+      return self._GenerateValue()
+
+    if len(self.vals) >= self.n:
+      return random.choice(self.vals)
+    n = self._GenerateValue()
+    if n not in self.vals:
+      self.vals.append(n)
+    return n
+
+class IntField (Field):
+  """A data field with a random integer value."""
+  def __init__(self, range_low, range_high, n_distinct):
+    Field.__init__(self, range_low, range_high, n_distinct)
+
+  def _GenerateValue(self):
+    return random.randint(self.lo, self.hi)
+
+class FloatField (Field):
+  """A data field with a random integer value."""
+  def __init__(self, range_low, range_high, precision, n_distinct):
+    Field.__init__(self, range_low, range_high, n_distinct)
+    self.precision = precision
+
+  def _GenerateValue(self):
+    return "%.*f" % (self.precision, random.uniform(self.lo, self.hi))
+
+class StringField (Field):
+  """A data field with a random string value."""
+  alnum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+
+  def __init__(self, len_low, len_high, n_distinct, charset=alnum):
+    """For StringField, the upper and lower bounds are applied to length rather
+    than value.  CHARSET may be a string/list-of-characters from which to build
+    generated values."""
+    Field.__init__(self, len_low, len_high, n_distinct)
+    self.charset = charset
+ 
+  def _GenerateValue(self):
+    target_len = random.randint(self.lo, self.hi)
+    chars = []
+    while len(chars) < target_len:
+      chars.append(random.choice(self.charset))
+    return ''.join(chars)
+
+class DateField (Field):
+  """A data field with a random date value."""
+  def __init__(self, range_low, range_high, n_distinct, fmt):
+    """FMT describes both input (i.e. RANGE_LOW and RANGE_HIGH) and output
+    date formats."""
+    low_secs = time.mktime(time.strptime(range_low, fmt))
+    high_secs = time.mktime(time.strptime(range_high, fmt))
+    Field.__init__(self, low_secs, high_secs, n_distinct)
+    self.fmt = fmt
+
+  def _GenerateValue(self):
+    secs = random.randint(self.lo, self.hi)
+    return time.strftime(self.fmt, time.localtime(secs))
+
+def usage():
+  sys.stderr.write("""
+generates delimited data
+
+usage: %s [-d DELIM] [-r ROWS] <-f DESC> ...
+
+-f should be specified once for each desired output field.
+
+DESC is of format LABEL,TYPE,<TYPE_SPECIFIC>
+
+If TYPE is "int",   TYPE_SPECIFIC is LOW,HIGH,N_DISTINCT
+If TYPE is "float", TYPE_SPECIFIC is LOW,HIGH,PRECISION,N_DISTINCT
+If TYPE is "str",   TYPE_SPECIFIC is MIN_LEN,MAX_LEN,N_DISTINCT
+If TYPE is "date",  TYPE_SPECIFIC is MIN_DATE,MAX_DATE,N_DISTINCT,FMT
+   (FMT describes how to format the output as well as the format used in
+    the MIN_ and MAX_DATE parameters)
+
+If N_DISTINCT is less than 1, no limit will be placed on the number of distinct
+values generated for that field.
+
+""")
+
+if __name__ == '__main__':
+  delim = ','
+  rows = 10
+  labels = []
+  fields = []
+
+  args = sys.argv[1:]
+  args.reverse()  # reversed so so pop() can be used to iterate thru the args
+  while args:
+    arg = args.pop()
+    if arg in ['-h', '--help']:
+      usage()
+      sys.exit(0)
+    elif arg in ['-d', '--delim']:
+      delim = args.pop()
+    elif arg in ['-r', '--rows']:
+      rows = int(args.pop())
+    elif arg in ['-f', '--field']:
+      fd = args.pop().split(',')
+      labels.append(fd[0])
+      if fd[1] == 'int':
+        fields.append(IntField(int(fd[2]), int(fd[3]), int(fd[4])))
+      elif fd[1] == 'float':
+        fields.append(FloatField(int(fd[2]), int(fd[3]), int(fd[4]),
+                                 int(fd[5])))
+      elif fd[1] == 'str':
+        fields.append(StringField(int(fd[2]), int(fd[3]), int(fd[4])))
+      elif fd[1] == 'date':
+        fields.append(DateField(fd[2], fd[3], int(fd[4]), fd[5]))
+      else:
+        raise UnknownFieldTypeException("%s" % fd[1])
+    else:
+      sys.stderr.write("%s: unknown option '%s'\n" % (sys.argv[0], arg))
+      sys.exit(1)
+
+  if not fields:
+    sys.stderr.write("%s: -f must be specified at least once.\n" % sys.argv[0])
+    sys.exit(1)
+
+  random.seed()
+
+  print delim.join(labels)
+
+  n_fields = len(fields)
+  for i in xrange(0, rows):
+    for j in xrange(0, n_fields):
+      sys.stdout.write("%s" % fields[j].GetValue())
+      if j < n_fields - 1:
+        sys.stdout.write(delim)
+    sys.stdout.write("\n")

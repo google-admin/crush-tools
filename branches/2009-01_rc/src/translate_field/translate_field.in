@@ -1,0 +1,232 @@
+#!CRUSH_PERL_PATH -w
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Long;
+use Memoize;
+
+Getopt::Long::Configure("no_ignore_case");
+
+my($help, $debug, $field, $field_label, $delim, $replace, $append, $prepend,
+   %mapping, $external, $show_version, @xpressions, $xpression_func);
+
+$delim = $ENV{"DELIMITER"} || chr(0xfe);
+
+GetOptions("help" => \$help,
+           "Debug" => \$debug,
+           "field=n" => \$field,
+           "Field-label=s" => \$field_label,
+           "delim=s" => \$delim,
+           "append" => \$append,
+           "prepend" => \$prepend,
+           "replace" => \$replace,
+           "map=s" => \%mapping,
+           "external=s" => \$external,
+           "Version" => \$show_version,
+           "xpression=s" => \@xpressions,
+          );
+
+if ($help) {
+  usage();
+  exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
+
+$delim = expand_chars($delim);
+
+if (! defined($field) && ! defined($field_label)) {
+  print STDERR "$0: -f or -F must be specified.\n";
+  exit(1);
+}
+
+if ($external) {
+  print STDERR "sourcing $external\n" if ($debug);
+  eval `cat $external` or die;
+  if ($@) { die }
+}
+
+# default to replace, but only if -a or -p weren't specified
+if (! ($append || $prepend)) {
+  $replace = 1;
+}
+
+if (@xpressions) {
+  my $formula;
+  for my $x (@xpressions) {
+    $formula .= "\$result =~ $x; ";
+  }
+  $xpression_func = sub {
+    my ($result) = @_;
+    eval $formula;
+    die "unable to run '$formula': $@" if $@;
+    return $result;
+  };
+}
+
+if ($debug) {
+  while (my ($k, $v) = each %mapping) {
+    print STDERR "$k => $v\n";
+  }
+}
+
+memoize('translate_field');
+
+my $header;
+if (defined($field)) {
+  $field--;
+} elsif ($field_label) {
+  $header = <>;
+  $field = field_str($field_label, $header, $delim);
+  if (! defined($field)) {
+    warn "$0: field label \"$field_label\" not found in input.\n";
+    exit(1);
+  }
+}
+
+if ($header) {
+  print translate_field($header);
+}
+
+while (my $line_str = <>) {
+  $line_str =~ s/([\r\n]+)//mo;
+  my @line = split(/\Q$delim\E/o, $line_str, -1);
+
+  # local field position for case where user prepends & appends
+  my $local_field = $field;
+
+  my $field_val = $line[$local_field];
+  my $trans_val = translate_field( $field_val );
+
+  if ($prepend) {
+    splice(@line, $local_field, 1, $trans_val, $field_val);
+    $local_field++;
+  }
+  if ($append) {
+    splice(@line, $local_field, 1, $field_val, $trans_val);
+  }
+  if ($replace) {
+    $line[$local_field] = $trans_val;
+  }
+
+  print join($delim, @line), $1;
+}
+
+sub translate_field {
+  my $field_val = shift;
+  my $trans_val;
+
+  if (defined($mapping{$field_val})) {
+    $trans_val = $mapping{$field_val};
+  } else {
+    $trans_val = $field_val;
+    if (@xpressions) {
+      $trans_val = $xpression_func->( $trans_val );
+    }
+  }
+  return $trans_val;
+}
+
+exit(0);
+
+sub usage {
+  print STDERR << "END_USAGE";
+
+convert field values based on user-supplied mappings.
+
+usage: $0 <-f <N>> [options] [file ...]
+
+  -h, --help       print this message and exit
+  -f, --field <N>  the 1-based index of the field to translate
+  -d, --delim <S>  the field delimiter string (default: 0xfe)
+  -a, --append     append the translation after the original field
+  -p, --prepend    prepend the translation before the original field
+  -r, --replace    replace the original field with the translation
+  -m, --map <K=V>  specifies a translation mapping for a possible
+                   field value
+  -e, --external <F> specifies a file containing perl expressions which
+      define mappings in the hashtable "\%mapping"
+  -x, --xpression <s/x/y/> apply regular expressions as the translation
+
+see `perldoc $0` for more details.
+
+END_USAGE
+}
+
+=head1 SUMMARY
+
+convert field values based on user-supplied mappings.
+
+usage: $0 <-f <N>> [options] [file ...]
+
+  -h, --help       print this message and exit
+  -f, --field <N>  the 1-based index of the field to translate
+  -d, --delim <S>  the field delimiter string (default: 0xfe)
+  -a, --append     append the translation after the original field
+  -p, --prepend    prepend the translation before the original field
+  -r, --replace    replace the original field with the translation
+  -m, --map <K=V>  specifies a translation mapping for a possible
+                   field value
+  -e, --external <F> specifies a file containing perl expressions which
+      define mappings in the hashtable "\%mapping"
+  -x, --xpression <s/x/y/> apply regular expressions as the translation
+
+=head1 DETAILS
+
+=over 2
+
+=item *
+
+Replacing is the default behavior, but for replacement to occur in
+addition to appending or prepending, -r must be specified.
+
+=item *
+
+Mappings passed to -m are specified as "K=V" pairs where K is a
+possible value for the field, and V is the translation.
+
+=item *
+
+Expressions are applied only if a mapping does not match the input
+field value. Expressions are applied in the same order they occur on
+the command line.
+
+=item *
+
+If no mapping or xpression is supplied for a field value, the value is
+unchanged (the header is preserved unless a mapping is specified for
+the header value).
+
+=item *
+
+The file specified by -e may have statements like
+
+  $mapping{hello} = 'salve';
+  $mapping{world} = 'orbis terrae';
+
+or
+
+  %mapping = ("hello" => "salve", "world" => "orbis terrae");
+
+The latter will nullify any -m parameters passed on the commandline.
+
+=back
+
+=cut
+
+m4_include(utils.pl)
