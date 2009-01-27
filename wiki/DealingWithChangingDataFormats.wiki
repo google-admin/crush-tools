@@ -25,7 +25,7 @@ function get_file_delimiter {
 }
 }}}
 
-As we'll see below, it is useful to be able to extract the header line separately.  If there is any possibility at all that the delimiter will be a white-space character, then remember to quote all dereferences of your delimiter and header variables.  All of CRUSH utilities look for an environment variable `$DELIMITER`, which if defined, will be used as the field separator.  So in your application code, you may have something like this:
+As we'll see below, it is useful to be able to extract the header line separately.  If there is any possibility at all that the delimiter will be a white-space character, then remember to quote all dereferences of your delimiter and header variables.   All of CRUSH utilities look for an environment variable `$DELIMITER`, which if defined, will be used as the field separator when the `-d` commandline option is not present.  So in your application code, you may have something like this:
 
 {{{
 files=`findfiles -s $start_date -e $end_date -d $dir -g "*.gz"`
@@ -38,7 +38,7 @@ export DELIMITER
 
 = Detecting field location =
 
-For data sets which contain a header row with predictable values, it is possible to use this as meta-data to locate required fields at run-time.
+For data sets which contain a header row with predictable values, it is possible to use this as meta-data to locate required fields at run-time.  As of the 2009-01 release, all CRUSH utilities accept field labels as an alternative to indexes on the command-line.  Locating indexes dynamically can still be useful when processing the data with standard Unix tools.
 
 {{{
 function locate_field {
@@ -68,7 +68,9 @@ if test $i_auth_name -eq 0 -o $i_user_agent -eq 0; then
   exit 1 # assuming this is in a script file
 fi
 
-aggregate -k $i_auth_name,$i_user_agent -c 1 access.log
+aggregate -p -k $i_auth_name,$i_user_agent -c 1 access.log
+# equivalent to "aggregate -K Auth-User,User-Agent -c 1 access.log"
+
 }}}
 
 Now if we go make tweaks to the aal2d and/or our apache log format output, our script will continue working just fine as long as the "Auth-User" and "User-Agent" fields aren't removed altogether.
