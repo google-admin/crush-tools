@@ -16,10 +16,13 @@ mergeable fields.  A header line in each file is required in either case.
 ||-V||--version|| ||print version info and exit||
 ||-v||--verbose|| ||print verbose messages during execution||
 ||-a||--left-keys||<left_keys> ||list of key fields in left-hand file||
+||-A||--left-labels||<left_key_labels> ||list of key labels in left-hand file||
 ||-b||--right-keys||<right_keys> ||list of key fields in right-hand file||
+||-B||--right-labels||<right_key_labels> ||list of key labels in right-hand file||
 ||-i||--inner|| ||inner join - i.e. drop lines that do not have a match in both files||
 ||-r||--right|| ||right outer join - i.e. drop lines in the first file that do not have a match in the second file||
 ||-l||--left|| ||left outer join - i.e. drop lines in the second file that do not have a match in the first file||
+||-D||--default||<merge_default> ||for outer joins, the defaut value to put in unmatched merge fields||
 ||-d||--delim||<delim> ||delimiting string for both input files||
 ||-o||--outfile||<outfile> ||name of file for output||
 

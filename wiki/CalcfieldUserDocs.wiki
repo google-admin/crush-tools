@@ -2,21 +2,32 @@
 
 = Usage =
 
-`calcfield <options> [-h] [-v] [-p] [-d <delimiter>] [-i <index>] -e <expression> -b <fallback_result> [-c <column_name>]`
+`calcfield <options> [file...]`
 
+The expression specified in -e may contain indexes of fields, e.g.
 
+  -e '[1] + [2]'
+
+You may also use column labels in the expression:
+
+  -e '[Clicks] + [Impressions]'
+
+Use of the latter form implies that the header should be preserved.
 
 = Options =
 ||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
+||-V||--Version|| ||show version information and exit.||
 ||-v||--verbose|| ||print verbose messages during execution||
 ||-d||--delim||<delim> ||field separator string (default: 0xfe)||
-||-p|| || ||preserve the header line (just passes the first line through to the output file)||
-||-r|| || ||replace the value at the given index (instead of adding a new column)||
-||-i|| ||<index> ||index for the new fields (1-based); if not given the new field will be appended||
-||-e|| ||<expression> ||the expression to calculate; the expression may contain references to fields, e.g. [1] + [2].  if the -p option is active, you may also use the field names, e. g. [Clicks] + [Impressions]||
-||-b|| ||<fallback> ||if the formula is not properly evaluated use this result as the fallback||
-||-c|| ||<column_name> ||the name of the column for the calculated field; only used with option -p||
+||-p||--preserve-header|| ||preserve the header line (just passes the first line through to the output file)||
+||-r||--replace|| ||replace the value at the given index (instead of adding a new column)||
+||-i||--insert||<index> ||index for the new fields (1-based); if not given the new field will be appended||
+||-B||--Before||<label> ||place the new field before the field with the specified label||
+||-A||--After||<label> ||place the new field after the field with the specified label||
+||-e||--expression||<expr> ||the expression to calculate (see below)||
+||-b||--fallback||<fallback> ||if the formula is not properly evaluated use this result as the fallback||
+||-c||--new-label||<column_name> ||the name of the column for the calculated field; implies -p||
 
 ----
 back to UserDocs

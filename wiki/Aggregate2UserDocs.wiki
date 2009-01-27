@@ -13,10 +13,15 @@
 ||-v||--verbose|| ||print verbose messages during execution||
 ||-d||--delim||<delim> ||field separator string||
 ||-p||--preserve-header|| ||do not treat first line as data||
-||-k||--keys||<keys> ||list of aggregation keys||
-||-s||--sums||<sums> ||list of fields to sum||
-||-c||--counts||<counts> ||list of aggregation count||
+||-k||--keys||<keys> ||indexes of aggregation keys||
+||-K||--key-labels||<key_labels> ||labels of aggregation key||
+||-s||--sums||<sums> ||indexes of fields to be summed||
+||-S||--sum-labels||<sum_labels> ||labels of fields to be summed||
+||-c||--counts||<counts> ||indexes of fields to be counted if non-blank||
+||-C||--count-labels||<count_labels> ||labels of fields to be counted if non-blank||
 ||-o||--outfile||<outfile> ||file to which output should be written (default: stdout)||
+||-l||--labels||<labels> ||delimiter-separated list of labels for the aggregation fields (default: unchanged)||
+||-L||--auto-label|| ||add \"-Sum\" or \"-Count\" suffixes to aggregation fields||
 
 ----
 back to UserDocs

@@ -17,12 +17,14 @@ case.
 ||*Short Opt*||*Long Opt*||*Argument*||*Description*||
 ||-h||--help|| ||print this message and exit||
 ||-d||--delim||<delim> ||field separator string (default: 0xfe)||
-||-f||--field||<field> ||split on the specified field number (required)||
+||-f||--field||<field> ||split on the specified field number||
+||-F||--Field-label||<label> ||split on the specified field label||
 ||-p||--path||<path> ||specifies dir as directory in which files will be placed (default: ./)||
 ||-n||--name||<name> ||output filename prefix||
 ||-s||--suffix||<suffix> ||output filename suffix||
 ||-k||--keep|| ||keep the header in all of the resulting files||
 ||-x||--xform-names||<xform_names> ||user-supplied substitution regex to transform output names (e.g. 's/[^-\w]//g')||
+||-S|| ||<num_flush_buffer_lines> ||override the number of lines stored in memory before flushing. (default: 10000)||
 
 ----
 back to UserDocs

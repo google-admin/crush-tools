@@ -12,7 +12,8 @@
 ||-V||--version|| ||print version info and exit||
 ||-v||--verbose|| ||print verbose messages during execution||
 ||-d||--delimiter||<delim> ||field separator (default: 0xfe)||
-||-f||--fields||<fields> ||fields to consider in the deduplication||
+||-f||--fields||<fields> ||indexes of fields to consider in the deduplication||
+||-F||--field-labels||<field_labels> ||labels of fields to consider in the deduplication||
 ||-c||--count|| ||produce a count of duplicated lines||
 
 ----

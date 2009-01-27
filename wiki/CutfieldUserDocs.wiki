@@ -11,7 +11,8 @@ if -d is not specified and DELIMITER enviroment variable is defined, that value 
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-d||--delimiter||<delim> ||field-separator string||
-||-f||--field||<fields> ||list of fields to be removed||
+||-f||--field||<fields> ||list of indexes of fields to be removed||
+||-F||--field-labels||<field_labels> ||list of labels of fields to be removed||
 ||-o||--output-file||<output_fname> ||name of file to which output should be written||
 ||-a||--append-file||<append_fname> ||name of file to which output should be appended||
 

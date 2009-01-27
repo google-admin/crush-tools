@@ -13,10 +13,13 @@
 ||-h||--help|| ||print this message and exit||
 ||-V||--version|| ||print version info and exit||
 ||-d||--delimiter||<delim> ||field separator string||
-||-k||--keep-header|| ||indicates that the first line of input \n\t\t\t\tshould be treated as header info||
-||-f||--output-fields||<keys> ||fields to output||
-||-p||--pivot-fields||<pivots> ||fields to pivot on||
-||-v||--value-fields||<values> ||fields to put into the pivoted cells||
+||-k||--keep-header|| ||indicates that the first line of input should be treated as header info||
+||-f||--output-fields||<keys> ||indexes of row fields to output||
+||-F||--output-labels||<key_labels> ||labels of row fields to output||
+||-p||--pivot-fields||<pivots> ||indexes of column fields to pivot on||
+||-P||--pivot-labels||<pivot_labels> ||labels of column fields to pivot on||
+||-v||--value-fields||<values> ||indexes of data fields to put into the pivoted cells||
+||-A||--value-labels||<value_labels> ||labels of data fields to put into the pivoted cells||
 
 ----
 back to UserDocs

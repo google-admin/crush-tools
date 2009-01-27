@@ -13,9 +13,10 @@ if no field is specified, the entire input line is scanned.
 ||-d||--delim||<delim> ||field separator string (default: 0xfe)||
 ||-o||--outfile||<outfile> ||output file name (default: stdout)||
 ||-f||--field||<field> ||index of field to scan (1-based)||
+||-F||--field-label||<field_label> ||label of field to scan (1-based)||
 ||-v||--invert|| ||print only non-matching lines||
 ||-i||--ignore-case|| ||do case-insensitive matches||
-||-p||--preserve_header|| ||preserve the header line||
+||-p||--preserve_header|| ||preserve the header line of the first file and discard all other headers.||
 
 ----
 back to UserDocs

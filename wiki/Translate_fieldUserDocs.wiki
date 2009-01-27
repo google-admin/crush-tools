@@ -30,6 +30,7 @@ The latter will nullify any -m parameters passed on the commandline.
 ||-r||--replace|| ||replace the original field with the translated field||
 ||-m||--map||<map> ||specifies a translation mapping for a possible field value (may be specified multiple times)||
 ||-e||--external||<external> ||specifies a file containing perl expressions which define mappings in the hashtable "%mapping"||
+||-x||--xpression||<xpression> ||specifies a list of regular expressions to apply to the specified input field||
 
 ----
 back to UserDocs

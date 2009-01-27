@@ -16,7 +16,9 @@
 ||-o||--output||<outfile> ||name of output file (stdout if not specified)||
 ||-l||--start-line||<start_line> ||the first line of data - everything before it is printed as-is.||
 ||-k||--key||<key> ||1-based column number for subtotal key||
+||-K||--key-label||<key_label> ||label of column for subtotal key||
 ||-s||--sum||<sum> ||list of 1-based column numbers to be subtotaled||
+||-S||--sum-labels||<sum_labels> ||list of column labels to be subtotaled||
 
 ----
 back to UserDocs
