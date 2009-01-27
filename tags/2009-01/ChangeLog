@@ -1,3 +1,27 @@
+Changes in the "2009-10" release (2008-10-05 thru 2009-01-13):
+
+* Field-label support: anywhere that you could use a field index as a command-
+  line argument, there is now the option to use that field's label from
+	the first line instead.
+
+* Generate and install man pages.
+
+* fieldsplit:  Add a "-b/--buckets" option, which limits the number of ouptut
+  files which may be produced, while guaranteeing that field values are
+  grouped together.  Performance enhancements.
+
+* aggregate & aggregate2: -l/--labels and -L/--auto-labels options to
+	control the headers for aggregated output fields.
+
+* mergekeys: -D/--default option to specify the value to put into a
+  mergeable field when there is no match in an outer join.
+
+* Support stdin as a trailing filename option specified as "-" in several apps.
+
+* translate_field: -x option to specify a substitution regular
+  expression instead of a hard-coded mapping.
+
+
 Changes in the "2008-10" release (2008-07-15 thru 2008-10-04):
 
 * Make sure m4 is available at configure-time.  Previously it was assumed that
