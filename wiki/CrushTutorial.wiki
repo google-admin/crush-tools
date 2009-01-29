@@ -53,6 +53,10 @@ Let's say we want to know how many hits we're getting from each logged-in user. 
 
 {{{
 aal2d access_log | aggregate -p -k 2 -c 1
+
+# Or for CRUSH release 2009-01 or greater:
+
+aal2d access_log | aggregate -K Auth-User -C IP
 }}}
 
 Refer to the AggregateUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
@@ -76,6 +80,12 @@ If we wanted to get that broken out by day, we can convert the time format using
 aal2d access_log |
   convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
   aggregate -p -k 3,2 -c 1
+
+# Or for CRUSH release 2009-01 or greater:
+
+aal2d access_log |
+  convdate -F Time -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  aggregate -K Time,Auth-User -C IP
 }}}
 
 The `convdate` call takes strings like "08/Jul/2008:04:27:26 -0600" and turns them into strings like "2008-07-08", giving us
@@ -112,6 +122,13 @@ aal2d access_log |
   convdate -f 3 -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
   aggregate -p -k 3,2 -c 1 |
   pivot -k -f 1 -p 2 -v 3
+
+# Or for CRUSH release 2009-01 or greater:
+
+aal2d access_log |
+  convdate -F Time -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  aggregate -K Time,Auth-User -C IP
+  pivot -f Time -P Auth-User -A IP
 }}}
 
 Now we get an output of
@@ -124,9 +141,10 @@ Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsun
 2008-07-09þ342þ44þ111þ3þ0þ1þ79
 }}}
 
-Piping the same command to `csvformat` (CsvformatUserDocs) will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` (Translate_fieldUserDocs) to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we'll use the standard `sed(1)` utility on just the header line, though `translate_field` would work as well.
+Piping the same command to `csvformat` (CsvformatUserDocs) will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` (Translate_fieldUserDocs) to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we could use the standard `sed(1)` utility on just the header line:
 
 {{{
+# CRUSH 2008-10 and earlier:
 aal2d access_log |
   (read header;
    echo "$header" | sed -e 's/IP/Page-Views/';
@@ -137,6 +155,19 @@ aal2d access_log |
   pivot -k -f 1 -p 2 -v 3 |
   csvformat 
 }}}
+
+Or we could add a `-l` option to the aggregate call:
+
+{{{
+# CRUSH 2009-01 and later:
+aal2d access_log |
+  convdate -F Time -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
+  translate_field -F Auth-User -m '-=Anonymous' |
+  aggregate -K Time,Auth-User -C IP -l Page-Views|
+  pivot -k -F Time -P Auth-User -A Page-Views |
+  csvformat 
+}}}
+
 
 Output:
 
@@ -167,6 +198,9 @@ And you want to join this into the first aggregation above (page-views by user).
 
 {{{
 aal2d access_log | aggregate -p -k 2 -c 1 > page_views.log
+# or...
+aal2d access_log | aggregate -K Auth-User -C IP > page_views.log
+# and then:
 mergekeys page_views.log food.log | csvformat
 }}}
 
