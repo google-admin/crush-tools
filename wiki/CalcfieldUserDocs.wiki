@@ -6,11 +6,11 @@
 
 The expression specified in -e may contain indexes of fields, e.g.
 
-  -e '[1] + [2]'
+  `-e '[1] + [2]'`
 
 You may also use column labels in the expression:
 
-  -e '[Clicks] + [Impressions]'
+  `-e '[Clicks] + [Impressions]'`
 
 Use of the latter form implies that the header should be preserved.
 
