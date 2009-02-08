@@ -14,7 +14,7 @@
    limitations under the License.
  *****************************************/
 
-#include <queue.h>
+#include <crush/queue.h>
 void q_init(queue_t * q, void (*data_free) (void *)) {
   ll_list_init(q, data_free, NULL);
 }

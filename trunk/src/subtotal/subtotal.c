@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-#include <ffutils.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
 #include "subtotal_main.h"
 
 #define SUBTOT_KEY_MAXLEN 256

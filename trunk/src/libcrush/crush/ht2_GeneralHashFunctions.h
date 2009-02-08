@@ -16,8 +16,7 @@
  **************************************************************************
 */
 
-/* modified by jeremy hinds <jhinds@doubleclick.net> 2006-12-20
-   to use void* input instead of char*, renamed functions to avoid
+/* modified to use void* input instead of char*, renamed functions to avoid
    namespace collisions.
  */
 

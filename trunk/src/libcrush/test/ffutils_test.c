@@ -16,9 +16,9 @@
 
 
 #include <stdio.h>
-#include <linklist.h>
+#include <crush/linklist.h>
 
-#include <ffutils.h>
+#include <crush/ffutils.h>
 
 int XFAIL(int n) {
   if (n == 0)

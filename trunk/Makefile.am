@@ -16,7 +16,7 @@ dist-hook:
 	done
 
 SUBDIRS = src contrib
-INCLUDES = -I$(top_srcdir)/include
+INCLUDES = -I$(top_srcdir)/libcrush
 PERL = @PERL@
 
 libtool: $(LIBTOOL_DEPS)

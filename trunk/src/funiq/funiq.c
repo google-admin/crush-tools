@@ -15,8 +15,8 @@
  ********************************/
 #include "funiq_main.h"
 
-#include <ffutils.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
 
 #define FIELD_LEN_LIMIT 255
 

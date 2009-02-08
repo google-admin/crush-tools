@@ -15,7 +15,7 @@
  ********************************/
 #include "indexof_main.h"
 #include "indexof.h"
-#include <ffutils.h>
+#include <crush/ffutils.h>
 
 int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *in;

@@ -14,7 +14,7 @@
    limitations under the License.
  *****************************************/
 
-#include <hashtbl.h>
+#include <crush/hashtbl.h>
 
 
 /* initialize a table. */

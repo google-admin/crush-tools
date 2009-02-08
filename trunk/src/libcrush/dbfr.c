@@ -1,5 +1,5 @@
 #if HAVE_CONFIG_H
-#  include <config.h>
+#  include <crush/config.h>
 #  ifdef HAVE_UNISTD_H
 #    include <unistd.h>
 #  endif
@@ -37,7 +37,7 @@
 #  include <sys/stat.h>
 #endif /* HAVE_CONFIG_H */
 
-#include <dbfr.h>
+#include <crush/dbfr.h>
 
 #ifdef HAVE_FCNTL_H || HAVE_SYS_FCNTL_H
 int dbfr_is_readable(FILE *fp) {

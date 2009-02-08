@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ffutils.h>
+#include <crush/ffutils.h>
 
 void usage(char *bin);
 

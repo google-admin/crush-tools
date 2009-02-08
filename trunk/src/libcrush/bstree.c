@@ -19,7 +19,7 @@
  * better function-level documentation.
  */  
   
-#include <bstree.h>
+#include <crush/bstree.h>
   
 #ifdef CRUSH_DEBUG
 #include <stdio.h>	/* only needed for debug prints */

@@ -16,9 +16,9 @@
 #include "truncfield_main.h"
 #include <err.h>
 
-#include <ffutils.h>
-#include <qsort_helper.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/qsort_helper.h>
+#include <crush/dbfr.h>
 
 /** @brief  
   * 

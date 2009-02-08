@@ -14,8 +14,8 @@
    limitations under the License.
  ********************************/
 #include "aggregate2_main.h"
-#include <ffutils.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
 #include <err.h>                /* warn() */
 
 struct agg_conf {

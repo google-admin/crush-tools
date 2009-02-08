@@ -21,7 +21,7 @@
    namespace collisions.
  */
 
-#include "ht2_GeneralHashFunctions.h"
+#include <crush/ht2_GeneralHashFunctions.h>
 
 size_t ht2_RSHash(void *key, size_t len) {
   size_t b = 378551;

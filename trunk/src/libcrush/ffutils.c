@@ -15,10 +15,10 @@
  *****************************************/
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <crush/config.h>
 #endif
 
-#include <ffutils.h>
+#include <crush/ffutils.h>
 #include <fcntl.h>              /* open64() and O_* flags */
 #include <ctype.h>              /* isdigit(), isspace() */
 

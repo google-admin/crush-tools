@@ -1,8 +1,8 @@
 AC_INIT([crush],
         [2008-10_trunk],
         [http://code.google.com/p/crush-tools/])
-AM_CONFIG_HEADER(src/include/config.h)
-AC_CONFIG_SRCDIR(src/include/ffutils.h)
+AM_CONFIG_HEADER(src/libcrush/crush/config.h)
+AC_CONFIG_SRCDIR(src/libcrush/crush/ffutils.h)
 AC_CONFIG_AUX_DIR([build])
 AM_INIT_AUTOMAKE
 
@@ -75,9 +75,9 @@ AC_CONFIG_FILES([Makefile
 contrib/Makefile
 src/Makefile
 src/bin/Makefile
-src/include/Makefile
-src/include/crush_version.h
 src/libcrush/Makefile
+src/libcrush/crush/Makefile
+src/libcrush/crush/crush_version.h
 src/perllib/Makefile
 src/perllib/crush_version.pl
 src/add_field/Makefile

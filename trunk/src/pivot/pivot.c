@@ -14,10 +14,10 @@
    limitations under the License.
  ********************************/
 #include "pivot_main.h"
-#include <dbfr.h>
-#include <ffutils.h>
-#include <hashtbl.h>
-#include <linklist.h>
+#include <crush/dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/hashtbl.h>
+#include <crush/linklist.h>
 
 #include <locale.h>
 #include <assert.h>
