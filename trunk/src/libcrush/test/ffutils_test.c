@@ -39,7 +39,6 @@ int test_nextfile(void);
 int test_expand_chars(void);
 int test_expand_nums(void);
 int test_expand_label_list(void);
-int test_cut_field(void);
 int test_field_str(void);
 
 /* void test_get_spot_tag_attributes(void); */
@@ -57,7 +56,6 @@ int main(int argc, char *argv[]) {
   errs += test_expand_chars();
   errs += test_expand_nums();
   errs += test_expand_label_list();
-  errs += test_cut_field();
   errs += test_field_str();
   /* errs += test_get_spot_tag_attributes(); */
   printf("-------------\n");
@@ -561,52 +559,6 @@ int test_expand_label_list(void) {
   return n_errors;
 }
 
-
-int test_cut_field(void) {
-  int n_errors = 0;
-  char result[32];
-  char *new_field;
-
-  char *TL0 = "a;b;c;d;e";
-  char *TE0 = "b;c;d;e";
-  char *TE1 = "a;b;c;d";
-  char *TE2 = "a;b;d;e";
-
-  strncpy(result, TL0, 31);
-  new_field = cut_field(result, 0, ";");
-  if (!str_eq(new_field, TE0)) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %s instead of %s\n",
-            "cut_field()", new_field, TE0);
-    n_errors++;
-  }
-  free(new_field);
-  new_field = cut_field(result, 4, ";");
-  if (!str_eq(new_field, TE1)) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %s instead of %s\n",
-            "cut_field()", new_field, TE1);
-    n_errors++;
-  }
-  free(new_field);
-  new_field = cut_field(result, 2, ";");
-  if (!str_eq(new_field, TE2)) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %s instead of %s\n",
-            "cut_field()", new_field, TE2);
-    n_errors++;
-  }
-  free(new_field);
-
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "cut_field()");
-  }
-
-  return n_errors;
-}
 
 int test_field_str() {
   int n_errors = 0;

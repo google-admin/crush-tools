@@ -82,20 +82,11 @@
   */
 #define FFUTILS_RESIZE_AMT 16
 
-/* * @brief scans a data transfer file header for the location of some fields. 
-  * 
-  * @param header first line of the dt file
-  * @param delim file delimiter
-  * 
-  * @return populated structure with the 0-based indexes of columns
-  */
-/* struct field_index findfields( char *header, const char *delim ); */
-
 /** @brief finds the number of fields in a delimited string.
-  * 
+  *
   * @param l a delimited string
   * @param d delimiter
-  * 
+  *
   * @return the number of fields in the string
   */
 size_t fields_in_line(const char *l, const char *d);
@@ -104,36 +95,36 @@ size_t fields_in_line(const char *l, const char *d);
   *
   * copies at most <i>n</i> characters from field <i>i</i> of
   * <i>delim</i>-delimited string <i>ct</i> into <i>cs</i>.
-  * 
-  * @param cs destination buffer
-  * @param ct delimited string
+  *
+  * @param dest destination buffer
+  * @param line delimited string
   * @param n max chars to copy into buffer
   * @param i field to be copied (0-based)
   * @param delim delimiter of ct
-  * 
-  * @return number of chars copied into buffer, or -1 if i is greater
-  * than the number of fields in ct
+  *
+  * @return number of chars copied into the dest buffer, or -1 if i is greater
+  * than the number of fields in line.
   */
-int get_line_field(char *cs, const char *ct, const size_t n, const int i,
+int get_line_field(char *cs, const char *ct, size_t n, int i,
                    const char *delim);
 
 /** @brief returns a pointer into a delimited string where a particular
   * field begins.
-  * 
-  * @param cs a delimited string
+  *
+  * @param line a delimited string
   * @param fn the desired field number (1-based)
   * @param delim the delimiting string
-  * 
+  *
   * @return a pointer into cs where the fn-th field begins, or NULL if
   *  the field does not exist.
   */
-char *field_start(const char *cs, size_t fn, const char *delim);
+char *field_start(const char * const line, size_t fn, const char *delim);
 
 /** @brief compares two date strings in the format MM-DD-YYYY_HH24:MI:SS
-  * 
+  *
   * @param a first date
   * @param b second date
-  * 
+  *
   * @return -1 if a < b; 0 if a == b; 1 if a > b.
   */
 int mdyhms_datecmp(const char *a, const char *b);
@@ -237,8 +228,8 @@ ssize_t expand_label_list(const char *labels,
 /** @brief determines the position of the first and the last character
   * of the given field.
   *
-  * @param ct the line buffer
-  * @param i the field number (0-based)
+  * @param line the line buffer
+  * @param i the field index (0-based)
   * @param d the field delimiter
   * @param start the position of the start character, or -1 if the
   *              field does not exist.
@@ -247,26 +238,16 @@ ssize_t expand_label_list(const char *labels,
   *
   * @return the length of the field, or -1 if the field does not exist.
   */
-int get_line_pos(const char *ct, const int i, const char *d, int *start,
+int get_line_pos(const char * const line, int i, const char *d, int *start,
                  int *end);
-
-/** @brief removes a field from a line.
-  *
-  * @param *ct the line buffer (buffer is changed!)
-  * @param i the field number (0-based)
-  * @param *d the field delimiter
-  *
-  * @return pointer to ct
-  */
-char *cut_field(char *ct, const int i, const char *d);
 
 /** @brief locates the index of the first field in a delimited string
   * having a specific value.
-  * 
+  *
   * @param value the string to be located
   * @param line  delimited string
   * @param delim line's field separator
-  * 
+  *
   * @return 0-based index of the first field having the specified value,
   * -1 if not found, or -2 on error.
   */
