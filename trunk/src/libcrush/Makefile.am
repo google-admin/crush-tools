@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libcrush.la
 libcrush_la_SOURCES = GeneralHashFunctions.c bstree.c ffutils.c hashfuncs.c \
                       hashtbl.c hashtbl2.c linklist.c mempool.c qsort_helper.c \
-                      queue.c dbfr.c
+                      queue.c dbfr.c general.c
 
 libcrush_includedir = $(includedir)/crush
 libcrush_include_HEADERS = crush/bstree.h \
