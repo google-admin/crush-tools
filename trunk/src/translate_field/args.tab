@@ -5,7 +5,7 @@
 	name => "translate_fields",
 	description => "convert field values based on user-supplied mappings.",
 	version => "0.1",
-	trailing_opts => "<-f <N>> [options] [file ...]",
+	trailing_opts => "<-f <N> | -F <S>> [options] [file ...]",
 	usage_extra => << "END_USAGE_EXTRA",
  * Mappings passed to -m are specified as "K=V" pairs where K is a possible value for the field, and V is the translation.
  * Replacing is the default behavior, but for replacement to occur in addition to appending or prepending, -r must be specified.
@@ -65,7 +65,15 @@ END_COPYRIGHT
 	  longopt     => 'field',
 	  type        => 'var',
 	  required    => 1,
-	  description => 'index of field to translate'
+	  description => 'index of the field to translate'
+	},
+  {
+	  name        => 'field_label',
+	  shortopt    => 'F',
+	  longopt     => 'Field-label',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'column label of the field to translate'
 	},
 	{
 	  name        => 'append',

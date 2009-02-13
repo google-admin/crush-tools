@@ -153,6 +153,7 @@ usage: $0 <-f <N>> [options] [file ...]
 
   -h, --help       print this message and exit
   -f, --field <N>  the 1-based index of the field to translate
+  -F, --Field-label <S>  the column label of the field to translate
   -d, --delim <S>  the field delimiter string (default: 0xfe)
   -a, --append     append the translation after the original field
   -p, --prepend    prepend the translation before the original field
@@ -176,6 +177,7 @@ usage: $0 <-f <N>> [options] [file ...]
 
   -h, --help       print this message and exit
   -f, --field <N>  the 1-based index of the field to translate
+  -F, --Field-label <S>  the column label of the field to translate
   -d, --delim <S>  the field delimiter string (default: 0xfe)
   -a, --append     append the translation after the original field
   -p, --prepend    prepend the translation before the original field
