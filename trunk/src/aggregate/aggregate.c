@@ -86,6 +86,38 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     memset(conf->average_precisions, 0, sizeof(int) * conf->naverages);
   }
 
+  if (args->mins) {
+    conf->nmins = expand_nums(args->mins, &(conf->min_fields),
+                              &(conf->min_fields_sz));
+  } else if (args->min_labels) {
+    conf->nmins = expand_label_list(args->min_labels, header, delim,
+                                    &(conf->min_fields),
+                                    &(conf->min_fields_sz));
+  }
+  if (conf->nmins < 0) {
+    return conf->nmins;
+  } else if (conf->nmins > 0) {
+    decrement_values(conf->min_fields, conf->nmins);
+    conf->min_precisions = malloc(sizeof(int) * conf->nmins);
+    memset(conf->min_precisions, 0, sizeof(int) * conf->nmins);
+  }
+
+  if (args->maxs) {
+    conf->nmaxs = expand_nums(args->maxs, &(conf->max_fields),
+                              &(conf->max_fields_sz));
+  } else if (args->max_labels) {
+    conf->nmaxs = expand_label_list(args->max_labels, header, delim,
+                                    &(conf->max_fields),
+                                    &(conf->max_fields_sz));
+  }
+  if (conf->nmaxs < 0) {
+    return conf->nmaxs;
+  } else if (conf->nmaxs > 0) {
+    decrement_values(conf->max_fields, conf->nmaxs);
+    conf->max_precisions = malloc(sizeof(int) * conf->nmaxs);
+    memset(conf->max_precisions, 0, sizeof(int) * conf->nmaxs);
+  }
+
   return 0;
 }
 
@@ -211,9 +243,23 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
                                  args->auto_label ? "-Average" : NULL);
         printf("%s%s", delim, outbuf);
       }
-    }
-    fputs("\n", stdout);
 
+      if (conf.nmins) {
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.min_fields, conf.nmins, delim,
+                                 args->auto_label ? "-Min" : NULL);
+        printf("%s%s", delim, outbuf);
+      }
+
+      if (conf.nmaxs) {
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.max_fields, conf.nmaxs, delim,
+                                 args->auto_label ? "-Min" : NULL);
+        printf("%s%s", delim, outbuf);
+      }
+    }
+
+    fputs("\n", stdout);
   }
 
   ht_init(&aggregations, 1024, NULL, (void (*)) free_agg);
@@ -247,7 +293,8 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       value = (struct aggregation *) ht_get(&aggregations, outbuf);
       if (!value) {
         in_hash = 0;
-        value = alloc_agg(conf.nsums, conf.ncounts, conf.naverages);
+        value = alloc_agg(conf.nsums, conf.ncounts, conf.naverages,
+                          conf.nmins, conf.nmaxs);
         /* value = malloc(sizeof(struct aggregation));
            memset(value, 0, sizeof(struct aggregation)); */
         if (!value) {
@@ -295,6 +342,46 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
         }
       }
 
+      /* mins */
+      for (i = 0; i < conf.nmins; i++) {
+        tmplen = get_line_field(tmpbuf, in_reader->current_line,
+                                AGG_TMP_BUF_SIZE - 1, conf.min_fields[i],
+                                delim);
+        if (tmplen > 0) {
+          double cur_val;
+          n = float_str_precision(tmpbuf);
+          if (conf.min_precisions[i] < n)
+            conf.min_precisions[i] = n;
+          n = sscanf(tmpbuf, "%lf", &cur_val);
+          if (n) {
+            if (cur_val < value->numeric_mins[i] ||
+                ! value->mins_initialized[i])
+              value->numeric_mins[i] = cur_val;
+            value->mins_initialized[i] = 1;
+          }
+        }
+      }
+
+      /* maxs */
+      for (i = 0; i < conf.nmaxs; i++) {
+        tmplen = get_line_field(tmpbuf, in_reader->current_line,
+                                AGG_TMP_BUF_SIZE - 1, conf.max_fields[i],
+                                delim);
+        if (tmplen > 0) {
+          double cur_val;
+          n = float_str_precision(tmpbuf);
+          if (conf.max_precisions[i] < n)
+            conf.max_precisions[i] = n;
+          n = sscanf(tmpbuf, "%lf", &cur_val);
+          if (n) {
+            if (cur_val > value->numeric_maxs[i] ||
+                ! value->maxs_initialized[i])
+              value->numeric_maxs[i] = cur_val;
+            value->maxs_initialized[i] = 1;
+          }
+        }
+      }
+
       if (!in_hash) {
         if (ht_put(&aggregations, outbuf, value) != 0)
           fprintf(stderr, "%s: failed to store value in hashtable.\n",
@@ -324,7 +411,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     for (i = 0; i < aggregations.arrsz; i++) {
       hash_keys = aggregations.arr[i];
       if (hash_keys != NULL) {
-        ll_call_for_each(hash_keys, ht_print_keys_sums_counts_avgs);
+        ll_call_for_each(hash_keys, ht_print_keys_and_agg_vals);
       }
     }
   } else {
@@ -353,7 +440,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     /* print everything out */
     for (i = 0; i < n_hash_elems; i++) {
       val = (struct aggregation *) ht_get(&aggregations, key_array[i]);
-      print_keys_sums_counts_avgs(key_array[i], val);
+      print_keys_and_agg_vals(key_array[i], val);
     }
 
     free(key_array);
@@ -405,7 +492,7 @@ int float_str_precision(char *d) {
   return (strlen(d) - after_dot);
 }
 
-int print_keys_sums_counts_avgs(char *key, struct aggregation *val) {
+int print_keys_and_agg_vals(char *key, struct aggregation *val) {
   int i;
   fputs(key, stdout);
   for (i = 0; i < conf.nsums; i++) {
@@ -418,16 +505,28 @@ int print_keys_sums_counts_avgs(char *key, struct aggregation *val) {
     printf("%s%.*f", delim, conf.average_precisions[i] + 2,
            val->average_sums[i] / val->average_counts[i]);
   }
+  for (i = 0; i < conf.nmins; i++) {
+    if (val->mins_initialized[i])
+      printf("%s%.*f", delim, conf.min_precisions[i], val->numeric_mins[i]);
+    else
+      fputs(delim, stdout);
+  }
+  for (i = 0; i < conf.nmaxs; i++) {
+    if (val->maxs_initialized[i])
+      printf("%s%.*f", delim, conf.max_precisions[i], val->numeric_maxs[i]);
+    else
+      fputs(delim, stdout);
+  }
   fputs("\n", stdout);
   return 0;
 }
 
-int ht_print_keys_sums_counts_avgs(void *htelem) {
+int ht_print_keys_and_agg_vals(void *htelem) {
   char *key;
   struct aggregation *val;
   key = ((ht_elem_t *) htelem)->key;
   val = ((ht_elem_t *) htelem)->data;
-  return print_keys_sums_counts_avgs(key, val);
+  return print_keys_and_agg_vals(key, val);
 }
 
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
@@ -467,17 +566,14 @@ void decrement_values(int *array, size_t sz) {
   }
 }
 
-struct aggregation *alloc_agg(int nsum, int ncount, int naverage) {
+struct aggregation *alloc_agg(int nsum, int ncount, int naverage, int nmin,
+                              int nmax) {
   struct aggregation *agg;
 
   agg = malloc(sizeof(struct aggregation));
   if (!agg)
     goto alloc_agg_error;
-
-  agg->counts = NULL;
-  agg->sums = NULL;
-  agg->average_sums = NULL;
-  agg->average_counts = NULL;
+  memset(agg, 0, sizeof(struct aggregation));
 
   if (nsum > 0) {
     agg->sums = malloc(sizeof(double) * nsum);
@@ -505,6 +601,27 @@ struct aggregation *alloc_agg(int nsum, int ncount, int naverage) {
     memset(agg->average_counts, 0, sizeof(u_int32_t) * naverage);
   }
 
+  if (nmin > 0) {
+    agg->numeric_mins = malloc(sizeof(double) * nmin);
+    if (! agg->numeric_mins)
+      goto alloc_agg_error;
+    memset(agg->numeric_mins, 0, sizeof(double) * nmin);
+    agg->mins_initialized = malloc(sizeof(int) * nmin);
+    if (! agg->mins_initialized)
+      goto alloc_agg_error;
+    memset(agg->mins_initialized, 0, nmin);
+  }
+
+  if (nmax > 0) {
+    agg->numeric_maxs = malloc(sizeof(double) * nmax);
+    if (! agg->numeric_maxs)
+      goto alloc_agg_error;
+    memset(agg->numeric_maxs, 0, sizeof(double) * nmax);
+    agg->maxs_initialized = malloc(sizeof(int) * nmax);
+    if (! agg->maxs_initialized)
+      goto alloc_agg_error;
+    memset(agg->maxs_initialized, 0, nmax);
+  }
   return agg;
 
 alloc_agg_error:
@@ -533,5 +650,9 @@ void free_agg(struct aggregation *agg) {
     free(agg->average_sums);
   if (agg->average_counts)
     free(agg->average_counts);
+  if (agg->numeric_mins)
+    free(agg->numeric_mins);
+  if (agg->numeric_maxs)
+    free(agg->numeric_maxs);
   free(agg);
 }

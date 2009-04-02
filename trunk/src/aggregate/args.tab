@@ -119,6 +119,34 @@ END_COPYRIGHT
 	  description => 'labels of fields to be counted if non-blank'
 	},
 	{
+	  name => 'mins',
+	  shortopt => 'n',
+	  longopt => 'mins',
+	  type => 'var',
+	  description => 'report the minimum values at the indexes',
+	},
+	{
+	  name => 'min_labels',
+	  shortopt => 'N',
+	  longopt => 'min-labels',
+	  type => 'var',
+	  description => 'report the minimum values at the labels',
+	},
+	{
+	  name => 'maxs',
+	  shortopt => 'x',
+	  longopt => 'maxs',
+	  type => 'var',
+	  description => 'report the maximum values at the indexes',
+	},
+	{
+	  name => 'max_labels',
+	  shortopt => 'X',
+	  longopt => 'max-labels',
+	  type => 'var',
+	  description => 'report the maximum values at the labels',
+	},
+	{
 	  name => 'delim',
 	  shortopt => 'd',
 	  longopt => 'delim',

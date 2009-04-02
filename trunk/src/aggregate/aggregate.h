@@ -39,17 +39,38 @@ struct agg_conf {
   int *key_fields;
   size_t key_fields_sz;
   int nkeys;
+
+/* TODO(jhinds): replace these groups of struct members with something like
+ * struct {
+ *   int *fields;
+ *   size_t fields_sz;
+ *   int n_elems;
+ *   int *precisions;
+ * };
+ */
   int *count_fields;
   size_t count_fields_sz;
   int ncounts;
+
   int *sum_fields;
   size_t sum_fields_sz;
   int nsums;
   int *sum_precisions;
+
   int *average_fields;
   size_t average_fields_sz;
   int naverages;
   int *average_precisions;
+
+  int *min_fields;
+  size_t min_fields_sz;
+  int nmins;
+  int *min_precisions;
+
+  int *max_fields;
+  size_t max_fields_sz;
+  int nmaxs;
+  int *max_precisions;
 };
 
 struct aggregation {
@@ -57,6 +78,14 @@ struct aggregation {
   double *sums;
   u_int32_t *average_counts;
   double *average_sums;
+  double *numeric_mins;
+  /* for each min field, whether a populated input field has been found yet. */
+  char *mins_initialized;
+  double *numeric_maxs;
+  /* for each max field, whether a populated input field has been found yet. */
+  char *maxs_initialized;
+  /* char *string_mins; */
+  /* char *string_maxs; */
 };
 
 int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
@@ -65,8 +94,8 @@ void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
                               int *fields, size_t nfields, char *delim,
                               char *suffix);
 void decrement_values(int *array, size_t sz);
-int print_keys_sums_counts_avgs(char *key, struct aggregation *val);
-int ht_print_keys_sums_counts_avgs(void *htelem);
+int print_keys_and_agg_vals(char *key, struct aggregation *val);
+int ht_print_keys_and_agg_vals(void *htelem);
 int key_strcmp(char **a, char **b);
 int float_str_precision(char *d);
 
@@ -78,7 +107,8 @@ int float_str_precision(char *d);
   * 
   * @return a shiny new, zeroed-out structure
   */
-struct aggregation *alloc_agg(int nsum, int ncount, int naverage);
+struct aggregation *alloc_agg(int nsum, int ncount, int naverage, int nmin,
+                              int nmax);
 
 void free_agg(struct aggregation *agg);
 
