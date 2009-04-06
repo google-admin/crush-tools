@@ -345,14 +345,13 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
                                 delim);
         if (tmplen > 0) {
           double cur_val;
-          n = float_str_precision(tmpbuf);
-          if (conf.mins.precisions[i] < n)
-            conf.mins.precisions[i] = n;
           n = sscanf(tmpbuf, "%lf", &cur_val);
           if (n) {
             if (cur_val < value->numeric_mins[i] ||
-                ! value->mins_initialized[i])
+                ! value->mins_initialized[i]) {
               value->numeric_mins[i] = cur_val;
+              conf.mins.precisions[i] = float_str_precision(tmpbuf);
+            }
             value->mins_initialized[i] = 1;
           }
         }
@@ -365,14 +364,13 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
                                 delim);
         if (tmplen > 0) {
           double cur_val;
-          n = float_str_precision(tmpbuf);
-          if (conf.maxs.precisions[i] < n)
-            conf.maxs.precisions[i] = n;
           n = sscanf(tmpbuf, "%lf", &cur_val);
           if (n) {
             if (cur_val > value->numeric_maxs[i] ||
-                ! value->maxs_initialized[i])
+                ! value->maxs_initialized[i]) {
               value->numeric_maxs[i] = cur_val;
+              conf.maxs.precisions[i] = float_str_precision(tmpbuf);
+            }
             value->maxs_initialized[i] = 1;
           }
         }
