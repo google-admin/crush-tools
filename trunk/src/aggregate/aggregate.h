@@ -27,50 +27,20 @@
 #ifndef AGGREGATE_H
 #define AGGREGATE_H
 
-
-/*
-struct aggregation {
-	u_int32_t counts[8];
-	double sums[8];
+struct agg_conf_field {
+  int *indexes;  /**< array of field indexes. */
+  size_t size;  /**< size of the index array. */
+  size_t count;  /**< number of elems in the index array. */
+  int *precisions;  /**< precision of output for each field. */
 };
-*/
 
 struct agg_conf {
-  int *key_fields;
-  size_t key_fields_sz;
-  int nkeys;
-
-/* TODO(jhinds): replace these groups of struct members with something like
- * struct {
- *   int *fields;
- *   size_t fields_sz;
- *   int n_elems;
- *   int *precisions;
- * };
- */
-  int *count_fields;
-  size_t count_fields_sz;
-  int ncounts;
-
-  int *sum_fields;
-  size_t sum_fields_sz;
-  int nsums;
-  int *sum_precisions;
-
-  int *average_fields;
-  size_t average_fields_sz;
-  int naverages;
-  int *average_precisions;
-
-  int *min_fields;
-  size_t min_fields_sz;
-  int nmins;
-  int *min_precisions;
-
-  int *max_fields;
-  size_t max_fields_sz;
-  int nmaxs;
-  int *max_precisions;
+  struct agg_conf_field keys;
+  struct agg_conf_field counts;
+  struct agg_conf_field sums;
+  struct agg_conf_field averages;
+  struct agg_conf_field mins;
+  struct agg_conf_field maxs;
 };
 
 struct aggregation {

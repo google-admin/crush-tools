@@ -26,96 +26,93 @@ struct agg_conf conf;
 int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
                           const char *header, const char *delim) {
   if (args->keys) {
-    conf->nkeys = expand_nums(args->keys, &(conf->key_fields),
-                              &(conf->key_fields_sz));
+    conf->keys.count = expand_nums(args->keys, &(conf->keys.indexes),
+                                   &(conf->keys.size));
   } else if (args->key_labels) {
-    conf->nkeys = expand_label_list(args->key_labels, header,
-                                    delim, &(conf->key_fields),
-                                    &(conf->key_fields_sz));
+    conf->keys.count = expand_label_list(args->key_labels, header,
+                                         delim, &(conf->keys.indexes),
+                                         &(conf->keys.size));
     args->preserve = 1;
   }
-  if (conf->nkeys < 0)
-    return conf->nkeys;
-  decrement_values(conf->key_fields, conf->nkeys);
+  if (conf->keys.count < 0)
+    return conf->keys.count;
+  decrement_values(conf->keys.indexes, conf->keys.count);
 
   if (args->sums) {
-    conf->nsums = expand_nums(args->sums, &(conf->sum_fields),
-                              &(conf->sum_fields_sz));
+    conf->sums.count = expand_nums(args->sums, &(conf->sums.indexes),
+                                   &(conf->sums.size));
   } else if (args->sum_labels) {
-    conf->nsums = expand_label_list(args->sum_labels, header,
-                                    delim, &(conf->sum_fields),
-                                    &(conf->sum_fields_sz));
+    conf->sums.count = expand_label_list(args->sum_labels, header,
+                                         delim, &(conf->sums.indexes),
+                                         &(conf->sums.size));
     args->preserve = 1;
   }
-  if (conf->nsums < 0) {
-    return conf->nsums;
-  } else if (conf->nsums > 0) {
-    decrement_values(conf->sum_fields, conf->nsums);
-    conf->sum_precisions = malloc(sizeof(int) * conf->nsums);
-    memset(conf->sum_precisions, 0, sizeof(int) * conf->nsums);
+  if (conf->sums.count < 0) {
+    return conf->sums.count;
+  } else if (conf->sums.count > 0) {
+    decrement_values(conf->sums.indexes, conf->sums.count);
+    conf->sums.precisions = calloc(conf->sums.count, sizeof(int));
   }
 
   if (args->counts) {
-    conf->ncounts = expand_nums(args->counts, &(conf->count_fields),
-                                &(conf->count_fields_sz));
+    conf->counts.count = expand_nums(args->counts, &(conf->counts.indexes),
+                                &(conf->counts.size));
   } else if (args->count_labels) {
-    conf->ncounts = expand_label_list(args->count_labels, header,
-                                      delim, &(conf->count_fields),
-                                      &(conf->count_fields_sz));
+    conf->counts.count = expand_label_list(args->count_labels, header,
+                                      delim, &(conf->counts.indexes),
+                                      &(conf->counts.size));
     args->preserve = 1;
   }
-  if (conf->ncounts < 0)
-    return conf->ncounts;
-  else if (conf->ncounts > 0)
-    decrement_values(conf->count_fields, conf->ncounts);
+  if (conf->counts.count < 0)
+    return conf->counts.count;
+  else if (conf->counts.count > 0)
+    decrement_values(conf->counts.indexes, conf->counts.count);
 
   if (args->averages) {
-    conf->naverages = expand_nums(args->averages, &(conf->average_fields),
-                                  &(conf->average_fields_sz));
+    conf->averages.count = expand_nums(args->averages, &(conf->averages.indexes),
+                                  &(conf->averages.size));
   } else if (args->average_labels) {
-    conf->naverages = expand_label_list(args->average_labels, header,
-                                        delim, &(conf->average_fields),
-                                        &(conf->average_fields_sz));
+    conf->averages.count = expand_label_list(args->average_labels, header,
+                                        delim, &(conf->averages.indexes),
+                                        &(conf->averages.size));
     args->preserve = 1;
   }
-  if (conf->naverages < 0) {
-    return conf->naverages;
-  } else if (conf->naverages > 0) {
-    decrement_values(conf->average_fields, conf->naverages);
-    conf->average_precisions = malloc(sizeof(int) * conf->naverages);
-    memset(conf->average_precisions, 0, sizeof(int) * conf->naverages);
+  if (conf->averages.count < 0) {
+    return conf->averages.count;
+  } else if (conf->averages.count > 0) {
+    decrement_values(conf->averages.indexes, conf->averages.count);
+    conf->averages.precisions = calloc(conf->averages.count, sizeof(int));
   }
 
   if (args->mins) {
-    conf->nmins = expand_nums(args->mins, &(conf->min_fields),
-                              &(conf->min_fields_sz));
+    conf->mins.count = expand_nums(args->mins, &(conf->mins.indexes),
+                              &(conf->mins.size));
   } else if (args->min_labels) {
-    conf->nmins = expand_label_list(args->min_labels, header, delim,
-                                    &(conf->min_fields),
-                                    &(conf->min_fields_sz));
+    conf->mins.count = expand_label_list(args->min_labels, header, delim,
+                                    &(conf->mins.indexes),
+                                    &(conf->mins.size));
   }
-  if (conf->nmins < 0) {
-    return conf->nmins;
-  } else if (conf->nmins > 0) {
-    decrement_values(conf->min_fields, conf->nmins);
-    conf->min_precisions = malloc(sizeof(int) * conf->nmins);
-    memset(conf->min_precisions, 0, sizeof(int) * conf->nmins);
+  if (conf->mins.count < 0) {
+    return conf->mins.count;
+  } else if (conf->mins.count > 0) {
+    decrement_values(conf->mins.indexes, conf->mins.count);
+    conf->mins.precisions = calloc(conf->mins.count, sizeof(int));
   }
 
   if (args->maxs) {
-    conf->nmaxs = expand_nums(args->maxs, &(conf->max_fields),
-                              &(conf->max_fields_sz));
+    conf->maxs.count = expand_nums(args->maxs, &(conf->maxs.indexes),
+                              &(conf->maxs.size));
   } else if (args->max_labels) {
-    conf->nmaxs = expand_label_list(args->max_labels, header, delim,
-                                    &(conf->max_fields),
-                                    &(conf->max_fields_sz));
+    conf->maxs.count = expand_label_list(args->max_labels, header, delim,
+                                    &(conf->maxs.indexes),
+                                    &(conf->maxs.size));
   }
-  if (conf->nmaxs < 0) {
-    return conf->nmaxs;
-  } else if (conf->nmaxs > 0) {
-    decrement_values(conf->max_fields, conf->nmaxs);
-    conf->max_precisions = malloc(sizeof(int) * conf->nmaxs);
-    memset(conf->max_precisions, 0, sizeof(int) * conf->nmaxs);
+  if (conf->maxs.count < 0) {
+    return conf->maxs.count;
+  } else if (conf->maxs.count > 0) {
+    decrement_values(conf->maxs.indexes, conf->maxs.count);
+    conf->maxs.precisions = malloc(sizeof(int) * conf->maxs.count);
+    memset(conf->maxs.precisions, 0, sizeof(int) * conf->maxs.count);
   }
 
   return 0;
@@ -178,18 +175,18 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
 
 #ifdef CRUSH_DEBUG
-  fprintf(stderr, "%d keys: ", conf.nkeys);
-  for (i = 0; i < conf.nkeys; i++)
-    fprintf(stderr, "%d ", conf.key_fields[i]);
-  fprintf(stderr, "\n%d sums: ", conf.nsums);
-  for (i = 0; i < conf.nsums; i++)
-    fprintf(stderr, "%d ", conf.sum_fields[i]);
-  fprintf(stderr, "\n%d averages: ", conf.naverages);
-  for (i = 0; i < conf.naverages; i++)
-    fprintf(stderr, "%d ", conf.average_fields[i]);
-  fprintf(stderr, "\n%d counts: ", conf.ncounts);
-  for (i = 0; i < conf.ncounts; i++)
-    fprintf(stderr, "%d ", conf.count_fields[i]);
+  fprintf(stderr, "%d keys: ", conf.keys.count);
+  for (i = 0; i < conf.keys.count; i++)
+    fprintf(stderr, "%d ", conf.keys.indexes[i]);
+  fprintf(stderr, "\n%d sums: ", conf.sums.count);
+  for (i = 0; i < conf.sums.count; i++)
+    fprintf(stderr, "%d ", conf.sums.indexes[i]);
+  fprintf(stderr, "\n%d averages: ", conf.averages.count);
+  for (i = 0; i < conf.averages.count; i++)
+    fprintf(stderr, "%d ", conf.averages.indexes[i]);
+  fprintf(stderr, "\n%d counts: ", conf.counts.count);
+  for (i = 0; i < conf.counts.count; i++)
+    fprintf(stderr, "%d ", conf.counts.indexes[i]);
   fprintf(stderr, "\n\n");
 #endif
 
@@ -218,42 +215,42 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     outbuf_sz = in_reader->current_line_len;
 
     extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                             conf.key_fields, conf.nkeys, delim, NULL);
+                             conf.keys.indexes, conf.keys.count, delim, NULL);
     fputs(outbuf, stdout);
     if (args->labels) {
     	printf("%s%s", delim, args->labels);
     } else {
-      if (conf.nsums) {
+      if (conf.sums.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                                 conf.sum_fields, conf.nsums, delim,
+                                 conf.sums.indexes, conf.sums.count, delim,
                                  args->auto_label ? "-Sum" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (conf.ncounts) {
+      if (conf.counts.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                                 conf.count_fields, conf.ncounts, delim,
+                                 conf.counts.indexes, conf.counts.count, delim,
                                  args->auto_label ? "-Count" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (conf.naverages) {
+      if (conf.averages.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                                 conf.average_fields, conf.naverages, delim,
-                                 args->auto_label ? "-Average" : NULL);
+                                 conf.averages.indexes, conf.averages.count,
+                                 delim, args->auto_label ? "-Average" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (conf.nmins) {
+      if (conf.mins.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                                 conf.min_fields, conf.nmins, delim,
+                                 conf.mins.indexes, conf.mins.count, delim,
                                  args->auto_label ? "-Min" : NULL);
         printf("%s%s", delim, outbuf);
       }
 
-      if (conf.nmaxs) {
+      if (conf.maxs.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                                 conf.max_fields, conf.nmaxs, delim,
+                                 conf.maxs.indexes, conf.maxs.count, delim,
                                  args->auto_label ? "-Min" : NULL);
         printf("%s%s", delim, outbuf);
       }
@@ -288,16 +285,15 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                               conf.key_fields, conf.nkeys, delim, NULL);
+                               conf.keys.indexes, conf.keys.count, delim, NULL);
 
       value = (struct aggregation *) ht_get(&aggregations, outbuf);
       if (!value) {
         in_hash = 0;
-        value = alloc_agg(conf.nsums, conf.ncounts, conf.naverages,
-                          conf.nmins, conf.nmaxs);
-        /* value = malloc(sizeof(struct aggregation));
-           memset(value, 0, sizeof(struct aggregation)); */
-        if (!value) {
+        value = alloc_agg(conf.sums.count, conf.counts.count,
+                          conf.averages.count, conf.mins.count,
+                          conf.maxs.count);
+        if (! value) {
           fprintf(stderr, "%s: out of memory.\n", getenv("_"));
           return EXIT_MEM_ERR;
         }
@@ -306,36 +302,36 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       /* sums */
-      for (i = 0; i < conf.nsums; i++) {
+      for (i = 0; i < conf.sums.count; i++) {
         tmplen =
           get_line_field(tmpbuf, in_reader->current_line,
-                         AGG_TMP_BUF_SIZE - 1, conf.sum_fields[i], delim);
+                         AGG_TMP_BUF_SIZE - 1, conf.sums.indexes[i], delim);
         if (tmplen > 0) {
           n = float_str_precision(tmpbuf);
-          if (conf.sum_precisions[i] < n)
-            conf.sum_precisions[i] = n;
+          if (conf.sums.precisions[i] < n)
+            conf.sums.precisions[i] = n;
           value->sums[i] += atof(tmpbuf);
         }
       }
 
       /* averages */
-      for (i = 0; i < conf.naverages; i++) {
+      for (i = 0; i < conf.averages.count; i++) {
         tmplen = get_line_field(tmpbuf, in_reader->current_line,
-                                AGG_TMP_BUF_SIZE - 1, conf.average_fields[i],
+                                AGG_TMP_BUF_SIZE - 1, conf.averages.indexes[i],
                                 delim);
         if (tmplen > 0) {
           n = float_str_precision(tmpbuf);
-          if (conf.average_precisions[i] < n)
-            conf.average_precisions[i] = n;
+          if (conf.averages.precisions[i] < n)
+            conf.averages.precisions[i] = n;
           value->average_sums[i] += atof(tmpbuf);
           value->average_counts[i] += 1;
         }
       }
 
       /* counts */
-      for (i = 0; i < conf.ncounts; i++) {
+      for (i = 0; i < conf.counts.count; i++) {
         tmplen = get_line_field(tmpbuf, in_reader->current_line,
-                                AGG_TMP_BUF_SIZE - 1, conf.count_fields[i],
+                                AGG_TMP_BUF_SIZE - 1, conf.counts.indexes[i],
                                 delim);
         if (tmplen > 0) {
           value->counts[i] += 1;
@@ -343,15 +339,15 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       /* mins */
-      for (i = 0; i < conf.nmins; i++) {
+      for (i = 0; i < conf.mins.count; i++) {
         tmplen = get_line_field(tmpbuf, in_reader->current_line,
-                                AGG_TMP_BUF_SIZE - 1, conf.min_fields[i],
+                                AGG_TMP_BUF_SIZE - 1, conf.mins.indexes[i],
                                 delim);
         if (tmplen > 0) {
           double cur_val;
           n = float_str_precision(tmpbuf);
-          if (conf.min_precisions[i] < n)
-            conf.min_precisions[i] = n;
+          if (conf.mins.precisions[i] < n)
+            conf.mins.precisions[i] = n;
           n = sscanf(tmpbuf, "%lf", &cur_val);
           if (n) {
             if (cur_val < value->numeric_mins[i] ||
@@ -363,15 +359,15 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       /* maxs */
-      for (i = 0; i < conf.nmaxs; i++) {
+      for (i = 0; i < conf.maxs.count; i++) {
         tmplen = get_line_field(tmpbuf, in_reader->current_line,
-                                AGG_TMP_BUF_SIZE - 1, conf.max_fields[i],
+                                AGG_TMP_BUF_SIZE - 1, conf.maxs.indexes[i],
                                 delim);
         if (tmplen > 0) {
           double cur_val;
           n = float_str_precision(tmpbuf);
-          if (conf.max_precisions[i] < n)
-            conf.max_precisions[i] = n;
+          if (conf.maxs.precisions[i] < n)
+            conf.maxs.precisions[i] = n;
           n = sscanf(tmpbuf, "%lf", &cur_val);
           if (n) {
             if (cur_val > value->numeric_maxs[i] ||
@@ -495,25 +491,25 @@ int float_str_precision(char *d) {
 int print_keys_and_agg_vals(char *key, struct aggregation *val) {
   int i;
   fputs(key, stdout);
-  for (i = 0; i < conf.nsums; i++) {
-    printf("%s%.*f", delim, conf.sum_precisions[i], val->sums[i]);
+  for (i = 0; i < conf.sums.count; i++) {
+    printf("%s%.*f", delim, conf.sums.precisions[i], val->sums[i]);
   }
-  for (i = 0; i < conf.ncounts; i++) {
+  for (i = 0; i < conf.counts.count; i++) {
     printf("%s%d", delim, val->counts[i]);
   }
-  for (i = 0; i < conf.naverages; i++) {
-    printf("%s%.*f", delim, conf.average_precisions[i] + 2,
+  for (i = 0; i < conf.averages.count; i++) {
+    printf("%s%.*f", delim, conf.averages.precisions[i] + 2,
            val->average_sums[i] / val->average_counts[i]);
   }
-  for (i = 0; i < conf.nmins; i++) {
+  for (i = 0; i < conf.mins.count; i++) {
     if (val->mins_initialized[i])
-      printf("%s%.*f", delim, conf.min_precisions[i], val->numeric_mins[i]);
+      printf("%s%.*f", delim, conf.mins.precisions[i], val->numeric_mins[i]);
     else
       fputs(delim, stdout);
   }
-  for (i = 0; i < conf.nmaxs; i++) {
+  for (i = 0; i < conf.maxs.count; i++) {
     if (val->maxs_initialized[i])
-      printf("%s%.*f", delim, conf.max_precisions[i], val->numeric_maxs[i]);
+      printf("%s%.*f", delim, conf.maxs.precisions[i], val->numeric_maxs[i]);
     else
       fputs(delim, stdout);
   }
