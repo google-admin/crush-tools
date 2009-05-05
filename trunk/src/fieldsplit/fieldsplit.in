@@ -89,7 +89,7 @@ my $lineno = 0;
 # to avoid recalculating length($buckets) inside the file loop.
 my $fmt_str;
 if ($buckets) {
-  $fmt_str = '%' . length($buckets) . 'd';
+  $fmt_str = '%0' . length($buckets) . 'd';
 }
 
 while (my $lstr = <>) {
