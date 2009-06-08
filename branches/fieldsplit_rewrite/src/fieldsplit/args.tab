@@ -1,119 +1,123 @@
-# this is a dummy file used only for generating documentation.
-
 # data relevant to the application as a whole
 %global = (
-	name => "fieldsplit",
-	description => "splits a file into multiple files according to a particular field value.",
-	version => "0.1",
-	trailing_opts => "[-h] <-f N> [-d D] [-p dir] [file(s)]",
-	usage_extra => "filenames will be the -n prefix argument (if any) followed by whatever the\\n" .
-                 "value of the field was (with spaces and slashes replaced with underscores),\\n" .
-                 "or \"_blank_value\" for lines where the field was empty, followed by the\\n" .
-                 "-s argument (if any).\\n\\n" .
-
-                 "NOTE: you should insure none of the files which will be created exist before\\n" .
-                 "running this - new data will just be appended to the existing file in that\\n" .
-                 "case." ,
-	do_long_opts => 1,
-	preproc_extra => '',
-	copyright => <<END_COPYRIGHT
-   Copyright 2008 Google Inc.
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+  name          => "fieldsplit",
+  description   => "splits a file into multiple files according to a particular field value.",
+  version       => "2.1",
+  trailing_opts => "[file ...]",
+  usage_extra   => "Either -f or -F must be specified.",
+  do_long_opts  => 1,
+  preproc_extra => '',
+  language      => 'c',
+  copyright     => <<END_COPYRIGHT
+copyright 2009
 END_COPYRIGHT
 );
 
 # descriptions of individual command-line arguments
+# valid types are
+#  flag                - no argument
+#  var                 - required argument
+#  var_optional        - optional argument
+#  custom_flag         - no arg, and specify parseopt_code 
+#  custom_var          - required arg, and specify parseopt_code 
+#  custom_var_optional - optional arg, and specify parseopt_code 
 @args = ( {
-	  name => 'help',
-	  shortopt => 'h',
-	  longopt => 'help',
-	  type => 'flag',
-	  required => 0,
-	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
-	  description => 'print this message and exit'
-	},
+    name        => 'help',
+    shortopt    => 'h',
+    longopt     => 'help',
+    type        => 'flag',
+    required    => 0,
+    main_code   => 'usage(argv[0]); exit(EXIT_HELP);',
+    description => 'print this message and exit'
+  },
   {
-	  name => 'delim',
-	  shortopt => 'd',
-	  longopt => 'delim',
-	  type => 'var',
-	  required => 0,
-	  description => 'field separator string (default: 0xfe)'
-	},
-	{
-	  name        => 'field',
-	  shortopt    => 'f',
-	  longopt     => 'field',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'split on the specified field number'
-	},
+    name        => 'version',
+    shortopt    => 'V',
+    longopt     => 'version',
+    type        => 'flag',
+    required    => 0,
+    main_code   => 'version(); exit(1);',
+    description => 'print version info and exit'
+  },
   {
-	  name        => 'label',
-	  shortopt    => 'F',
-	  longopt     => 'Field-label',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'split on the specified field label'
-	},
-	{
-	  name        => 'path',
-	  shortopt    => 'p',
-	  longopt     => 'path',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'specifies dir as directory in which files will be placed (default: ./)'
-	},
-	{
-	  name        => 'name',
-	  shortopt    => 'n',
-	  longopt     => 'name',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'output filename prefix'
-	},
-	{
-	  name        => 'suffix',
-	  shortopt    => 's',
-	  longopt     => 'suffix',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'output filename suffix'
-	},
-	{
-	  name        => 'keep_header',
-	  shortopt    => 'k',
-	  longopt     => 'keep',
-	  type        => 'flag',
-	  required    => 0,
-	  description => 'keep the header in all of the resulting files'
-	},
-	{
-	  name        => 'xform_names',
-	  shortopt    => 'x',
-	  longopt     => 'xform-names',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'user-supplied substitution regex to transform output names (e.g. \'s/[^-\\w]//g\')'
-	},
-	{
-	  name        => 'num_flush_buffer_lines',
-	  shortopt    => 'S',
-	  longopt     => '',
-	  type        => 'var',
-	  required    => 0,
-	  description => 'override the number of lines stored in memory before flushing. (default: 10000)'
-	},
+    name => 'field',
+    shortopt => 'f',
+    longopt => 'field',
+    type => 'var',
+    required => 0,
+    description => 'index of field to split on',
+  },
+  {
+    name => 'field_label',
+    shortopt => 'F',
+    longopt => 'field-label',
+    type => 'var',
+    required => 0,
+    description => 'label of field to split on',
+  },
+  {
+    name => 'delim',
+    shortopt => 'd',
+    longopt => 'delim',
+    type => 'var',
+    required => 0,
+    description => 'field separator string (default: 0xfe)',
+  },
+  {
+    name => 'path',
+    shortopt => 'p',
+    longopt => 'path',
+    type => 'var',
+    required => 0,
+    description => 'directory in which output files should be placed (default: ./)',
+  },
+  {
+    name => 'name',
+    shortopt => 'n',
+    longopt => 'name',
+    type => 'var',
+    required => 0,
+    description => 'output file prefix',
+  },
+  {
+    name => 'suffix',
+    shortopt => 's',
+    longopt => 'suffix',
+    type => 'var',
+    required => 0,
+    description => 'output file suffix',
+  },
+  {
+    name => 'keep_header',
+    shortopt => 'k',
+    longopt => 'keep',
+    type => 'flag',
+    required => 0,
+    description => 'preserve the input header row in all output files',
+  },
+  {
+    name => 'buffer_line_count',
+    shortopt => 'S',
+    longopt => 'buffer-lines',
+    type => 'var',
+    required => 0,
+    description => 'line buffer size - DEPRECATED.',
+  },
+  {
+    name => 'buckets',
+    shortopt => 'b',
+    longopt => 'buckets',
+    type => 'var',
+    required => 0,
+    description => 'split data into BUCKETS files, guaranteeing that like ' .
+                   'field values are in the same output file.',
+  },
+  {
+    name => 'xform_names',
+    shortopt => 'x',
+    longopt => 'xform-names',
+    type => 'var',
+    required => 0,
+    description => 'user-supplied substitution regex to transform output names (e.g. \'s/[^-\\w]//g\')'
+  }
 );
-
