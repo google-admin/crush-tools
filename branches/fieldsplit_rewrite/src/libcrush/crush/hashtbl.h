@@ -126,4 +126,12 @@ void ht_call_for_each(hashtbl_t * tbl, int (*func) (void *));
   */
 void ht_dump_stats(hashtbl_t * tbl);
 
+
+/** @brief gets the first prime number greater than or equal to N.
+  *
+  * @arg n some number.
+  * @return a prime number not less than N.
+  */
+unsigned long ht_next_prime(unsigned long n);
+
 #endif /* HASHTBL_H */
