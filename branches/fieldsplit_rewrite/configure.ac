@@ -45,7 +45,7 @@ AC_PROG_LIBTOOL
 
 # cygwin has fcntl.h under sys/
 AC_CHECK_HEADERS([fcntl.h sys/fcntl.h unistd.h err.h locale.h sys/types.h \
-                  sys/stat.h regex.h assert.h])
+                  sys/stat.h regex.h assert.h pcre.h])
 AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_SIZE_T
@@ -54,6 +54,7 @@ AC_DEFINE(_LARGEFILE64_SOURCE, [1],
           [make O_LARGEFILE open flag visible if available])
 
 AC_CHECK_FUNCS([open64 getline fgetln])
+AC_CHECK_LIB(pcre, pcre_compile)
 
 AC_ARG_ENABLE(maintainer-mode,
 AS_HELP_STRING([--enable-maintainer-mode],
