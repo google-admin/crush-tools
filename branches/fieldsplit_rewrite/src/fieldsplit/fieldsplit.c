@@ -15,8 +15,28 @@
 #endif
 
 #include <ffutils.h>
+#include <reutils.h>
 #include <hashtbl.h>
 #include "fieldsplit_main.h"
+
+#ifdef HAVE_PCRE_H
+char *re_pattern = NULL, *re_subst = NULL;
+pcre *re = NULL;
+pcre_extra *re_extra = NULL;
+int re_flags = 0;
+int subst_globally = 0;
+struct crush_resubst_elem *compiled_subst = NULL;
+size_t compiled_subst_sz = 0;
+int n_subst_elems;
+
+/** @brief parses user-supplied substitution and initializes related global
+  * values.
+  *
+  * @arg subst_regex a Perl-style substitution regular expression.
+  * @return Non-zero on error, or 0 on success.
+  */
+int init_xform_regex(char *subst_regex);
+#endif
 
 /** @brief turns an input field value into the value which will determine which
   * output file the row will go to.
@@ -26,10 +46,13 @@
   *
   * @arg data the input field value.
   * @arg copy target for the transformed version of the value.
+  * @arg subst_buffer working space for regex substitutions.
+  * @arg subst_buffer_sz size of subst buffer.
   *
   * @return copy, or NULL on error.
   */
-char * transform_key(const char const *data, char *copy);
+char * transform_key(const char const *data, char *copy,
+                     char **subst_buffer, size_t *subst_buffer_sz);
 
 /** @brief hashes a string.
   * Used for bucketizing input into a limited number of output files.
@@ -78,12 +101,29 @@ hashtbl_t fileptr_cache; /**< @brief a filename-to-fp_wrapper lookup table. */
 int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *in_file;
   char *header = NULL, *line = NULL,
-       *field = NULL, *field_key = NULL;
-  size_t header_sz = 0, line_sz = 0, field_sz = 0;
+       *field = NULL, *field_key = NULL,
+       *subst_buffer = NULL;
+  size_t header_sz = 0, line_sz = 0, field_sz = 0, subst_buffer_sz = 0;
   int field_index, buckets = 0, bucket_len;
   long max_open_files;
 
   char default_delim[] = {0xfe, 0x00};
+
+#ifdef HAVE_PCRE_H
+  if (args->xform_names) {
+    if (init_xform_regex(args->xform_names) != 0) {
+      fprintf(stderr, "%s: fatal error parsing \"%s\"\n",
+              getenv("_"), args->xform_names);
+      exit(1);
+    }
+  }
+#else
+  if (args->xform_names) {
+    fprintf(stderr, "%s was compiled without regular expression support.\n",
+            getenv("_"));
+    exit(1);
+  }
+#endif
 
   if (! args->field && ! args->field_label) {
     fprintf(stderr, "%s: either -f or -F must be specified.\n");
@@ -151,7 +191,7 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
         }
         field_sz += 32;
       }
-      transform_key(field, field_key);
+      transform_key(field, field_key, &subst_buffer, &subst_buffer_sz);
       if (buckets) {
         sprintf(field_key, "%.*d", bucket_len, strhash32(field_key) % buckets);
       }
@@ -177,7 +217,8 @@ int close_files(void *data) {
 }
 
 
-char * transform_key(const char const *data, char *copy) {
+char * transform_key(const char const *data, char *copy,
+                     char **subst_buffer, size_t *subst_buffer_sz) {
   char *p;
   strcpy(copy, data);
   if (! *copy) {
@@ -192,6 +233,12 @@ char * transform_key(const char const *data, char *copy) {
     }
     p++;
   }
+#ifdef HAVE_PCRE_H
+  crush_re_substitute(re, re_extra, compiled_subst, n_subst_elems,
+                      copy, re_subst, subst_buffer, subst_buffer_sz,
+                      subst_globally);
+  strcpy(copy, *subst_buffer);
+#endif
   return copy;
 }
 
@@ -250,3 +297,59 @@ void store_mapping(const struct cmdargs const *args,
   }
   fputs(line, out);
 }
+
+#ifdef HAVE_PCRE_H
+int init_xform_regex(char *subst_regex) {
+  const char *re_error;
+  int re_err_offset;
+  char *re_modifiers = NULL, *p;
+  char re_separator;
+  int is_escaped;
+
+  if (subst_regex[0] != 's') {
+    fprintf(stderr, "%s: unparseable regular expression \"%s\"\n",
+            getenv("_"), subst_regex);
+    return 1;
+  }
+  re_separator = subst_regex[1];
+  re_pattern = subst_regex + 2;
+
+  for (p = subst_regex + 2; *p; p++) {
+    if (*p == '\\') {
+      is_escaped = 1;
+      continue;
+    }
+    if (is_escaped || *p != re_separator) {
+      is_escaped = 0;
+      continue;
+    }
+    *p = '\0';
+    if (! re_subst)
+      re_subst = p + 1;
+    else if (! re_modifiers)
+      re_modifiers = p + 1;
+  }
+
+  if (! re_subst) {
+    fprintf(stderr, "%s: failed to parse substitution \"%s\"\n",
+            getenv("_"), subst_regex);
+    return 1;
+  }
+
+  re_flags = crush_re_make_flags(re_modifiers, &subst_globally);
+  re = pcre_compile(re_pattern, re_flags, &re_error, &re_err_offset, NULL);
+  if (! re) {
+    fprintf(stderr, "%s: re compile failed: %s\n", getenv("_"), re_error);
+    return 1;
+  }
+  re_extra = pcre_study(re, 0, &re_error);
+
+  n_subst_elems = crush_resubst_compile(re_subst, &compiled_subst,
+                                        &compiled_subst_sz);
+  if (n_subst_elems < 0) {
+    fprintf(stderr, "%s: substitution compile failed.\n", getenv("_"));
+    return 1;
+  }
+  return 0;
+}
+#endif

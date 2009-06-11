@@ -13,7 +13,7 @@ if [ $? -ne 0 ]; then
 fi
 
 validate_output || {
-  test_status $test_number 0 "$description" XFAIL
+  test_status $test_number 0 "$description" FAIL
   continue
 }
 test_status $test_number 0 "$description" PASS
