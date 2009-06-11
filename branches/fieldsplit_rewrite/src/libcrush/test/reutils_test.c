@@ -22,6 +22,9 @@
   pcre *re; \
   const char *re_error; \
   int re_err_offset; \
+  struct crush_resubst_elem *compiled_subst = NULL; \
+  size_t compiled_subst_sz = 0; \
+  int n_subst_elems = 0; \
   char *target = NULL; \
   size_t target_sz = 0; \
   int has_error = 0; \
@@ -29,7 +32,11 @@
 
 
 #define TEST(subtest, subject, substitution, global, expected) \
-  if (crush_re_substitute(re, NULL, (subject), (substitution), \
+  n_subst_elems = crush_resubst_compile((substitution), \
+                                        &compiled_subst, \
+                                        &compiled_subst_sz); \
+  if (crush_re_substitute(re, NULL, compiled_subst, n_subst_elems, \
+                          (subject), (substitution), \
                           &target, &target_sz, (global))) { \
     if (strcmp(target, (expected)) != 0) { \
       printf("FAIL: reutils: %s %d: expected \"%s\", got \"%s\".\n", \
@@ -77,7 +84,118 @@ int test_make_flags() {
            desc, 3); \
     has_error = 1;
   }
-  printf("PASS: reutils: %s.\n", desc);
+  if (! has_error)
+    printf("PASS: reutils: %s.\n", desc);
+  return has_error;
+}
+
+int test_resubst_compile() {
+  char *desc = "resubst compile";
+  struct crush_resubst_elem *subst_elems = NULL;
+  size_t subst_elems_sz = 0;
+  int n_elems, has_error = 0;
+  char pattern[64];
+
+  strcpy(pattern, "");
+  n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
+  if (n_elems != 1) {
+    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
+           desc, 1, n_elems, 1);
+    has_error = 1;
+  } else {
+    if (subst_elems[0].elem_type != resubst_literal) {
+      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 1);
+      has_error = 1;
+    }
+    if (subst_elems[0].begin != pattern) {
+      printf("FAIL: reutils: %s %d: bad start of element.\n", desc, 1);
+      has_error = 1;
+    }
+    if (subst_elems[0].elem_len != 0) {
+      printf("FAIL: reutils: %s %d: bad length of element.\n", desc, 1);
+      has_error = 1;
+    }
+  }
+
+  strcpy(pattern, "$1");
+  n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
+  if (n_elems != 1) {
+    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
+           desc, 2, n_elems, 1);
+    has_error = 1;
+  } else {
+    if (subst_elems[0].elem_type != resubst_variable) {
+      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 2);
+      has_error = 1;
+    }
+    if (subst_elems[0].variable_num != 1) {
+      printf("FAIL: reutils: %s %d: bad variable number.\n", desc, 2);
+      has_error = 1;
+    }
+  }
+
+  strcpy(pattern, "hello$1world");
+  n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
+  if (n_elems != 3) {
+    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
+           desc, 3, n_elems, 3);
+    has_error = 1;
+  } else {
+    if (subst_elems[0].elem_type != resubst_literal) {
+      printf("FAIL: reutils: %s %d: bad element 1 type.\n", desc, 3);
+      has_error = 1;
+    } else if (subst_elems[0].begin != pattern) {
+      printf("FAIL: reutils: %s %d: bad start of element 1.\n", desc, 3);
+      has_error = 1;
+    } else if (subst_elems[0].elem_len != 5) {
+      printf("FAIL: reutils: %s %d: bad length of element 1.\n", desc, 3);
+      has_error = 1;
+    }
+
+    if (subst_elems[1].elem_type != resubst_variable) {
+      printf("FAIL: reutils: %s %d: bad element 2 type.\n", desc, 3);
+      has_error = 1;
+    } else if (subst_elems[1].variable_num != 1) {
+      printf("FAIL: reutils: %s %d: bad variable number.\n", desc, 3);
+      has_error = 1;
+    }
+
+    if (subst_elems[2].elem_type != resubst_literal) {
+      printf("FAIL: reutils: %s %d: bad element 3 type.\n", desc, 3);
+      has_error = 1;
+    } else if (subst_elems[2].begin != pattern + 7) {
+      printf("FAIL: reutils: %s %d: bad start of element 3.\n", desc, 3);
+      has_error = 1;
+    } else if (subst_elems[2].elem_len != 5) {
+      printf("FAIL: reutils: %s %d: bad length of element 3.\n", desc, 3);
+      has_error = 1;
+    }
+  }
+
+  strcpy(pattern, "${1${}$hello");
+  n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
+  if (n_elems != 1) {
+    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
+           desc, 4, n_elems, 1);
+    has_error = 1;
+  } else {
+    if (subst_elems[0].elem_type != resubst_literal) {
+      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 4);
+      has_error = 1;
+    } else {
+      if (subst_elems[0].begin != pattern) {
+        printf("FAIL: reutils: %s %d: bad start of element.\n", desc, 4);
+        has_error = 1;
+      }
+      if (subst_elems[0].elem_len != strlen(pattern)) {
+        printf("FAIL: reutils: %s %d: bad element length.\n", desc, 4);
+        has_error = 1;
+      }
+    }
+  }
+
+  if (! has_error)
+    printf("PASS: reutils: %s.\n", desc);
   return has_error;
 }
 
@@ -123,6 +241,7 @@ int test_bad_variables() {
 int main (int argc, char *argv[]) {
   int n_failures = 0;
   n_failures += test_make_flags();
+  n_failures += test_resubst_compile();
   n_failures += test_basic_substitution();
   n_failures += test_global_substitution();
   n_failures += test_good_variables();
