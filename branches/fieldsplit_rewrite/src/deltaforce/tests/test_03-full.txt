@@ -1,6 +1,0 @@
-ID-0	ID-1	ID-3	ID-4	Text-0
-43001	21001	21002	71001	text one
-43002	21001	21002	71001	text two 
-43003	21001	21002	71001	text three
-43009	21009	21010	71010	text nine, suckers!
-43010	21009	21010	71010	and other texts as well.
