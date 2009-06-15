@@ -26,6 +26,8 @@ int ht_init(hashtbl_t * tbl,
   if (tbl == NULL || sz == 0)
     return 1;
 
+  sz = ht_next_prime(sz);
+
   /* allocate memory for the table */
   if ((tbl->arr = malloc(sizeof(llist_t *) * sz)) == NULL)
     return -1;
@@ -206,4 +208,28 @@ void ht_dump_stats(hashtbl_t * tbl) {
   fprintf(stderr,
           "size:\t%zd\nempty:\t%zd\naverage length (nonempty only): %d\nmax length:\t%d\ntotal elems:\t%zd\n",
           tbl->arrsz, empty, avg_len, maxlen, tbl->nelems);
+}
+
+
+static int ht_is_prime(unsigned long n) {
+  static int primes[] = {
+#include "primes.dat"
+  };
+  int n_primes = sizeof(primes) / sizeof(int);
+  unsigned long half_n = n / 2;
+  int i;
+  for (i=0; i < n_primes; i++) {
+    if (n % primes[i] == 0)
+      return 0;
+    if (primes[i] > half_n)
+      return 1;
+  }
+  return 1;
+}
+
+
+unsigned long ht_next_prime(unsigned long n) {
+  while (! ht_is_prime(n))
+    n++;
+  return n;
 }
