@@ -20,18 +20,15 @@
   * This is a library which provides binary search tree functionality.
   */
 
-#include <stdlib.h>	/* malloc(), free() */
-#include <string.h>	/* memset() */
-#include <queue.h>	/* for the breadth-first traversal */
-
 #ifndef BSTREE_H
 #define BSTREE_H
 
 /** @brief specifies a tree traversal order */
-  typedef enum { preorder, /**< traverse the tree preorder */
-    inorder, /**< traverse the tree inorder */
-    postorder, /**< traverse the tree postorder */
-    breadthfirst /**< traverse the tree breadth-first */
+typedef enum {
+  preorder, /**< @brief traverse the tree preorder */
+  inorder, /**< @brief traverse the tree inorder */
+  postorder, /**< @brief traverse the tree postorder */
+  breadthfirst /**< @brief traverse the tree breadth-first */
 } traversal_order_t;
 
 /** @brief indicates the balance status of a binary tree node.
@@ -45,26 +42,26 @@
 } node_balance_t;
 
 /** @brief a node in a binary search tree. */
-  typedef struct _bst_node {
+typedef struct _bst_node {
   struct _bst_node *l;   /**< @brief child to the left.
-					     the left child's data is equal to
-					     or less than this node. */
+                              the left child's data is equal to
+                              or less than this node. */
    struct _bst_node *r;  /**< @brief child to the right.
-					     the right child's data is greater
-					     than this node. */
-   struct _bst_node *parent;
-                            /**< @brief parent of this node. */
+                              the right child's data is greater
+                              than this node. */
+   struct _bst_node *parent;  /**< @brief parent of this node. */
    void *data;   /**< @brief payload data. */
-    node_balance_t balance;/**< @brief the balance status of this node. */
- } bst_node_t;
+   node_balance_t balance;  /**< @brief the balance status of this node. */
+} bst_node_t;
 
 /** @brief binary search tree data type. */
-  typedef struct _bstree {
-  bst_node_t * root;
-                    /**< @brief root node of the tree. */
-  int (*cmp) (const void *, const void *); /**< @brief function for comparing node data.  return values are like those for strcmp() */
-   void (*free) (void *);  /**< @brief function to free node data. */
- } bstree_t;
+typedef struct _bstree {
+  bst_node_t * root;  /**< @brief root node of the tree. */
+  /** @brief function for comparing node data.  Return values are like those
+    * for strcmp(). */
+  int (*cmp) (const void *, const void *);
+  void (*free) (void *);  /**< @brief function to free node data. */
+} bstree_t;
 
 /** @brief initializes a binary search tree.  the tree should be allocated
   * already.
@@ -97,8 +94,8 @@ void bst_destroy(bstree_t * tree);
   * the new node would go or if there is a memory error, else a pointer to the
   * new node.
   */
-  bst_node_t * bst_create_child(bstree_t * tree, bst_node_t * parent,
-                                void *data);
+bst_node_t * bst_create_child(bstree_t * tree, bst_node_t * parent,
+                              void *data);
 
 /** @brief inserts a node containing specified data into a binary search tree.
   *
@@ -107,7 +104,7 @@ void bst_destroy(bstree_t * tree);
   *
   * @return a pointer to the new node
   */
-  bst_node_t * bst_insert(bstree_t * tree, void *data);
+bst_node_t * bst_insert(bstree_t * tree, void *data);
 
 /** @brief deletes a node containing specified data from a binary search tree.
   *
@@ -121,7 +118,7 @@ void bst_delete(bstree_t * tree, void *data);
   * @param data the data to be found.
   * @return the node containing the specified data, or NULL if not found.
   */
-  bst_node_t * bst_find(bstree_t * tree, void *data);
+bst_node_t * bst_find(bstree_t * tree, void *data);
 
 /** @brief traverses a binary search tree in the indicated order, calling the specified
   * function for each data item in the tree.
@@ -144,4 +141,3 @@ void bstn_call_for_each(bst_node_t * node, void (*func) (void *),
                         traversal_order_t order);
 
 #endif  /* BSTREE_H */
-
