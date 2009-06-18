@@ -14,8 +14,8 @@
    limitations under the License.
  *****************************************/
 
+#include <crush/general.h>
 #include <crush/hashtbl2.h>
-
 
 /* initialize a table. */
 int ht2_init(hashtbl2_t * tbl,
@@ -35,8 +35,7 @@ int ht2_init(hashtbl2_t * tbl,
  *	cost rather than a comparison plus possible list initialization for every insert.
  */
   /* allocate memory for the table */
-  if ((tbl->arr = malloc(sizeof(llist_t *) * sz)) == NULL)
-    return -1;
+  tbl->arr = xmalloc(sizeof(llist_t *) * sz);
   memset(tbl->arr, 0, sizeof(llist_t *) * sz);
 
   tbl->nelems = 0;
@@ -87,12 +86,8 @@ int ht2_put(hashtbl2_t * tbl, void *key, void *data) {
   llist_node_t *listnode;
   ht2_elem_t *elem;
 
-  if ((elem = malloc(sizeof(ht2_elem_t))) == NULL)
-    return -1;
-  if ((elem->key = malloc(tbl->keysz)) == NULL) {
-    free(elem);
-    return -1;
-  }
+  elem = xmalloc(sizeof(ht2_elem_t));
+  elem->key = xmalloc(tbl->keysz);
   memcpy(elem->key, key, tbl->keysz);
   elem->data = data;
 
@@ -101,7 +96,7 @@ int ht2_put(hashtbl2_t * tbl, void *key, void *data) {
 
 
   if (!tbl->arr[h]) {
-    tbl->arr[h] = malloc(sizeof(llist_t));
+    tbl->arr[h] = xmalloc(sizeof(llist_t));
     ll_list_init(tbl->arr[h], free, NULL);
     /* using the normal free() function here because we just
        want the list to deallocate the ht2_elem_t data - we'll

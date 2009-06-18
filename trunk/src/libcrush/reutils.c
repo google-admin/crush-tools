@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <crush/general.h>
 #include <crush/reutils.h>
 
 #ifdef HAVE_LIBPCRE
@@ -47,13 +48,10 @@ int crush_resubst_compile(const char *subst_pattern,
                      sizeof(struct crush_resubst_elem);
 
   if (! *compiled_subst || ! *compiled_subst_sz) {
-    if ((*compiled_subst = malloc(needed_sz)) == NULL)
-      return -1;
+    *compiled_subst = xmalloc(needed_sz);
     *compiled_subst_sz = needed_sz;
   } else if (*compiled_subst_sz < needed_sz) {
-    void *tmp = realloc(*compiled_subst, needed_sz);
-    if (! tmp)
-      return -1;
+    void *tmp = xrealloc(*compiled_subst, needed_sz);
     *compiled_subst = tmp;
     *compiled_subst_sz = needed_sz;
   }
@@ -157,9 +155,7 @@ static char * _crush_re_expand_subst(const char *subject,
                                               *target_sz - *target_offset);
         if (var_val_len == PCRE_ERROR_NOMEMORY) {
           int add_size = ovector[capt_var*2 + 1] - ovector[capt_var*2] + 32;
-          char *tmp = realloc(*target, *target_sz + add_size);
-          if (! tmp)
-            return NULL;
+          char *tmp = xrealloc(*target, *target_sz + add_size);
           *target = tmp;
           *target_sz += add_size;
           continue;
@@ -174,9 +170,7 @@ static char * _crush_re_expand_subst(const char *subject,
       int len = compiled_subst[i].elem_len;
       if (*target_offset + len >= *target_sz) {
         int resize = *target_offset + len + 32;
-        char *tmp = realloc(*target, resize);
-        if (! tmp)
-          return NULL;
+        char *tmp = xrealloc(*target, resize);
         *target = tmp;
         *target_sz = resize;
       }
@@ -203,16 +197,10 @@ char * crush_re_substitute(pcre *re, pcre_extra *re_extra,
 
   if (! *target || *target_sz == 0) {
     *target_sz = subject_len;
-    *target = malloc(*target_sz);
-    if (! *target) {
-      *target_sz = 0;
-      return NULL;
-    }
+    *target = xmalloc(*target_sz);
   }
   if (*target_sz < subject_len) {
-    char *tmp = realloc(*target, subject_len);
-    if (! tmp)
-      return NULL;
+    char *tmp = xrealloc(*target, subject_len);
     *target = tmp;
     *target_sz = subject_len;
   }
@@ -227,9 +215,7 @@ char * crush_re_substitute(pcre *re, pcre_extra *re_extra,
     if (ovector[0] == -1) {
       if (*target_sz - target_offset < subject_len - prev_match_stop) {
         int add_size = subject_len - prev_match_stop + 4;
-        char *tmp = realloc(*target, *target_sz + add_size);
-        if (! tmp)
-          return NULL;
+        char *tmp = xrealloc(*target, *target_sz + add_size);
         *target = tmp;
         *target_sz += add_size;
       }

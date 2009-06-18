@@ -19,10 +19,11 @@
  * better function-level documentation.
  */
 
-#include <stdlib.h>  /* malloc(), free() */
+#include <stdlib.h>  /* free() */
 #include <string.h>  /* memset() */
-#include <queue.h>  /* for the breadth-first traversal */
+#include <crush/queue.h>  /* for the breadth-first traversal */
 #include <crush/bstree.h>
+#include <crush/general.h>
 
 #ifdef CRUSH_DEBUG
 #  include <stdio.h>  /* only needed for debug prints */
@@ -114,9 +115,7 @@ bst_node_t * bst_create_child(bstree_t * tree, bst_node_t * parent,
 #endif
     return NULL;
   }
-  new = malloc(sizeof(bst_node_t));
-  if (! new)
-    return NULL;
+  new = xmalloc(sizeof(bst_node_t));
   new->data = data;
   new->l = new->r = NULL;
   new->balance = balanced;

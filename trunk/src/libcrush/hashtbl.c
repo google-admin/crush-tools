@@ -14,8 +14,8 @@
    limitations under the License.
  *****************************************/
 
+#include <crush/general.h>
 #include <crush/hashtbl.h>
-
 
 /* initialize a table. */
 int ht_init(hashtbl_t * tbl,
@@ -29,8 +29,7 @@ int ht_init(hashtbl_t * tbl,
   sz = ht_next_prime(sz);
 
   /* allocate memory for the table */
-  if ((tbl->arr = malloc(sizeof(llist_t *) * sz)) == NULL)
-    return -1;
+  tbl->arr = xmalloc(sizeof(llist_t *) * sz);
   memset(tbl->arr, 0, sizeof(llist_t *) * sz);
 
   tbl->ht_elem_pool = mempool_create(sizeof(ht_elem_t) * 128);
@@ -100,7 +99,7 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   h = tbl->hash(elem->key) % tbl->arrsz;
 
   if (!tbl->arr[h]) {
-    tbl->arr[h] = malloc(sizeof(llist_t));
+    tbl->arr[h] = xmalloc(sizeof(llist_t));
     /* non free() fn for the list, since the list elems are in a mempool. */
     ll_list_init(tbl->arr[h], NULL, NULL);
     ll_add_elem(tbl->arr[h], elem, end);

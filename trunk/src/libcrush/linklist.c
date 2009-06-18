@@ -14,6 +14,7 @@
    limitations under the License.
  *****************************************/
 
+#include <crush/general.h>
 #include <crush/linklist.h>
 
 /* see linklist.h for better function-level documentation */
@@ -32,8 +33,7 @@ int ll_list_init(llist_t * list,
 
 /* allocate & initialize a new list node */
 int ll_init_node(llist_node_t ** node, void *data) {
-  if ((*node = malloc(sizeof(llist_node_t))) == NULL)
-    return -1;
+  *node = xmalloc(sizeof(llist_node_t));
   (*node)->prev = (*node)->next = NULL;
   (*node)->data = data;
   return 0;

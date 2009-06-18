@@ -194,7 +194,7 @@ void expand_chars(char *s) {
   if (strchr(s, '\\') == NULL)
     return;
 
-  w = malloc(strlen(s));
+  w = (char *) xmalloc(strlen(s));
   memset(w, 0, strlen(s));
 
   p = s;
@@ -243,9 +243,7 @@ void expand_chars(char *s) {
 /* used in expand_nums() */
 static size_t arr_resize(void **array,
                          size_t dsize, size_t oldsize, size_t add) {
-  if (realloc(*array, dsize * (oldsize + add)) == NULL) {
-    return 0;
-  }
+  xrealloc(*array, dsize * (oldsize + add));
   return (oldsize + add);
 }
 
@@ -268,10 +266,7 @@ ssize_t expand_nums(char *arg, int **array, size_t * array_size) {
   i = 0;
 
   if (*array == NULL && *array_size == 0) {
-    *array = malloc(sizeof(int) * FFUTILS_RESIZE_AMT);
-    if (*array == NULL) {
-      return -1;
-    }
+    *array = (char *) xmalloc(sizeof(int) * FFUTILS_RESIZE_AMT);
     *array_size = FFUTILS_RESIZE_AMT;
   }
 
@@ -325,7 +320,7 @@ ssize_t expand_label_list(const char *labels,
                           int **array, size_t *array_sz) {
   int i = 0, j = 0;
   size_t labels_len = strlen(labels);
-  char *labels_copy = malloc(labels_len + 1);
+  char *labels_copy = (char *) xmalloc(labels_len + 1);
   size_t tokens = 0;
   char *pos, *labels_end;
 
@@ -367,9 +362,7 @@ ssize_t expand_label_list(const char *labels,
 
   /* make sure the array can hold all of the indexes */
   if (*array == NULL) {
-    *array = malloc(sizeof(int) * tokens);
-    if (! *array)
-      return -2;
+    *array = (int *) xmalloc(sizeof(int) * tokens);
     *array_sz = tokens;
   } else {
     if (*array_sz < tokens) {
@@ -474,9 +467,7 @@ ssize_t field_str(const char *value, const char *line, const char *delim) {
      bigger, just for fun.  and allocating max+1 so there's room for
      the null terminator. */
   max_field_chars = strlen(value) + 3;
-  curfield = malloc(max_field_chars + 1);
-  if (curfield == NULL)
-    return -2;
+  curfield = (char *) xmalloc(max_field_chars + 1);
 
   i = 0;
   curfield_len = 0;
@@ -518,12 +509,10 @@ ssize_t getline(char **outbuf, size_t * outsize, FILE * fp) {
   if (*outbuf == NULL || *outsize < len + 1) {
     void *tmp;
     if (*outbuf == NULL) {
-      tmp = malloc(len + 1);
+      tmp = xmalloc(len + 1);
     } else {
-      tmp = realloc(*outbuf, len + 1);
+      tmp = xrealloc(*outbuf, len + 1);
     }
-    if (tmp == NULL)
-      return (-1);
     *outbuf = tmp;
     *outsize = len + 1;
   }

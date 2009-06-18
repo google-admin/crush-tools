@@ -14,6 +14,7 @@
    limitations under the License.
  *****************************************/
 
+#include <crush/general.h>
 #include <crush/mempool.h>
 #include <string.h>             /* memcpy() */
 
@@ -26,20 +27,16 @@ static void * _mempool_add_page(mempool_t *pool) {
   void *tmp;
   int i = pool->n_pages;
   if (! pool->pages) {
-    tmp = malloc(sizeof(struct _mempool_page));
+    tmp = xmalloc(sizeof(struct _mempool_page));
   } else {
-    tmp = realloc(pool->pages,
-                  sizeof(struct _mempool_page) * (pool->n_pages + 1));
+    tmp = xrealloc(pool->pages,
+                   sizeof(struct _mempool_page) * (pool->n_pages + 1));
   }
-  if (! tmp)
-    return NULL;
   pool->pages = tmp;
   pool->n_pages++;
 
   pool->pages[i].next = 0;
-  pool->pages[i].buffer = malloc(pool->page_size);
-  if (! pool->pages[i].buffer)
-    return NULL;
+  pool->pages[i].buffer = xmalloc(pool->page_size);
   return pool->pages;
 }
 
@@ -47,10 +44,7 @@ static void * _mempool_add_page(mempool_t *pool) {
 mempool_t *mempool_create(size_t page_size) {
   mempool_t *pool;
 
-  pool = malloc(sizeof(mempool_t));
-  if (!pool) {
-    return NULL;
-  }
+  pool = xmalloc(sizeof(mempool_t));
   memset(pool, 0, sizeof(mempool_t));
   pool->page_size = page_size;
 
