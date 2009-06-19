@@ -14,9 +14,11 @@
 #include <unistd.h> /* sysconf() */
 #endif
 
-#include <ffutils.h>
-#include <reutils.h>
-#include <hashtbl.h>
+#include <crush/ffutils.h>
+#include <crush/general.h>
+#include <crush/hashtbl.h>
+#include <crush/reutils.h>
+
 #include "fieldsplit_main.h"
 
 #ifdef HAVE_PCRE_H
@@ -146,8 +148,8 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
     bucket_len = strlen(args->buckets);
   }
 
-  field = malloc(128);
-  field_key = malloc(128);
+  field = xmalloc(128);
+  field_key = xmalloc(128);
   field_sz = 128;
 
 #ifdef HAVE_UNISTD_H
@@ -183,12 +185,8 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
     while (getline(&line, &line_sz, in_file) > 0) {
       while (get_line_field(field, line, field_sz,
                             field_index, args->delim) == field_sz) {
-        if((field = realloc(field, field_sz + 32)) == NULL) {
-          DIE("%s: out of memory.\n", getenv("_"));
-        }
-        if ((field_key = realloc(field_key, field_sz + 32)) == NULL) {
-          DIE("%s: out of memory.\n", getenv("_"));
-        }
+        field = xrealloc(field, field_sz + 32);
+        field_key = xrealloc(field_key, field_sz + 32);
         field_sz += 32;
       }
       transform_key(field, field_key, &subst_buffer, &subst_buffer_sz);
@@ -286,7 +284,7 @@ void store_mapping(const struct cmdargs const *args,
       }
     }
     if (! ht_entry) {
-      ht_entry = malloc(sizeof(struct fp_wrapper));
+      ht_entry = xmalloc(sizeof(struct fp_wrapper));
       ht_entry->fp = out;
       if (ht_put(&fileptr_cache, filename, ht_entry) < 0) {
         DIE("%s: out of memory", getenv("_"));

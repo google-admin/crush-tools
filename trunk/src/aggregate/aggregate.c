@@ -14,6 +14,7 @@
    limitations under the License.
  ********************************/
 #include <crush/dbfr.h>
+#include <crush/general.h>
 
 #include "aggregate_main.h"
 #include "aggregate.h"
@@ -111,7 +112,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->maxs.count;
   } else if (conf->maxs.count > 0) {
     decrement_values(conf->maxs.indexes, conf->maxs.count);
-    conf->maxs.precisions = malloc(sizeof(int) * conf->maxs.count);
+    conf->maxs.precisions = xmalloc(sizeof(int) * conf->maxs.count);
     memset(conf->maxs.precisions, 0, sizeof(int) * conf->maxs.count);
   }
 
@@ -207,11 +208,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
     chomp(in_reader->current_line);
 
-    outbuf = malloc(in_reader->current_line_len);
-    if (!outbuf) {
-      fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-      exit(EXIT_MEM_ERR);
-    }
+    outbuf = xmalloc(in_reader->current_line_len);
     outbuf_sz = in_reader->current_line_len;
 
     extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
@@ -275,12 +272,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     while (dbfr_getline(in_reader) > 0) {
       chomp(in_reader->current_line);
       if (in_reader->current_line_len > outbuf_sz) {
-        char *tmp_outbuf = realloc(outbuf, in_reader->current_line_len + 32);
-        if (!tmp_outbuf) {
-          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          return EXIT_MEM_ERR;
-        }
-        outbuf = tmp_outbuf;
+        outbuf = xrealloc(outbuf, in_reader->current_line_len + 32);
         outbuf_sz = in_reader->current_line_len + 32;
       }
 
@@ -293,10 +285,6 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
         value = alloc_agg(conf.sums.count, conf.counts.count,
                           conf.averages.count, conf.mins.count,
                           conf.maxs.count);
-        if (! value) {
-          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          return EXIT_MEM_ERR;
-        }
       } else {
         in_hash = 1;
       }
@@ -413,7 +401,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     struct aggregation *val;
     char **key_array;
     int j = 0;
-    key_array = malloc(sizeof(char *) * n_hash_elems);
+    key_array = xmalloc(sizeof(char *) * n_hash_elems);
 
     /* put all the keys into an array */
     for (i = 0; i < aggregations.arrsz; i++) {
@@ -564,73 +552,41 @@ struct aggregation *alloc_agg(int nsum, int ncount, int naverage, int nmin,
                               int nmax) {
   struct aggregation *agg;
 
-  agg = malloc(sizeof(struct aggregation));
-  if (!agg)
-    goto alloc_agg_error;
+  agg = xmalloc(sizeof(struct aggregation));
   memset(agg, 0, sizeof(struct aggregation));
 
   if (nsum > 0) {
-    agg->sums = malloc(sizeof(double) * nsum);
-    if (!agg->sums)
-      goto alloc_agg_error;
+    agg->sums = xmalloc(sizeof(double) * nsum);
     memset(agg->sums, 0, sizeof(double) * nsum);
   }
 
   if (ncount > 0) {
-    agg->counts = malloc(sizeof(u_int32_t) * ncount);
-    if (!agg->counts)
-      goto alloc_agg_error;
+    agg->counts = xmalloc(sizeof(u_int32_t) * ncount);
     memset(agg->counts, 0, sizeof(u_int32_t) * ncount);
   }
 
   if (naverage > 0) {
-    agg->average_sums = malloc(sizeof(double) * naverage);
-    if (!agg->average_sums)
-      goto alloc_agg_error;
+    agg->average_sums = xmalloc(sizeof(double) * naverage);
     memset(agg->average_sums, 0, sizeof(double) * naverage);
 
-    agg->average_counts = malloc(sizeof(u_int32_t) * naverage);
-    if (!agg->average_counts)
-      goto alloc_agg_error;
+    agg->average_counts = xmalloc(sizeof(u_int32_t) * naverage);
     memset(agg->average_counts, 0, sizeof(u_int32_t) * naverage);
   }
 
   if (nmin > 0) {
-    agg->numeric_mins = malloc(sizeof(double) * nmin);
-    if (! agg->numeric_mins)
-      goto alloc_agg_error;
+    agg->numeric_mins = xmalloc(sizeof(double) * nmin);
     memset(agg->numeric_mins, 0, sizeof(double) * nmin);
-    agg->mins_initialized = malloc(sizeof(int) * nmin);
-    if (! agg->mins_initialized)
-      goto alloc_agg_error;
+    agg->mins_initialized = xmalloc(sizeof(int) * nmin);
     memset(agg->mins_initialized, 0, nmin);
   }
 
   if (nmax > 0) {
-    agg->numeric_maxs = malloc(sizeof(double) * nmax);
-    if (! agg->numeric_maxs)
-      goto alloc_agg_error;
+    agg->numeric_maxs = xmalloc(sizeof(double) * nmax);
     memset(agg->numeric_maxs, 0, sizeof(double) * nmax);
-    agg->maxs_initialized = malloc(sizeof(int) * nmax);
-    if (! agg->maxs_initialized)
-      goto alloc_agg_error;
+    agg->maxs_initialized = xmalloc(sizeof(int) * nmax);
     memset(agg->maxs_initialized, 0, nmax);
   }
   return agg;
-
-alloc_agg_error:
-  if (agg) {
-    if (agg->sums)
-      free(agg->sums);
-    if (agg->counts)
-      free(agg->counts);
-    if (agg->average_sums)
-      free(agg->average_sums);
-    if (agg->average_counts)
-      free(agg->average_counts);
-    free(agg);
-  }
-  return NULL;
 }
 
 void free_agg(struct aggregation *agg) {

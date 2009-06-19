@@ -13,9 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+
+#include <crush/general.h>
+#include <crush/ffutils.h>
+
 #include "indexof_main.h"
 #include "indexof.h"
-#include <crush/ffutils.h>
 
 int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *in;
@@ -63,11 +66,7 @@ int indexof(struct cmdargs *args, int argc, char *argv[], int optind) {
   } else {
     /* header string provided on commandline, but strtok needs
        a dynamically allocated copy */
-    buf = malloc(strlen(args->string) + 1);
-    if (buf == NULL) {
-      fprintf(stderr, "%s: out of memory\n", getenv("_"));
-      return EXIT_MEM_ERR;
-    }
+    buf = xmalloc(strlen(args->string) + 1);
     strcpy(buf, args->string);
   }
 

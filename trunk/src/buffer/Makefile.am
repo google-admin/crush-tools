@@ -1,6 +1,7 @@
 
 bin_PROGRAMS = buffer
 buffer_SOURCES = buffer.c
+buffer_LDADD = ../libcrush/libcrush.la
 
 EXTRA_DIST = args.tab
 man1_MANS = buffer.1

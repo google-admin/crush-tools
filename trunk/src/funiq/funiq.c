@@ -15,8 +15,9 @@
  ********************************/
 #include "funiq_main.h"
 
-#include <crush/ffutils.h>
 #include <crush/dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/general.h>
 
 #define FIELD_LEN_LIMIT 255
 
@@ -78,9 +79,9 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
 
   /* prepare the array of previous field values */
-  prev_line = malloc(sizeof(char *) * n_fields);
+  prev_line = xmalloc(sizeof(char *) * n_fields);
   for (i = 0; i < n_fields; i++) {
-    prev_line[i] = malloc(sizeof(char *) * FIELD_LEN_LIMIT);
+    prev_line[i] = xmalloc(sizeof(char *) * FIELD_LEN_LIMIT);
   }
 
   /* get the first line to seed the prev_line array */

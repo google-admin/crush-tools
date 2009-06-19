@@ -13,6 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+
+#include <crush/general.h>
+
 #include "reorder_main.h"
 #include "reorder.h"
 
@@ -97,19 +100,12 @@ int reorder(struct cmdargs *args, int argc, char *argv[], int optind) {
     while (dbfr_getline(reader) > 0) {
       /* make sure there's enough room in the working buffer */
       if (wbuf == NULL) {
-        if ((wbuf = malloc(reader->current_line_sz)) == NULL) {
-          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          return EXIT_MEM_ERR;
-        }
+        wbuf = xmalloc(reader->current_line_sz);
         wbs = reader->current_line_sz;
       } else if (wbs < reader->current_line_sz) {
         /* if realloc unsuccessful, we don't want wbuf to end up being NULL */
         char *tmp_ptr;
-        if ((tmp_ptr = realloc(wbuf, reader->current_line_sz)) == NULL) {
-          fprintf(stderr, "%s: out of memory.\n", getenv("_"));
-          return EXIT_MEM_ERR;
-        }
-        wbuf = tmp_ptr;
+        wbuf = xrealloc(wbuf, reader->current_line_sz);
         wbs = reader->current_line_sz;
       }
 
@@ -280,10 +276,7 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
 
   /* make sure the destination buffer is allocated */
   if (*s == NULL || *s_sz == 0) {
-    if ((*s = malloc(strlen(ct))) == NULL) {
-      *s_sz = 0;
-      return -1;
-    }
+    *s = xmalloc(strlen(ct));
     *s_sz = strlen(ct);
   }
 
@@ -299,10 +292,7 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
       if (*s_sz < s_len + buf_len + delim_len) {
         char *tmp;
         /* include room for a null terminator and line break. */
-        tmp = realloc(*s, *s_sz + buf_len + delim_len + 2);
-        if (tmp == NULL)
-          return -1;
-        *s = tmp;
+        *s = xrealloc(*s, *s_sz + buf_len + delim_len + 2);
         *s_sz += buf_len + delim_len + 2;
       }
 
@@ -324,12 +314,12 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
 
 /* stores --swap and --move options in an ordered list for parsing later. */
 int pushswap(char *s, int action_type) {
-  struct swap_arg *p = malloc(sizeof(struct swap_arg));
+  struct swap_arg *p = xmalloc(sizeof(struct swap_arg));
   p->pair_str = strdup(s);
   p->action_type = action_type;
 
   if (swap_arg_list == NULL) {
-    swap_arg_list = malloc(sizeof(llist_t));
+    swap_arg_list = xmalloc(sizeof(llist_t));
     ll_list_init(swap_arg_list, free, NULL);
   }
 
@@ -364,7 +354,7 @@ int parse_swap_list(llist_t *args, llist_t *pairs,
     *pair_elem_b = '\0';
     pair_elem_b++;
 
-    cur_pair = malloc(sizeof(struct swap_pair));
+    cur_pair = xmalloc(sizeof(struct swap_pair));
     cur_pair->action_type = p->action_type;
 
     if (strspn(pair_elem_a, "0123456789") == strlen(pair_elem_a)) {

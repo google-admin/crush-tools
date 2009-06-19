@@ -13,14 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+
+#include <crush/general.h>
 #include <crush/ffutils.h>
 #include <crush/dbfr.h>
 #include "subtotal_main.h"
 
 #define SUBTOT_KEY_MAXLEN 256
 
-/** @brief  
-  * 
+/** @brief
+  *
   * @param args contains the parsed cmd-line options & arguments.
   * @param argc number of cmd-line arguments.
   * @param argv list of cmd-line arguments
@@ -132,11 +134,7 @@ int subtotal(struct cmdargs *args, int argc, char *argv[], int optind) {
     return EXIT_HELP;
   }
 
-  if ((sums = malloc(sizeof(int) * nsums)) == NULL) {
-    fprintf(stderr, "%s: out of memory\n", getenv("_"));
-    free(sum_cols);
-    return EXIT_MEM_ERR;
-  }
+  sums = xmalloc(sizeof(int) * nsums);
   memset(sums, 0, sizeof(int) * nsums);
 
   cur_key_val[0] = '\0';

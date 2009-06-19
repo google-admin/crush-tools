@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+#include <crush/general.h>
 #include "deltaforce_main.h"
 #include "deltaforce.h"
 
@@ -119,7 +120,7 @@ int deltaforce(struct cmdargs *args, int argc, char *argv[], int optind) {
     nkeys = expand_label_list(args->key_labels, left_reader->next_line, delim,
                               &keyfields, &keyfields_sz);
   } else {
-    keyfields = malloc(sizeof(int));
+    keyfields = xmalloc(sizeof(int));
     keyfields[0] = 1;
     keyfields_sz = sizeof(int);
     nkeys = 1;

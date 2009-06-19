@@ -13,15 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
-
-/* note: must specify "-I/home/dfarep/include" when compiling */
-
+#include <crush/general.h>
 
 /*! initial buffer size */
 #define BUFFER_INITIAL_SIZE 4096
@@ -79,10 +76,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if ((buffer = malloc(BUFFER_INITIAL_SIZE)) == NULL) {
-    perror("out of memory");
-    return (1);
-  }
+  buffer = (char *) xmalloc(BUFFER_INITIAL_SIZE);
   buffer_size = BUFFER_INITIAL_SIZE;
   fi = optind;
 
@@ -97,12 +91,7 @@ int main(int argc, char *argv[]) {
     while (!feof(fp) && !ferror(fp)) {
       amt_read = fread(tmp, 1, 512, fp);
       if (amt_read + buffer_full > buffer_size) {
-        if ((buffer = realloc(buffer, buffer_size + BUFFER_INITIAL_SIZE))
-            == NULL) {
-          fprintf(stderr, "%s: out of memory\n", getenv("_"));
-          free(buffer);
-          exit(EXIT_FAILURE);
-        }
+        buffer = (char *) xrealloc(buffer, buffer_size + BUFFER_INITIAL_SIZE);
         buffer_size += BUFFER_INITIAL_SIZE;
       }
       memcpy(buffer + buffer_full, tmp, amt_read);

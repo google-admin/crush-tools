@@ -13,10 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-#include "aggregate2_main.h"
-#include <crush/ffutils.h>
+#include <err.h>  /* warn() */
 #include <crush/dbfr.h>
-#include <err.h>                /* warn() */
+#include <crush/ffutils.h>
+#include <crush/general.h>
+#include "aggregate2_main.h"
 
 struct agg_conf {
   int *key_fields;
@@ -137,8 +138,8 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
     cur_sums = calloc(conf.nsums, sizeof(double));
 
   /* this can be resized later */
-  cur_keys = malloc(sizeof(char) * 1024);
-  prev_keys = malloc(sizeof(char) * 1024);
+  cur_keys = xmalloc(sizeof(char) * 1024);
+  prev_keys = xmalloc(sizeof(char) * 1024);
   keybuf_sz = 1024;
 
   if (args->labels || args->auto_label)
@@ -190,22 +191,8 @@ int aggregate2(struct cmdargs *args, int argc, char *argv[], int optind) {
     while (dbfr_getline(in_reader) > 0) {
       chomp(in_reader->current_line);
       if (in_reader->current_line_sz > keybuf_sz) {
-        char *tmp;
-        tmp = realloc(cur_keys, in_reader->current_line_sz);
-        if (!tmp) {
-          fprintf(stderr,
-                  "%s: out of memory (resizing cur_keys from %d to %d)\n",
-                  argv[0], keybuf_sz, in_reader->current_line_sz);
-          return EXIT_MEM_ERR;
-        }
-        cur_keys = tmp;
-
-        tmp = realloc(prev_keys, in_reader->current_line_sz);
-        if (!tmp) {
-          fprintf(stderr, "%s: out of memory (resizing prev_keys)\n", argv[0]);
-          return EXIT_MEM_ERR;
-        }
-        prev_keys = tmp;
+        cur_keys = xrealloc(cur_keys, in_reader->current_line_sz);
+        prev_keys = xrealloc(prev_keys, in_reader->current_line_sz);
         keybuf_sz = in_reader->current_line_sz;
       }
 
@@ -310,7 +297,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->nsums;
   } else if (conf->nsums > 0) {
     decrement_values(conf->sum_fields, conf->nsums);
-    conf->sum_precisions = malloc(sizeof(int) * conf->nsums);
+    conf->sum_precisions = xmalloc(sizeof(int) * conf->nsums);
     memset(conf->sum_precisions, 0, sizeof(int) * conf->nsums);
   }
 
@@ -341,7 +328,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->naverages;
   } else if (conf->naverages > 0) {
     decrement_values(conf->average_fields, conf->naverages);
-    conf->average_precisions = malloc(sizeof(int) * conf->naverages);
+    conf->average_precisions = xmalloc(sizeof(int) * conf->naverages);
     memset(conf->average_precisions, 0, sizeof(int) * conf->naverages);
   }
 */

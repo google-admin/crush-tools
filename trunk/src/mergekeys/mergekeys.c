@@ -13,6 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+
+#include <crush/general.h>
+
 #include "mergekeys_main.h"
 #include "mergekeys.h"
 
@@ -156,13 +159,11 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
 
   if (dbfr_getline(left) <= 0) {
     fprintf(stderr, "%s: no header found in left-hand file\n", getenv("_"));
-    retval = EXIT_FILE_ERR;
-    goto cleanup;
+    exit(EXIT_FAILURE);
   }
   if (dbfr_getline(right) <= 0) {
     fprintf(stderr, "%s: no header found in right-hand file\n", getenv("_"));
-    retval = EXIT_FILE_ERR;
-    goto cleanup;
+    exit(EXIT_FAILURE);
   }
 
   chomp(left->current_line);
@@ -177,35 +178,17 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
             left->current_line, right->current_line);
   }
 
-  if ((left_keyfields = malloc(sizeof(int) * nfields_left)) == NULL) {
-    warn("allocating key array");
-    retval = EXIT_MEM_ERR;
-    goto cleanup;
-  }
-  if ((right_keyfields = malloc(sizeof(int) * nfields_right)) == NULL) {
-    warn("allocating key array");
-    retval = EXIT_MEM_ERR;
-    goto cleanup;
-  }
-
-  if ((left_mergefields = malloc(sizeof(int) * nfields_left)) == NULL) {
-    warn("allocating merge-fields array");
-    retval = EXIT_MEM_ERR;
-    goto cleanup;
-  }
-  if ((right_mergefields = malloc(sizeof(int) * nfields_right)) == NULL) {
-    warn("allocating merge-fields array");
-    retval = EXIT_MEM_ERR;
-    goto cleanup;
-  }
+  left_keyfields = xmalloc(sizeof(int) * nfields_left);
+  right_keyfields = xmalloc(sizeof(int) * nfields_right);
+  left_mergefields = xmalloc(sizeof(int) * nfields_left);
+  right_mergefields = xmalloc(sizeof(int) * nfields_right);
 
   if ((args->left_keys || args->left_key_labels) &&
       (args->right_keys ||args->right_key_labels)) {
     int has_error = set_key_lists(args, left->current_line,
                                   right->current_line, delim);
     if (has_error) {
-      retval = EXIT_FAILURE;
-      goto cleanup;
+      exit(EXIT_FAILURE);
     }
   } else {
     /* use headers to figure out which fields are keys or need to be merged */
@@ -214,8 +197,7 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
 
   if (nkeys == 0) {
     fprintf(stderr, "%s: no common fields found\n", getenv("_"));
-    retval = EXIT_HELP;
-    goto cleanup;
+    exit(EXIT_FAILURE);
   }
 
   if (args->verbose) {
@@ -346,7 +328,6 @@ left_file_loop:
     } /* feof( right ) */
   } /* feof( left ) */
 
-cleanup:
   if (left_keyfields)
     free(left_keyfields);
   if (right_keyfields)

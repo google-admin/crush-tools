@@ -13,11 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
+
+#include <crush/general.h>
 #include "grepfield_main.h"
 #include "grepfield.h"
 
-/** @brief  
-  * 
+/** @brief
+  *
   * @param args contains the parsed cmd-line options & arguments.
   * @param argc number of cmd-line arguments.
   * @param argv list of cmd-line arguments
@@ -159,13 +161,9 @@ char *scan_field(char **field_buffer, ssize_t * field_buffer_size,
   if (*field_buffer_size < strlen(orig_line)) {
     char *tmp;
     if (*field_buffer)
-      tmp = realloc(*field_buffer, strlen(orig_line));
+      tmp = xrealloc(*field_buffer, strlen(orig_line));
     else
-      tmp = malloc(strlen(orig_line));
-    if (tmp == NULL) {
-      fprintf(stderr, "%s: out of memory", getenv("_"));
-      exit(EXIT_MEM_ERR);
-    }
+      tmp = xmalloc(strlen(orig_line));
     *field_buffer = tmp;
   }
 
@@ -180,7 +178,7 @@ void re_perror(int err_code, regex_t pattern) {
   size_t len;
   char *buf;
   len = regerror(err_code, &pattern, NULL, 0);
-  buf = malloc(len);
+  buf = xmalloc(len);
   regerror(err_code, &pattern, buf, len);
   fprintf(stderr, "%s: %s\n", getenv("_"), buf);
   free(buf);

@@ -13,14 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  ********************************/
-#include "pivot_main.h"
-#include <crush/dbfr.h>
-#include <crush/ffutils.h>
-#include <crush/hashtbl.h>
-#include <crush/linklist.h>
 
 #include <locale.h>
 #include <assert.h>
+
+#include <crush/dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/general.h>
+#include <crush/hashtbl.h>
+#include <crush/linklist.h>
+
+#include "pivot_main.h"
 
 #define KEY_HASH_SZ 1024
 #define PIVOT_HASH_SZ 32
@@ -135,11 +138,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
 
   /* TODO: get rid of this arbirary field length limitation */
-  fieldbuf = malloc(MAX_FIELD_LEN);
-  if (! fieldbuf) {
-    warn("allocating field buffer");
-    return EXIT_MEM_ERR;
-  }
+  fieldbuf = xmalloc(MAX_FIELD_LEN);
   fieldbuf_sz = MAX_FIELD_LEN;
 
   /* extract headers from first line of input if necessary */
@@ -151,14 +150,12 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
     chomp(in_reader->current_line);
     n_headers = fields_in_line(in_reader->current_line, delim);
-    headers = malloc(sizeof(char *) * n_headers);
-    if (!headers)
-      return EXIT_MEM_ERR;
+    headers = xmalloc(sizeof(char *) * n_headers);
 
     for (i = 0; i < n_headers; i++) {
       get_line_field(fieldbuf, in_reader->current_line, fieldbuf_sz - 1,
                      i, delim);
-      headers[i] = malloc(sizeof(char *) * strlen(fieldbuf) + 1);
+      headers[i] = xmalloc(sizeof(char *) * strlen(fieldbuf) + 1);
       strcpy(headers[i], fieldbuf);
     }
 
@@ -231,14 +228,14 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
       /* get hashtable value */
       pivot_hash = (hashtbl_t *) ht_get(&key_hash, keystr);
       if (!pivot_hash) {
-        pivot_hash = malloc(sizeof(hashtbl_t));
+        pivot_hash = xmalloc(sizeof(hashtbl_t));
         ht_init(pivot_hash, PIVOT_HASH_SZ, NULL, free);
         pivot_in_hash = 0;
       }
 
       line_values = ht_get(pivot_hash, pivstr);
       if (!line_values) {
-        line_values = malloc(sizeof(double) * conf.n_values);
+        line_values = xmalloc(sizeof(double) * conf.n_values);
         memset(line_values, 0, sizeof(double) * conf.n_values);
         value_in_hash = 0;
       }
@@ -302,7 +299,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   {
     llist_node_t *node;
     llist_t *pivot_list;
-    pivot_array = malloc(sizeof(char *) * n_pivot_keys);
+    pivot_array = xmalloc(sizeof(char *) * n_pivot_keys);
     j = 0;
     for (i = 0; i < uniq_pivots.arrsz; i++) {
       pivot_list = uniq_pivots.arr[i];
@@ -333,11 +330,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
        than the combined length of all pivot field values and a 3-char
        separator.  safe assumption?  probably not if every input field
        is used as a pivot field. */
-    pivot_label = malloc(max_line_sz);
-    if (! pivot_label) {
-      warn("allocating memory for the labels");
-      exit(EXIT_MEM_ERR);
-    }
+    pivot_label = xmalloc(max_line_sz);
 
     if (conf.n_keys) {
       for (i = 0; i < conf.n_keys; i++)
@@ -385,8 +378,8 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     /* construct string for empty value set.  this should be big enough for
        n_values worth of zeros (of the appropriate precision) and delimiters
        in between.  here we'll just guess that a precision of 8 is enough. */
-    empty_value_string = malloc((sizeof(char) * conf.n_values * 8) +
-                                (strlen(delim) * conf.n_values));
+    empty_value_string = xmalloc((sizeof(char) * conf.n_values * 8) +
+                                 (strlen(delim) * conf.n_values));
     empty_value_string[0] = 0x00;
     for (i = 0; i < conf.n_values; i++) {
       sprintf(empty_value_string, "%s%.*f", empty_value_string,
@@ -395,11 +388,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
         strcat(empty_value_string, delim);
     }
 
-    key_array = malloc(sizeof(char *) * n_key_strings);
-    if (key_array == NULL) {
-      warn("malloc key array");
-      return EXIT_MEM_ERR;
-    }
+    key_array = xmalloc(sizeof(char *) * n_key_strings);
 
     j = 0;
     for (i = 0; i < key_hash.arrsz; i++) {
@@ -511,7 +500,7 @@ int configure_pivot(struct pivot_conf *conf, struct cmdargs *args,
     return -1;
   else
     decrement_values(conf->values, conf->n_values);
-  conf->value_precisions = calloc(conf->n_values, sizeof(int));
+  conf->value_precisions = xcalloc(conf->n_values, sizeof(int));
   return 0;
 }
 
