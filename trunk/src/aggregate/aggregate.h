@@ -30,7 +30,9 @@
 struct agg_conf_field {
   int *indexes;  /**< array of field indexes. */
   size_t size;  /**< size of the index array. */
-  size_t count;  /**< number of elems in the index array. */
+  ssize_t count;  /**< number of elems in the index array.  This may hold a
+                       negative return code from expand_nums() or
+                       expand_label_list(). */
   int *precisions;  /**< precision of output for each field. */
 };
 
