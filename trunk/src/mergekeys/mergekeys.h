@@ -18,8 +18,8 @@
 # include <config.h>
 #endif
 
-#include <ffutils.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
 
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>             /* open64() */

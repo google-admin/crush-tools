@@ -18,7 +18,7 @@
   * @brief Interface for the FIFO queue library.
   */
 
-#include <linklist.h>
+#include <crush/linklist.h>
 
 #ifndef QUEUE_H
 #define QUEUE_H

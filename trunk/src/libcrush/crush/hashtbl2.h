@@ -24,8 +24,8 @@
 
 #include <stdlib.h>
 #include <string.h>             /* strcmp(), strlen() */
-#include <linklist.h>           /* used internally */
-#include <ht2_GeneralHashFunctions.h>
+#include <crush/linklist.h>           /* used internally */
+#include <crush/ht2_GeneralHashFunctions.h>
 
 #ifndef HASHTBL2_H
 #define HASHTBL2_H

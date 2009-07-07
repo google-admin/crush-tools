@@ -20,9 +20,9 @@
 #include <assert.h>
 #include <locale.h>
 
-#include <ffutils.h>
-#include <hashtbl.h>
-#include <linklist.h>
+#include <crush/ffutils.h>
+#include <crush/hashtbl.h>
+#include <crush/linklist.h>
 
 #ifndef AGGREGATE_H
 #define AGGREGATE_H

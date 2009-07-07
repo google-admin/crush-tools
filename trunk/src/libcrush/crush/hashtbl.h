@@ -28,9 +28,9 @@
 
 #include <stdlib.h>
 #include <string.h>             /* strcmp(), strlen() */
-#include <linklist.h>
-#include <hashfuncs.h>
-#include <mempool.h>
+#include <crush/linklist.h>
+#include <crush/hashfuncs.h>
+#include <crush/mempool.h>
 
 
 #ifndef HASHTBL_H

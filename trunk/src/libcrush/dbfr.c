@@ -1,5 +1,5 @@
 #if HAVE_CONFIG_H
-#  include <crush/config.h>
+#  include <config.h>
 #  ifdef HAVE_UNISTD_H
 #    include <unistd.h>
 #  endif

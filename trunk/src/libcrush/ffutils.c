@@ -15,7 +15,7 @@
  *****************************************/
 
 #ifdef HAVE_CONFIG_H
-#include <crush/config.h>
+#include <config.h>
 #endif
 
 #include <crush/ffutils.h>

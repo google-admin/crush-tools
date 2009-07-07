@@ -6,7 +6,6 @@ libcrush_la_SOURCES = GeneralHashFunctions.c bstree.c ffutils.c hashfuncs.c \
 
 libcrush_includedir = $(includedir)/crush
 libcrush_include_HEADERS = crush/bstree.h \
-								           crush/config.h \
 								           crush/crush_version.h \
 								           crush/dbfr.h \
 								           crush/ffutils.h \
@@ -35,6 +34,6 @@ test_mempool_test_LDADD = libcrush.la
 test_qsort_helper_test_LDADD = libcrush.la
 test_reutils_test_LDADD = libcrush.la
 
-EXTRA_DIST = $(check_PROGRAMS)
+EXTRA_DIST = $(check_PROGRAMS) config.h.in primes.dat
 
 SUBDIRS = crush

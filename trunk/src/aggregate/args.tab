@@ -8,7 +8,7 @@
 	usage_extra =>
 "All column indexes are 1-based.  Either -k or -K must be specified.\\n\\nThe use of label options -K, -S, -A, or -C implies that the header row should\\nbe preserved (-p).",
 	do_long_opts => 1,
-	preproc_extra => '#include <crush_version.h>',
+	preproc_extra => '#include <crush/crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

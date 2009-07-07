@@ -4,7 +4,7 @@ main.c usage.c fieldsplit_main.h : args.tab
 BUILT_SOURCES = main.c usage.c fieldsplit_main.h
 
 bin_PROGRAMS = fieldsplit
-fieldsplit_SOURCES = fieldsplit.c fieldsplit.h $(BUILT_SOURCES)
+fieldsplit_SOURCES = fieldsplit.c $(BUILT_SOURCES)
 
 fieldsplit_LDADD = ../libcrush/libcrush.la
 

@@ -7,7 +7,7 @@
 	trailing_opts => "",
 	usage_extra => "",
 	do_long_opts => 1,
-	preproc_extra => '#include <crush_version.h>',
+	preproc_extra => '#include <crush/crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

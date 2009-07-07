@@ -26,9 +26,9 @@
 # include <assert.h>
 #endif
 
-#include <ffutils.h>
-#include <dbfr.h>
-#include <linklist.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
+#include <crush/linklist.h>
 
 #ifndef REORDER_H
 #define REORDER_H

@@ -75,7 +75,7 @@ int main (int argc, char *argv[]) {
  */
 
 #ifdef HAVE_CONFIG_H
-#include <crush/config.h>
+#include <config.h>
 #endif
 
 #ifndef REUTILS_H

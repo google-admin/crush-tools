@@ -9,7 +9,7 @@
   usage_extra => "<range_string> may be a mixture of comma-separated numbers and ranges (no spaces).\\n\\n".
                  "`example: range 1,2,6-10`",
   do_long_opts => 1,
-  preproc_extra => '#include <crush_version.h>',
+  preproc_extra => '#include <crush/crush_version.h>',
   copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

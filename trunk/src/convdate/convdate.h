@@ -25,8 +25,8 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ffutils.h>
-#include <dbfr.h>
+#include <crush/ffutils.h>
+#include <crush/dbfr.h>
 
 #ifndef CONVDATE_H
 #define CONVDATE_H

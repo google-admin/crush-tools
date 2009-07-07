@@ -10,7 +10,7 @@
                  " * If no files are specified, stdin is used for input, and stdout for output.\\n" .
                  " * Warning: this has potential to consume large amounts of memory.\\n",
 	do_long_opts => 1,
-	preproc_extra => '#include <crush_version.h>',
+	preproc_extra => '#include <crush/crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2008 Google Inc.
 

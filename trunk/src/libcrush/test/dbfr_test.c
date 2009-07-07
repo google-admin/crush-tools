@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "dbfr.h"
+#include <crush/dbfr.h>
 
 #define DIE(s, ...) \
   do { \
