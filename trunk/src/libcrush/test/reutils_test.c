@@ -234,7 +234,7 @@ int test_bad_variables() {
   INIT_TEST("malformed variable substitution", "(l+)")
   TEST(1, "hello", "${}", 0, "he${}o")
   TEST(2, "hello", "$x", 0, "he$xo")
-  TEST(1, "hello", "${1", 0, "he${1o")
+  TEST(3, "hello", "${1", 0, "he${1o")
   FINISH_TEST()
 }
 
