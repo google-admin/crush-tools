@@ -99,6 +99,7 @@ src/findfiles/Makefile
 src/foreach_parallel/Makefile
 src/funiq/Makefile
 src/grepfield/Makefile
+src/hashjoin/Makefile
 src/indexof/Makefile
 src/mergekeys/Makefile
 src/pivot/Makefile
