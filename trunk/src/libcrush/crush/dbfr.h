@@ -41,7 +41,7 @@ typedef struct {
 /** \brief opens FILENAME for reading with a double-buffered reader.
   *
   * Upon successful initialization, the next_line will be initialized to the
-  * first line of the file, 
+  * first line of the file.
   *
   * \param filename if NULL or "-", the reader will attach to stdin.
   *                 Otherwise the named file is opened for reading.
@@ -49,7 +49,7 @@ typedef struct {
   * \returns a double-buffered file reader object, or NULL if the file cannot
   *          be opened.
   */
-dbfr_t * dbfr_open(char *filename);
+dbfr_t * dbfr_open(const char *filename);
 
 /** \brief initializes a double-buffered reader from an already opened file.
   *

@@ -62,7 +62,7 @@ static void * xmalloc(size_t size) {
   return ptr;
 }
 
-dbfr_t * dbfr_open(char *filename) {
+dbfr_t * dbfr_open(const char *filename) {
   int fd, flags;
   FILE *fp;
   flags = O_RDONLY;
