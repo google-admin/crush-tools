@@ -261,7 +261,8 @@ void store_mapping(const struct cmdargs const *args,
   struct fp_wrapper *ht_entry = NULL;
   struct fp_wrapper new_entry;
 
-  sprintf(filename, "%s/%s%s", args->path, key,
+  sprintf(filename, "%s/%s%s%s", args->path,
+          args->name ? args->name : "", key,
           args->suffix ? args->suffix : "");
 
   ht_entry = ht_get(&fileptr_cache, filename);
