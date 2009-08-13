@@ -1,0 +1,39 @@
+---- user parameters:
+
+A) 1 or more pivot fields
+
+each distinct permutation of these fields' values, in combination with each
+of the "sum" fields will become new columns in the output.  data within
+these fields may be of any type.
+
+B) 1 or more value fields
+
+these fields will be aggregated according to the values of the pivot fields
+and become the data for the new columns in the output.  data within these
+fields must be numeric.
+
+C) 0 or more other key fields
+
+these fields will be carried over from the input to the output, acting as
+additional aggregation keys for the sum fields.  data within these fields
+may be of any type.
+
+D) option of whether or not to preserve header information
+
+E) delimiter
+
+F) input data
+
+---- usage scenarios
+
+if no key fields are provided, one line of data will be produced, optionally
+preceeded by one header line.  if key fields are provided, there will be as
+many rows of data as there are distinct combinations of the key fields.
+
+an execution without pivot fields would be equivalent to a normal
+aggregation, so `aggregate` should be used instead.
+
+use cases in which counting rather than summing of the data fields is
+desired can be handled by using `aggregate` to do the counting before
+`pivot` is used.
+

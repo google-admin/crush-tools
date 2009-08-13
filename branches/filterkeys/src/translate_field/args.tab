@@ -1,0 +1,127 @@
+# this is a dummy file used only for generating documentation.
+
+# data relevant to the application as a whole
+%global = (
+	name => "translate_fields",
+	description => "convert field values based on user-supplied mappings.",
+	version => "0.1",
+	trailing_opts => "<-f <N> | -F <S>> [options] [file ...]",
+	usage_extra => << "END_USAGE_EXTRA",
+ * Mappings passed to -m are specified as "K=V" pairs where K is a possible value for the field, and V is the translation.
+ * Replacing is the default behavior, but for replacement to occur in addition to appending or prepending, -r must be specified.
+ * If no mapping is supplied for a field value, the value is unchanged (the header is preserved unless a mapping is specified for the header value)
+
+The file specified by -e may have statements like
+{{{
+  \$mapping{hello} = 'salve';
+  \$mapping{world} = 'orbis terrae';
+}}}
+or
+{{{
+  \%mapping = ("hello" => "salve", "world" => "orbis terrae");
+}}}
+The latter will nullify any -m parameters passed on the commandline.
+END_USAGE_EXTRA
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+  {
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string (default: 0xfe)'
+	},
+	{
+	  name        => 'field',
+	  shortopt    => 'f',
+	  longopt     => 'field',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'index of the field to translate'
+	},
+  {
+	  name        => 'field_label',
+	  shortopt    => 'F',
+	  longopt     => 'Field-label',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'column label of the field to translate'
+	},
+	{
+	  name        => 'append',
+	  shortopt    => 'a',
+	  longopt     => 'append',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'append the translated field after the original field',
+	},
+	{
+	  name        => 'prepend',
+	  shortopt    => 'p',
+	  longopt     => 'prepend',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'prepend the translated field before the original field',
+	},
+	{
+	  name        => 'replace',
+	  shortopt    => 'r',
+	  longopt     => 'replace',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'replace the original field with the translated field'
+	},
+	{
+	  name        => 'map',
+	  shortopt    => 'm',
+	  longopt     => 'map',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'specifies a translation mapping for a possible field value (may be specified multiple times)'
+	},
+	{
+	  name        => 'external',
+	  shortopt    => 'e',
+	  longopt     => 'external',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'specifies a file containing perl expressions which define mappings in the hashtable "%mapping"'
+	},
+	{
+	  name        => 'xpression',
+	  shortopt    => 'x',
+	  longopt     => 'xpression',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'specifies a list of regular expressions to apply to the specified input field'
+	},
+);
+

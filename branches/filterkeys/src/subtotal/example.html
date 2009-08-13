@@ -1,0 +1,13 @@
+
+# assume dtfile has Advertiser-ID, Buy-ID, and Ad-ID in fields 4, 5, 6; and
+# Quantity and Revenue in fields 15 and 16
+
+# this command aggregates on those fields and inserts lines subtotaling quantity
+# and revenue for each distinct campaign id
+
+<a href="gzdog.html">gzdog</a> $dtfile |
+	<a href="aggregate.html">aggregate</a> -p -k 4-6 -s 15,16 |
+	<b>subtotal</b> -k 2 -s 4,5 -l 2
+
+# the "-l 2" is required so that the header is not treated the same as the data
+
