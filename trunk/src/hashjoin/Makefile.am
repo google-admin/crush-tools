@@ -4,7 +4,7 @@ main.c usage.c hashjoin_main.h : args.tab
 BUILT_SOURCES = main.c usage.c hashjoin_main.h
 
 bin_PROGRAMS = hashjoin
-hashjoin_SOURCES = hashjoin.c hashjoin.h $(BUILT_SOURCES)
+hashjoin_SOURCES = hashjoin.c $(BUILT_SOURCES)
 
 hashjoin_LDADD = ../libcrush/libcrush.la
 
