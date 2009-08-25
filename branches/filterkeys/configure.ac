@@ -94,6 +94,7 @@ src/dbstream/Makefile
 src/deltadays/Makefile
 src/deltaforce/Makefile
 src/fieldsplit/Makefile
+src/filterkeys/Makefile
 src/find_not_processed/Makefile
 src/findfiles/Makefile
 src/foreach_parallel/Makefile
