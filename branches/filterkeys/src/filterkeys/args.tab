@@ -2,12 +2,12 @@
 %global = (
 	category => 'General file manipulation',
 	name => "filterkeys",
-	description => "filters registers in files using a list of allowed keys",
+	description => "filters data by matching a field's content against an external list of values",
 	version => "\"CRUSH_PACKAGE_VERSION\"",
 	trailing_opts => "<keys-file> [file1 ...]",
 	usage_extra => "",
 	do_long_opts => 1,
-	preproc_extra => '#include <crush_version.h>',
+	preproc_extra => '#include <crush/crush_version.h>',
 	copyright => <<END_COPYRIGHT
    Copyright 2009 Google Inc.
 
@@ -53,6 +53,14 @@ END_COPYRIGHT
 	  description => 'field separator string (default: 0xfe)'
 	},
 	{
+	  name => 'filter_file',
+	  shortopt => 'f',
+	  longopt => 'filter-file',
+	  type => 'var',
+	  required => 1,
+	  description => 'one key per line file used for filtering input'
+	},
+	{
 	  name => 'outfile',
 	  shortopt => 'o',
 	  longopt => 'outfile',
@@ -83,6 +91,14 @@ END_COPYRIGHT
 	  type => 'flag',
 	  required => 0,
 	  description => 'print only non-matching lines'
+	},
+	{
+	  name => 'max_field_size',
+	  shortopt => 's',
+	  longopt => 'max-fieldsize',
+	  type => 'var',
+	  required => 0,
+	  description => 'maximum field size when concatenating key (default: 64)'
 	},
 	{
 	  name => 'preserve_header',

@@ -14,6 +14,9 @@
    limitations under the License.
  ********************************/
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <crush/general.h>
 #include <crush/ffutils.h>
 #include <crush/bstree.h>
@@ -24,6 +27,51 @@
 char default_delim[2] = { 0xfe, 0x00 };
 char *delim;
 struct fkeys_conf fk_conf;
+
+/* lookup the fields to be used as filter */
+static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
+                                dbfr_t *ffile_reader, const char *delim) {
+  char *t_keybuf;
+  int i, acum_len;
+
+  memset(conf, 0x0, sizeof(struct fkeys_conf));
+
+  /* parse header for keys */
+  dbfr_getline(ffile_reader);
+  if (args->keys) {
+    conf->key_count = expand_nums(args->keys, &conf->indexes, &conf->size);
+  } else if (args->key_labels) {
+    conf->key_count = expand_label_list(args->key_labels,
+                                        ffile_reader->current_line,
+                                        delim, &conf->indexes, &conf->size);
+  }
+  for (i = 0; i < conf->key_count; i++)
+    conf->indexes[i]--;
+  if (conf->key_count < 1)
+    return conf->key_count;
+
+  if (args->max_field_size)
+    conf->field_size = atoi(args->max_field_size);
+  else
+    conf->field_size = 64;
+
+  /* load filters */
+  bst_init(&conf->ftree, (int (*)(const void*, const void*))strcmp, free);
+  while (dbfr_getline(ffile_reader) > 0) {
+
+    t_keybuf = (char *) xmalloc(conf->key_count * conf->field_size);
+    /* TODO(rgranata): check for -1 returning from get_line_field */
+    for (acum_len = 0, i = 0; i < conf->key_count; i++)
+      acum_len += get_line_field(t_keybuf + acum_len,
+                                 ffile_reader->current_line,
+                                 conf->field_size, conf->indexes[i], delim);
+    if (acum_len > 0) {
+      bst_insert(&conf->ftree, t_keybuf);
+    }
+  }
+
+  return 0;
+}
 
 /** @brief
  *
@@ -51,17 +99,27 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       perror(args->outfile);
       exit(EXIT_FILE_ERR);
     }
-  } else
+  } else {
     outfile = stdout;
+  }
 
   /* choose field delimiter */
   if (!(delim = (args->delim ? args->delim : getenv("DELIMITER"))))
     delim = default_delim;
-  else if(!args->delim)
-    expand_chars(delim);
+  expand_chars(delim);
 
-  if (!(ffile = nextfile(argc, argv, &optind, "r")))
-    return EXIT_FILE_ERR;
+  if (!args->filter_file) {
+    fprintf(stderr, "%s: -f must be specified.\n", argv[0]);
+    return EXIT_HELP;
+  } else {
+    int fd = open64(args->filter_file, O_RDONLY);
+    if (fd != -1) {
+      ffile = fdopen(fd, "r");
+    } else {
+      perror("Opening filter file.");
+      return EXIT_FILE_ERR;
+    }
+  }
 
   ffile_reader = dbfr_init( ffile );
   if (configure_filterkeys(&fk_conf, args, ffile_reader, delim) != 0) {
@@ -80,18 +138,19 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       fputs(ffile_reader->current_line, outfile);
   }
 
-  t_keybuf = (char*)xmalloc( fk_conf.key_count * MAX_FIELD_SIZE );
-  while( ffile ) {
-    while( dbfr_getline(ffile_reader) > 0 ) {
+  t_keybuf = (char *) xmalloc(fk_conf.key_count * fk_conf.field_size);
+  while (ffile) {
+    while (dbfr_getline(ffile_reader) > 0) {
 
       /* TODO(rgranata): check for -1 returning from get_line_field */
-      for( acum_len = 0, i = 0; i < fk_conf.key_count; i++ ) {
+      for (acum_len = 0, i = 0; i < fk_conf.key_count; i++) {
         acum_len += get_line_field(t_keybuf + acum_len,
-                ffile_reader->current_line,
-                MAX_FIELD_SIZE, fk_conf.indexes[i], delim);
+                                   ffile_reader->current_line,
+                                   fk_conf.field_size, fk_conf.indexes[i], delim);
       }
 
       if (acum_len > 0) {
+        /* Logical XOR: only print if it's found xor filter is inverted */
         if (!!bst_find(&fk_conf.ftree, t_keybuf) != !!args->invert)
           fputs(ffile_reader->current_line, outfile);
       }
@@ -107,48 +166,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (t_keybuf)
     free(t_keybuf);
 
-  bst_destroy(&conf->ftree);
-
-  return 0;
-}
-
-
-/* lookup the fields to be used as filter */
-static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
-    dbfr_t *ffile_reader, const char *delim) {
-  char *t_keybuf;
-  int i, acum_len;
-
-  memset(conf, 0x0, sizeof(struct fkeys_conf));
-
-  /* parse header for keys */
-  dbfr_getline(ffile_reader);
-  if (args->keys)
-    conf->key_count = expand_nums(args->keys, &conf->indexes, &conf->size);
-  else if (args->key_labels) {
-    conf->key_count = expand_label_list(args->key_labels,
-            ffile_reader->current_line,
-            delim, &conf->indexes, &conf->size);
-  }
-  for( i = 0; i < conf->key_count; i++ )
-    conf->indexes[i]--;
-  if(conf->key_count < 1)
-    return conf->key_count;
-
-  /* load filters */
-  bst_init(&conf->ftree, (int (*)(const void*, const void*))strcmp, free);
-  while( dbfr_getline(ffile_reader) > 0 ) {
-
-    t_keybuf = (char*)xmalloc( conf->key_count * MAX_FIELD_SIZE);
-    /* TODO(rgranata): check for -1 returning from get_line_field */
-    for( acum_len = 0, i = 0; i < conf->key_count; i++ )
-      acum_len += get_line_field(t_keybuf + acum_len,
-              ffile_reader->current_line,
-              MAX_FIELD_SIZE, conf->indexes[i], delim);
-    if (acum_len > 0) {
-      bst_insert(&conf->ftree, t_keybuf);
-    }
-  }
+  bst_destroy(&fk_conf.ftree);
 
   return 0;
 }

@@ -12,10 +12,11 @@ TESTS = test.conf
 filterkeys_LDADD = ../libcrush/libcrush.la
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab test.conf test/test-filter.in test/test-1.in test/test-2.in \
-             test/test_00.sh test/test_00.expected \
-             test/test_01.sh test/test_01.expected \
-			 test/test_02.sh test/test_02.expected
+EXTRA_DIST = args.tab test.conf test/test-filter.in \
+							test/test-1.in test/test-2.in \
+							test/test_00.sh test/test_00.expected \
+							test/test_01.sh test/test_01.expected \
+							test/test_02.sh test/test_02.expected
 
 
 man1_MANS = filterkeys.1
