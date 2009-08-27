@@ -6,7 +6,7 @@
 struct fkeys_conf {
   ssize_t key_count;
 
-  size_t field_size;
+  size_t key_buffer_sz;
 
   size_t size;
   int *indexes;

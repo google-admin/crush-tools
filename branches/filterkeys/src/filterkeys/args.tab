@@ -93,14 +93,6 @@ END_COPYRIGHT
 	  description => 'print only non-matching lines'
 	},
 	{
-	  name => 'max_field_size',
-	  shortopt => 's',
-	  longopt => 'max-fieldsize',
-	  type => 'var',
-	  required => 0,
-	  description => 'maximum field size when concatenating key (default: 64)'
-	},
-	{
 	  name => 'preserve_header',
 	  shortopt => 'p',
 	  longopt => 'preserve_header',

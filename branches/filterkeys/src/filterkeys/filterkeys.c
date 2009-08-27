@@ -50,21 +50,19 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
   if (conf->key_count < 1)
     return conf->key_count;
 
-  if (args->max_field_size)
-    conf->field_size = atoi(args->max_field_size);
-  else
-    conf->field_size = 64;
-
   /* load filters */
   bst_init(&conf->ftree, (int (*)(const void*, const void*))strcmp, free);
   while (dbfr_getline(ffile_reader) > 0) {
 
-    t_keybuf = (char *) xmalloc(conf->key_count * conf->field_size);
-    /* TODO(rgranata): check for -1 returning from get_line_field */
+    t_keybuf = (char *) xmalloc(ffile_reader->current_line_sz);
+    conf->key_buffer_sz = (conf->key_buffer_sz < ffile_reader->current_line_sz ?
+                           ffile_reader->current_line_sz : conf->key_buffer_sz);
+
     for (acum_len = 0, i = 0; i < conf->key_count; i++)
       acum_len += get_line_field(t_keybuf + acum_len,
                                  ffile_reader->current_line,
-                                 conf->field_size, conf->indexes[i], delim);
+                                 ffile_reader->current_line_sz - acum_len,
+                                 conf->indexes[i], delim);
     if (acum_len > 0) {
       bst_insert(&conf->ftree, t_keybuf);
     }
@@ -116,7 +114,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
     if (fd != -1) {
       ffile = fdopen(fd, "r");
     } else {
-      perror("Opening filter file.");
+      warn("Opening filter file %s", args->filter_file);
       return EXIT_FILE_ERR;
     }
   }
@@ -138,20 +136,22 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       fputs(ffile_reader->current_line, outfile);
   }
 
-  t_keybuf = (char *) xmalloc(fk_conf.key_count * fk_conf.field_size);
+  t_keybuf = (char *) xmalloc(fk_conf.key_buffer_sz);
   while (ffile) {
     while (dbfr_getline(ffile_reader) > 0) {
 
-      /* TODO(rgranata): check for -1 returning from get_line_field */
-      for (acum_len = 0, i = 0; i < fk_conf.key_count; i++) {
+      for (acum_len = 0, i = 0;
+           i < fk_conf.key_count && fk_conf.key_buffer_sz > acum_len;
+           i++) {
         acum_len += get_line_field(t_keybuf + acum_len,
                                    ffile_reader->current_line,
-                                   fk_conf.field_size, fk_conf.indexes[i], delim);
+                                   fk_conf.key_buffer_sz - acum_len,
+                                   fk_conf.indexes[i], delim);
       }
 
       if (acum_len > 0) {
-        /* Logical XOR: only print if it's found xor filter is inverted */
-        if (!!bst_find(&fk_conf.ftree, t_keybuf) != !!args->invert)
+        int found = (bst_find(&fk_conf.ftree, t_keybuf) ? 1 : 0);
+        if (found ^ args->invert)
           fputs(ffile_reader->current_line, outfile);
       }
     }
