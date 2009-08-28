@@ -55,9 +55,6 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
   while (dbfr_getline(ffile_reader) > 0) {
 
     t_keybuf = (char *) xmalloc(ffile_reader->current_line_sz);
-    conf->key_buffer_sz = (conf->key_buffer_sz < ffile_reader->current_line_sz ?
-                           ffile_reader->current_line_sz : conf->key_buffer_sz);
-
     for (acum_len = 0, i = 0; i < conf->key_count; i++)
       acum_len += get_line_field(t_keybuf + acum_len,
                                  ffile_reader->current_line,
@@ -67,6 +64,7 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
       bst_insert(&conf->ftree, t_keybuf);
     }
   }
+  conf->key_buffer_sz = ffile_reader->current_line_sz;
 
   return 0;
 }
