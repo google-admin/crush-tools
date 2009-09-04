@@ -8,8 +8,8 @@ struct fkeys_conf {
 
   size_t key_buffer_sz;
 
-  size_t size;
-  int *indexes;
+  size_t asize, bsize;
+  int *aindexes, *bindexes;
   
   bstree_t ftree;
 };

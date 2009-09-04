@@ -4,7 +4,7 @@
 	name => "filterkeys",
 	description => "filters data by matching a field's content against an external list of values",
 	version => "\"CRUSH_PACKAGE_VERSION\"",
-	trailing_opts => "<keys-file> [file1 ...]",
+	trailing_opts => "[file1 ...]",
 	usage_extra => "",
 	do_long_opts => 1,
 	preproc_extra => '#include <crush/crush_version.h>',
@@ -57,7 +57,7 @@ END_COPYRIGHT
 	  shortopt => 'f',
 	  longopt => 'filter-file',
 	  type => 'var',
-	  required => 1,
+	  required => 0,
 	  description => 'one key per line file used for filtering input'
 	},
 	{
@@ -69,20 +69,36 @@ END_COPYRIGHT
 	  description => 'output file name (default: stdout)'
 	},
 	{
-	  name => 'keys',
-	  shortopt => 'k',
-	  longopt => 'keys',
+	  name => 'akeys',
+	  shortopt => 'a',
+	  longopt => 'filter-keys',
 	  type => 'var',
 	  required => 0,
-	  description => 'fields to be considered for filtering'
+	  description => 'filter-file field indexes considered for filtering'
 	},
 	{
-	  name => 'key_labels',
-	  shortopt => 'K',
-	  longopt => 'key-labels',
+	  name => 'akey_labels',
+	  shortopt => 'A',
+	  longopt => 'filter-labels',
 	  type => 'var',
 	  required => 0,
-	  description => 'labels of fields to be considered for filtering'
+	  description => 'filter-file labels to be considered for filtering'
+	},
+	{
+	  name => 'bkeys',
+	  shortopt => 'b',
+	  longopt => 'file-keys',
+	  type => 'var',
+	  required => 0,
+	  description => 'input-files field indexes considered for filtering'
+	},
+	{
+	  name => 'bkey_labels',
+	  shortopt => 'B',
+	  longopt => 'file-labels',
+	  type => 'var',
+	  required => 0,
+	  description => 'input-file labels to be considered for filtering'
 	},
 	{
 	  name => 'invert',

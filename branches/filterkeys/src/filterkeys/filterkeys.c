@@ -38,15 +38,15 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
 
   /* parse header for keys */
   dbfr_getline(ffile_reader);
-  if (args->keys) {
-    conf->key_count = expand_nums(args->keys, &conf->indexes, &conf->size);
-  } else if (args->key_labels) {
-    conf->key_count = expand_label_list(args->key_labels,
+  if (args->akeys) {
+    conf->key_count = expand_nums(args->akeys, &conf->aindexes, &conf->asize);
+  } else if (args->akey_labels) {
+    conf->key_count = expand_label_list(args->akey_labels,
                                         ffile_reader->current_line,
-                                        delim, &conf->indexes, &conf->size);
+                                        delim, &conf->aindexes, &conf->asize);
   }
   for (i = 0; i < conf->key_count; i++)
-    conf->indexes[i]--;
+    conf->aindexes[i]--;
   if (conf->key_count < 1)
     return conf->key_count;
 
@@ -59,7 +59,7 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
       acum_len += get_line_field(t_keybuf + acum_len,
                                  ffile_reader->current_line,
                                  ffile_reader->current_line_sz - acum_len,
-                                 conf->indexes[i], delim);
+                                 conf->aindexes[i], delim);
     if (acum_len > 0) {
       bst_insert(&conf->ftree, t_keybuf);
     }
@@ -85,8 +85,8 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   int i, acum_len;
 
   // setup
-  if (!args->keys && !args->key_labels) {
-    fprintf(stderr, "%s: -k or -K must be specified.\n", argv[0]);
+  if (!args->akeys && !args->akey_labels) {
+    fprintf(stderr, "%s: -a or -A must be specified.\n", argv[0]);
     return EXIT_HELP;
   }
 
@@ -105,15 +105,18 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   expand_chars(delim);
 
   if (!args->filter_file) {
-    fprintf(stderr, "%s: -f must be specified.\n", argv[0]);
-    return EXIT_HELP;
+    ffile = stdin;
   } else {
-    int fd = open64(args->filter_file, O_RDONLY);
-    if (fd != -1) {
-      ffile = fdopen(fd, "r");
+    if (args->filter_file[0] == '-') {
+      ffile = stdin;
     } else {
-      warn("Opening filter file %s", args->filter_file);
-      return EXIT_FILE_ERR;
+      int fd = open64(args->filter_file, O_RDONLY);
+      if (fd != -1) {
+        ffile = fdopen(fd, "r");
+      } else {
+        warn("Opening filter file %s", args->filter_file);
+        return EXIT_FILE_ERR;
+      }
     }
   }
 
@@ -124,14 +127,38 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
   dbfr_close( ffile_reader );
 
-  /* filter */
+  /* input files */
   if (!(ffile = (optind < argc ? nextfile(argc, argv, &optind, "r") : stdin)))
     return EXIT_FILE_ERR;
 
   ffile_reader = dbfr_init( ffile );
+
+  int read_header = 0;
+  if (args->bkeys) {
+    fk_conf.key_count = expand_nums(args->bkeys, &fk_conf.bindexes, &fk_conf.bsize);
+  } else if (args->bkey_labels) {
+    read_header = dbfr_getline(ffile_reader);
+    fk_conf.key_count = expand_label_list(args->bkey_labels,
+                                        ffile_reader->current_line,
+                                        delim, &fk_conf.bindexes, &fk_conf.bsize);
+  } else {
+    fk_conf.bsize = fk_conf.asize;
+    fk_conf.bindexes = (int*) malloc(fk_conf.bsize * sizeof(int));
+    for(i = 0; i < fk_conf.bsize; i++)
+      fk_conf.bindexes[i] = fk_conf.aindexes[i];
+  }
+  if(fk_conf.asize != fk_conf.bsize) {
+    fprintf(stderr, "%s: akeys and bkeys have to be the same amount.\n", argv[0]);
+    return EXIT_HELP;
+  }
+  if (args->bkeys || args->bkey_labels)
+    for (i = 0; i < fk_conf.key_count; i++)
+      fk_conf.bindexes[i]--;
+
   if (args->preserve_header) {
-    if (dbfr_getline(ffile_reader) > 0)
-      fputs(ffile_reader->current_line, outfile);
+    if (!read_header)
+      dbfr_getline(ffile_reader);
+    fputs(ffile_reader->current_line, outfile);
   }
 
   t_keybuf = (char *) xmalloc(fk_conf.key_buffer_sz);
@@ -144,7 +171,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
         acum_len += get_line_field(t_keybuf + acum_len,
                                    ffile_reader->current_line,
                                    fk_conf.key_buffer_sz - acum_len,
-                                   fk_conf.indexes[i], delim);
+                                   fk_conf.bindexes[i], delim);
       }
 
       if (acum_len > 0) {
