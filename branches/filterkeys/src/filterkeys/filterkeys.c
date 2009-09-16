@@ -40,8 +40,8 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
   dbfr_getline(ffile_reader);
   if (args->akeys) {
     conf->key_count = expand_nums(args->akeys, &conf->aindexes, &conf->asize);
-  } else if (args->akey_labels) {
-    conf->key_count = expand_label_list(args->akey_labels,
+  } else if (args->key_labels) {
+    conf->key_count = expand_label_list(args->key_labels,
                                         ffile_reader->current_line,
                                         delim, &conf->aindexes, &conf->asize);
   }
@@ -85,8 +85,8 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   int i, acum_len;
 
   // setup
-  if (!args->akeys && !args->akey_labels) {
-    fprintf(stderr, "%s: -a or -A must be specified.\n", argv[0]);
+  if (!(args->akeys && args->bkeys) && !args->key_labels) {
+    fprintf(stderr, "%s: -a and -b or -K must be specified.\n", argv[0]);
     return EXIT_HELP;
   }
 
@@ -104,19 +104,16 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
     delim = default_delim;
   expand_chars(delim);
 
-  if (!args->filter_file) {
-    ffile = stdin;
+
+  int fd = open64(args->filter_file, O_RDONLY);
+  if (fd != -1) {
+    ffile = fdopen(fd, "r");
   } else {
     if (args->filter_file[0] == '-') {
       ffile = stdin;
     } else {
-      int fd = open64(args->filter_file, O_RDONLY);
-      if (fd != -1) {
-        ffile = fdopen(fd, "r");
-      } else {
-        warn("Opening filter file %s", args->filter_file);
-        return EXIT_FILE_ERR;
-      }
+      warn("Opening filter file %s", args->filter_file);
+      return EXIT_FILE_ERR;
     }
   }
 
@@ -136,24 +133,19 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   int read_header = 0;
   if (args->bkeys) {
     fk_conf.key_count = expand_nums(args->bkeys, &fk_conf.bindexes, &fk_conf.bsize);
-  } else if (args->bkey_labels) {
+  } else if (args->key_labels) {
     read_header = dbfr_getline(ffile_reader);
-    fk_conf.key_count = expand_label_list(args->bkey_labels,
+    fk_conf.key_count = expand_label_list(args->key_labels,
                                         ffile_reader->current_line,
                                         delim, &fk_conf.bindexes, &fk_conf.bsize);
-  } else {
-    fk_conf.bsize = fk_conf.asize;
-    fk_conf.bindexes = (int*) malloc(fk_conf.bsize * sizeof(int));
-    for(i = 0; i < fk_conf.bsize; i++)
-      fk_conf.bindexes[i] = fk_conf.aindexes[i];
   }
+  for (i = 0; i < fk_conf.key_count; i++)
+    fk_conf.bindexes[i]--;
+
   if(fk_conf.asize != fk_conf.bsize) {
     fprintf(stderr, "%s: akeys and bkeys have to be the same amount.\n", argv[0]);
     return EXIT_HELP;
   }
-  if (args->bkeys || args->bkey_labels)
-    for (i = 0; i < fk_conf.key_count; i++)
-      fk_conf.bindexes[i]--;
 
   if (args->preserve_header) {
     if (!read_header)

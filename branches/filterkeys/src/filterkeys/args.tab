@@ -57,7 +57,7 @@ END_COPYRIGHT
 	  shortopt => 'f',
 	  longopt => 'filter-file',
 	  type => 'var',
-	  required => 0,
+	  required => 1,
 	  description => 'one key per line file used for filtering input'
 	},
 	{
@@ -77,14 +77,6 @@ END_COPYRIGHT
 	  description => 'filter-file field indexes considered for filtering'
 	},
 	{
-	  name => 'akey_labels',
-	  shortopt => 'A',
-	  longopt => 'filter-labels',
-	  type => 'var',
-	  required => 0,
-	  description => 'filter-file labels to be considered for filtering'
-	},
-	{
 	  name => 'bkeys',
 	  shortopt => 'b',
 	  longopt => 'file-keys',
@@ -93,12 +85,12 @@ END_COPYRIGHT
 	  description => 'input-files field indexes considered for filtering'
 	},
 	{
-	  name => 'bkey_labels',
-	  shortopt => 'B',
-	  longopt => 'file-labels',
+	  name => 'key_labels',
+	  shortopt => 'K',
+	  longopt => 'labels',
 	  type => 'var',
 	  required => 0,
-	  description => 'input-file labels to be considered for filtering'
+	  description => 'labels to be considered for filtering'
 	},
 	{
 	  name => 'invert',
