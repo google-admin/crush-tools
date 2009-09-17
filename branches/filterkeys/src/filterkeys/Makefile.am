@@ -14,9 +14,13 @@ CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = args.tab test.conf test/test-filter.in \
 							test/test-1.in test/test-2.in \
+							test/test-3.in test/test-4.in \
 							test/test_00.sh test/test_00.expected \
 							test/test_01.sh test/test_01.expected \
-							test/test_02.sh test/test_02.expected
+							test/test_02.sh test/test_02.expected \
+							test/test_03.sh test/test_03.expected \
+							test/test_04.sh test/test_04.expected \
+							test/test_05.sh test/test_05.expected \
 
 
 man1_MANS = filterkeys.1
