@@ -10,4 +10,5 @@ SUBDIRS = bin libcrush perllib aggregate aggregate2 buffer convdate \
           cutfield deltaforce foreach_parallel funiq grepfield hashjoin \
           indexof mergekeys pivot range reorder subtotal tochar truncfield \
           add_field fieldsplit translate_field findfiles csvformat \
-          calcfield find_not_processed $(WITH_DATE_CALC) $(WITH_DBI) 
+          calcfield find_not_processed filterkeys \
+					$(WITH_DATE_CALC) $(WITH_DBI) 

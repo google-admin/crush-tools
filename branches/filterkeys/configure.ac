@@ -1,4 +1,4 @@
-AC_INIT([crush],
+AC_INIT([crush-tools],
         [2009-08_branches_filterkeys],
         [http://code.google.com/p/crush-tools/])
 AM_CONFIG_HEADER(src/libcrush/config.h)
