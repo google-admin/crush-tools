@@ -109,7 +109,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (fd != -1) {
     ffile = fdopen(fd, "r");
   } else {
-    if (args->filter_file[0] == '-') {
+    if (!strcmp(args->filter_file, "-")) {
       ffile = stdin;
     } else {
       warn("Opening filter file %s", args->filter_file);
@@ -136,8 +136,8 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   } else if (args->key_labels) {
     read_header = dbfr_getline(ffile_reader);
     fk_conf.key_count = expand_label_list(args->key_labels,
-                                        ffile_reader->current_line,
-                                        delim, &fk_conf.bindexes, &fk_conf.bsize);
+                                          ffile_reader->current_line,
+                                          delim, &fk_conf.bindexes, &fk_conf.bsize);
   }
   for (i = 0; i < fk_conf.key_count; i++)
     fk_conf.bindexes[i]--;
