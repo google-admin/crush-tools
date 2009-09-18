@@ -20,7 +20,7 @@ EXTRA_DIST = args.tab test.conf test/test-filter.in \
 							test/test_02.sh test/test_02.expected \
 							test/test_03.sh test/test_03.expected \
 							test/test_04.sh test/test_04.expected \
-							test/test_05.sh test/test_05.expected \
+							test/test_05.sh test/test_05.expected
 
 
 man1_MANS = filterkeys.1
