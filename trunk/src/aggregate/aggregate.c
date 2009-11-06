@@ -437,7 +437,7 @@ int key_strcmp(char **a, char **b) {
   char fa[256], fb[256];
   int retval = 0;
   int i;
-  size_t alen, blen;
+  int alen, blen;
 
   /* avoid comparing nulls */
   if (!*a && !*b)
