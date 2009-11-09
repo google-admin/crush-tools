@@ -28,43 +28,104 @@ char default_delim[2] = { 0xfe, 0x00 };
 char *delim;
 struct fkeys_conf fk_conf;
 
-/* lookup the fields to be used as filter */
-static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
-                                dbfr_t *ffile_reader, const char *delim) {
-  char *t_keybuf;
-  int i, acum_len;
+/* parse key fields */
+static int configure_filterkeys(struct fkeys_conf *conf, 
+                                struct cmdargs *args,
+                                dbfr_t *filter_reader,
+                                dbfr_t *stream_reader) {
+  size_t arrsz=0, brrsz=0;
+  int i, j;
 
   memset(conf, 0x0, sizeof(struct fkeys_conf));
 
-  /* parse header for keys */
-  dbfr_getline(ffile_reader);
-  if (args->akeys) {
-    conf->key_count = expand_nums(args->akeys, &conf->aindexes, &conf->asize);
-  } else if (args->key_labels) {
+  if (args->key_labels) {
+
+    dbfr_getline(filter_reader);
+    dbfr_getline(stream_reader);
+
     conf->key_count = expand_label_list(args->key_labels,
-                                        ffile_reader->current_line,
-                                        delim, &conf->aindexes, &conf->asize);
+        filter_reader->current_line,
+        delim, &conf->aindexes, &arrsz);
+
+    conf->key_count = expand_label_list(args->key_labels,
+                                        stream_reader->current_line,
+                                        delim, &conf->bindexes, &brrsz);
+    /* preserve header implied */
+    args->preserve_header = 1;
+
+  } else if (args->akeys && args->bkeys) {
+    ssize_t akeyct, bkeyct;
+
+    akeyct = expand_nums(args->akeys, &conf->aindexes, &arrsz);
+    bkeyct = expand_nums(args->bkeys, &conf->bindexes, &brrsz);
+
+    if (akeyct != bkeyct) {
+      fprintf(stderr, "a-key and b-key lists must be the same length.\n");
+      return EXIT_HELP;
+    } else {
+      conf->key_count = akeyct;
+    }
+
+  } else {
+    dbfr_getline(filter_reader);
+    dbfr_getline(stream_reader);
+  
+    char label_left[MAX_FIELD_LEN + 1], label_right[MAX_FIELD_LEN + 1];
+    int nfields_filter = fields_in_line(filter_reader->current_line, delim);
+    int nfields_stream = fields_in_line(stream_reader->current_line, delim);
+
+    j = (nfields_filter < nfields_stream ? nfields_filter : nfields_stream);
+    conf->aindexes = (int*)malloc(sizeof(int) * j);
+    conf->bindexes = (int*)malloc(sizeof(int) * j);
+
+    /* find the keys common to both files */
+    for (i = 0; i < nfields_filter; i++)
+      for (j = 0; j < nfields_stream; j++) {
+        get_line_field(label_left, filter_reader->current_line,
+            MAX_FIELD_LEN, i, delim);
+        get_line_field(label_right, stream_reader->current_line,
+            MAX_FIELD_LEN, j, delim);
+
+        if (strcmp(label_left, label_right) == 0) {
+          conf->aindexes[conf->key_count] = i+1;
+          conf->bindexes[conf->key_count] = j+1;
+          conf->key_count++;
+          break;
+        }
+      }
+
+    /* preserve header implied */
+    args->preserve_header = 1;
   }
-  for (i = 0; i < conf->key_count; i++)
+
+  for (i = 0; i < conf->key_count; i++) {
     conf->aindexes[i]--;
-  if (conf->key_count < 1)
-    return conf->key_count;
+    conf->bindexes[i]--;
+  }
 
-  /* load filters */
+  return (conf->key_count < 1 ? conf->key_count : 0);
+}
+
+/* reconfigure_filterkeys() */
+
+/* load the filter from the filter file */
+static int load_filter(struct fkeys_conf *conf, dbfr_t *filter_reader) {
+  char *t_keybuf;
+  int i, acum_len;
+
   bst_init(&conf->ftree, (int (*)(const void*, const void*))strcmp, free);
-  while (dbfr_getline(ffile_reader) > 0) {
+  while (dbfr_getline(filter_reader) > 0) {
 
-    t_keybuf = (char *) xmalloc(ffile_reader->current_line_sz);
+    t_keybuf = (char *) xmalloc(filter_reader->current_line_sz);
     for (acum_len = 0, i = 0; i < conf->key_count; i++)
       acum_len += get_line_field(t_keybuf + acum_len,
-                                 ffile_reader->current_line,
-                                 ffile_reader->current_line_sz - acum_len,
+                                 filter_reader->current_line,
+                                 filter_reader->current_line_sz - acum_len,
                                  conf->aindexes[i], delim);
-    if (acum_len > 0) {
+    if (acum_len > 0)
       bst_insert(&conf->ftree, t_keybuf);
-    }
   }
-  conf->key_buffer_sz = ffile_reader->current_line_sz;
+  conf->key_buffer_sz = filter_reader->current_line_sz;
 
   return 0;
 }
@@ -80,15 +141,9 @@ static int configure_filterkeys(struct fkeys_conf *conf, struct cmdargs *args,
  */
 int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   FILE *ffile, *outfile;
-  dbfr_t *ffile_reader;
+  dbfr_t *filter_reader, *stream_reader;
   char *t_keybuf;
   int i, acum_len;
-
-  // setup
-  if (!(args->akeys && args->bkeys) && !args->key_labels) {
-    fprintf(stderr, "%s: -a and -b or -K must be specified.\n", argv[0]);
-    return EXIT_HELP;
-  }
 
   if (args->outfile) {
     if ((outfile = fopen(args->outfile, "w")) == NULL) {
@@ -104,7 +159,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
     delim = default_delim;
   expand_chars(delim);
 
-
+  /* get the filter file */
   int fd = open64(args->filter_file, O_RDONLY);
   if (fd != -1) {
     ffile = fdopen(fd, "r");
@@ -116,52 +171,38 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       return EXIT_FILE_ERR;
     }
   }
-
-  ffile_reader = dbfr_init( ffile );
-  if (configure_filterkeys(&fk_conf, args, ffile_reader, delim) != 0) {
-    fprintf(stderr, "%s: error setting up configuration.\n", argv[0]);
-    return EXIT_HELP;
-  }
-  dbfr_close( ffile_reader );
+  filter_reader = dbfr_init( ffile );
 
   /* input files */
   if (!(ffile = (optind < argc ? nextfile(argc, argv, &optind, "r") : stdin)))
     return EXIT_FILE_ERR;
+  stream_reader = dbfr_init( ffile );
 
-  ffile_reader = dbfr_init( ffile );
 
-  int read_header = 0;
-  if (args->bkeys) {
-    fk_conf.key_count = expand_nums(args->bkeys, &fk_conf.bindexes, &fk_conf.bsize);
-  } else if (args->key_labels) {
-    read_header = dbfr_getline(ffile_reader);
-    fk_conf.key_count = expand_label_list(args->key_labels,
-                                          ffile_reader->current_line,
-                                          delim, &fk_conf.bindexes, &fk_conf.bsize);
-  }
-  for (i = 0; i < fk_conf.key_count; i++)
-    fk_conf.bindexes[i]--;
-
-  if(fk_conf.asize != fk_conf.bsize) {
-    fprintf(stderr, "%s: akeys and bkeys have to be the same amount.\n", argv[0]);
+  if (configure_filterkeys(&fk_conf, args, filter_reader, stream_reader) != 0) {
+    fprintf(stderr, "%s: error setting up configuration.\n", argv[0]);
     return EXIT_HELP;
   }
 
+  load_filter(&fk_conf, filter_reader);
+  dbfr_close( filter_reader );
+
   if (args->preserve_header) {
-    if (!read_header)
-      dbfr_getline(ffile_reader);
-    fputs(ffile_reader->current_line, outfile);
+    /* if indexes where supplied read the header */
+    if (args->akeys && args->bkeys)
+      dbfr_getline(stream_reader);
+    fputs(stream_reader->current_line, outfile);
   }
 
   t_keybuf = (char *) xmalloc(fk_conf.key_buffer_sz);
   while (ffile) {
-    while (dbfr_getline(ffile_reader) > 0) {
+    while (dbfr_getline(stream_reader) > 0) {
 
       for (acum_len = 0, i = 0;
            i < fk_conf.key_count && fk_conf.key_buffer_sz > acum_len;
            i++) {
         acum_len += get_line_field(t_keybuf + acum_len,
-                                   ffile_reader->current_line,
+                                   stream_reader->current_line,
                                    fk_conf.key_buffer_sz - acum_len,
                                    fk_conf.bindexes[i], delim);
       }
@@ -169,15 +210,22 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       if (acum_len > 0) {
         int found = (bst_find(&fk_conf.ftree, t_keybuf) ? 1 : 0);
         if (found ^ args->invert)
-          fputs(ffile_reader->current_line, outfile);
+          fputs(stream_reader->current_line, outfile);
       }
     }
 
-    dbfr_close(ffile_reader);
+    dbfr_close(stream_reader);
     if ((ffile = nextfile(argc, argv, &optind, "r"))) {
-      ffile_reader = dbfr_init( ffile );
+      stream_reader = dbfr_init( ffile );
+      /* reconfigure fields (needed if labels were used) */
+      /* TODO(rgranata): implement reconfigure field
+      if (reconfigure_filterkeys(&fk_conf, args, NULL, stream_reader) != 0) {
+        fprintf(stderr, "%s: error parsing field arguments.\n", argv[0]);
+        return EXIT_HELP;
+      }
+      */
       if (args->preserve_header)
-        dbfr_getline(ffile_reader);
+        dbfr_getline(stream_reader);
     }
   }
   if (t_keybuf)
