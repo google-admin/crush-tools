@@ -506,43 +506,41 @@ int set_field_types() {
 void classify_fields(char *left_header, char *right_header) {
 
   int i, j;
-
   char label_left[MAX_FIELD_LEN + 1], label_right[MAX_FIELD_LEN + 1];
 
   nkeys = left_ntomerge = right_ntomerge = 0;
 
-  j = (nfields_left < nfields_right ? nfields_left : nfields_right);
+  for (i = 0; i < nfields_left; i++) {
+    for (j = 0; j < nfields_right; j++) {
 
-  /* find the keys common to both files & the ones that need merged */
-  for (i = 0; i < j; i++) {
+      get_line_field(label_right, right_header, MAX_FIELD_LEN, j, delim);
+      get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
 
-    get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
-    get_line_field(label_right, right_header, MAX_FIELD_LEN, i, delim);
-
-    if (str_eq(label_left, label_right)) {
-      left_keyfields[nkeys] = i;
-      right_keyfields[nkeys] = i;
-      nkeys++;
-    } else {
-      left_mergefields[left_ntomerge] = i;
-      right_mergefields[right_ntomerge] = i;
-      left_ntomerge++;
-      right_ntomerge++;
+      /* add common fields as merge keys */
+      if (str_eq(label_left, label_right)) {
+        left_keyfields[nkeys] = i;
+        right_keyfields[nkeys] = j;
+        nkeys++;
+        break;
+      }
     }
+    /* i-th left field has no match => mergefield */
+    if (j == nfields_right)
+      left_mergefields[left_ntomerge++] = i;
   }
 
-  j = i;
-  /* if LEFT had more fields than RIGHT, all of those need merged */
-  for (; i < nfields_left; i++) {
-    left_mergefields[left_ntomerge] = i;
-    left_ntomerge++;
-  }
+  for (j = 0; j < nfields_right; j++) {
+    for (i = 0; i < nfields_left; i++) {
 
-  i = j;
-  /* if RIGHT had more fields than LEFT, all of those need merged */
-  for (; i < nfields_right; i++) {
-    right_mergefields[right_ntomerge] = i;
-    right_ntomerge++;
+      get_line_field(label_right, right_header, MAX_FIELD_LEN, j, delim);
+      get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
+
+      if (str_eq(label_left, label_right))
+        break;
+    }
+    /* j-th right field has no match => mergefield */
+    if (i == nfields_left)
+      right_mergefields[right_ntomerge++] = j;
   }
 }
 
