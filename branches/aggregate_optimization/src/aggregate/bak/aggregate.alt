@@ -1,0 +1,178 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+use util::args;
+
+my $tmpdir = '/tmp';
+
+my ($k, $s, $c, $d, $p, $h);
+my (@keys, @cnts, @sums);
+$d = chr(0xfe);
+
+&GetOptions(	"key=s"		=> \$k,
+		"sum=s"		=> \$s,
+		"count=s"	=> \$c,
+		"delim=s"	=> \$d,
+		"preserve!"	=> \$p,
+		"help!"		=> \$h
+	);
+
+if( $h || ! defined($k) ){
+	usage();
+	exit(1);
+}
+
+my $dd = resafe($d);
+
+my $input = $tmpdir . "/aggregate_$$.in.tmp";
+my $tmpfile = $tmpdir . "/aggregate_$$.tmp";
+
+open(IN, "> $input");
+my $header;
+if ( $p ) {
+	$header = <>;
+	$header =~ s/[\r\n]//g;
+}
+while (<>) {
+	print IN $_;
+}
+close(IN);
+
+# get the aggregation keys into the format used by sort(1)
+@keys = split(/,/, $k);
+my @sortkeys = ();
+foreach ( @keys) {
+	$_ =~ s/-/,/;
+	push @sortkeys, '-k';
+	push @sortkeys, $_;
+}
+
+system("sort", "-t", $d, @sortkeys, "-o", $tmpfile, $input);
+unlink($input) or warn "unlinking $input: $!\n";
+
+@keys = util::args::expand($k);
+@sums = util::args::expand($s);
+@cnts = util::args::expand($c);
+
+if ( ! $sums[0] ) { undef @sums; }
+if ( ! $cnts[0] ) { undef @sums; }
+
+if ( $p ) {
+	my @heads = split(/$dd/, $header);
+	my $hstr = '';
+	foreach my $ki (@keys) {
+		$hstr .= $d . $heads[$ki - 1];
+	}
+	$hstr =~ s/^$dd//;
+	if ( scalar(@sums) ) {
+		foreach my $si (@sums) {
+			$hstr .= $d . $heads[$si - 1];
+		}
+	}
+	if ( scalar(@cnts) ) {
+		foreach my $ci (@cnts) {
+			$hstr .= $d . $heads[$ci - 1];
+		}
+	}
+	print $hstr , qq(\n);
+}
+
+open(TMP, "$tmpfile") or (unlink $tmpfile && die "$tmpfile: $!\n");
+
+my $pkey;
+my @lsums = ();
+my @lcnts = ();
+while(<TMP>) {
+	s/[\r\n]//g;
+	my @line = split(/$dd/, $_);
+	my $lkey;
+	foreach my $ki (@keys) {
+		$lkey .= $line[$ki - 1] . $d;
+	}
+	$lkey =~ s/$dd$//o;
+
+	if ( defined($pkey) && $lkey ne $pkey ) {
+		print $pkey;
+		foreach my $si ( @sums ) {
+			print $d;
+			if ( defined($lsums[$si - 1]) ) {
+				print $lsums[$si - 1];
+			} else { print '0'; }
+		}
+		foreach my $ci ( @cnts ) {
+			print $d;
+			if ( defined($lcnts[$ci - 1]) ) {
+				print $lcnts[$ci - 1];
+			} else { print '0'; }
+		}
+
+		print qq(\n);
+
+		@lsums = ();
+		@lcnts = ();
+	}
+
+	foreach my $si ( @sums ) {
+		if ( defined($line[$si - 1]) && $line[$si - 1] =~ /^[\d\.]+$/ ) {
+			$lsums[$si - 1] += $line[$si - 1];
+		}
+	}
+	foreach my $ci ( @cnts ) {
+		if ( defined($line[$ci - 1]) && length($line[$ci - 1]) ) {
+			$lcnts[$ci - 1]++;
+		}
+	}
+
+	$pkey = $lkey;
+}
+
+print $pkey;
+foreach my $si ( @sums ) {
+	print $d;
+	if ( $lsums[$si - 1] ) {
+		print $lsums[$si - 1];
+	} else { print '0'; }
+}
+foreach my $ci ( @cnts ) {
+	print $d;
+	if ( $lcnts[$ci - 1] ) {
+		print $lcnts[$ci - 1];
+	} else { print '0'; }
+}
+print qq(\n);
+
+close(TMP);
+
+unlink($tmpfile) or warn "unlinking $tmpfile: $!\n";
+
+exit(0);
+
+sub usage {
+	print STDERR <<__USAGE__;
+
+flat-file aggregator
+
+usage: $0 <opts> [file(s)]
+opts:	-h, --help		- print this message and exit
+	-k, --key <list>	- cells for aggregation levels & output (req'd)
+	-s, --sum <list>	- sum numeric values, skip non-numerics
+	-c, --count <list>	- count non-null
+	-d, --delim <D>		- specifies input data delimiter (0xfe)
+	-p, --preserve		- preserve header - don't include first line
+					in the aggregation
+
+all column indexes are 1-based.  if neither sum or count columns are specified,
+only key columns will be printed.
+
+__USAGE__
+}
+
+# escape some special regex characters
+sub resafe {
+	my $s = shift;
+	$s =~ s/\^/\\^/g;
+	$s =~ s/\$/\\\$/g;
+	$s =~ s/\|/\\\|/g;
+	return $s;
+}

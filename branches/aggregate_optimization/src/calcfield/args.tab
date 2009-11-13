@@ -1,0 +1,132 @@
+# this is a dummy file used only for generating documentation.
+
+# data relevant to the application as a whole
+%global = (
+	name => "calcfield",
+	description => "calculates the value for a new field based on existing fields",
+	version => "0.1",
+	trailing_opts => "[file...]",
+	usage_extra =>
+  "The expression specified in -e may contain indexes of fields, e.g.\\n\\n" .
+  "  -e '[1] + [2]'\\n\\n" .
+  "You may also use column labels in the expression:\\n\\n" .
+  "  -e '[Clicks] + [Impressions]'\\n\\n" .
+  "Use of the latter form implies that the header should be preserved.",
+	do_long_opts => 1,
+	preproc_extra => '',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+  { name => 'version',
+    shortopt => 'V',
+    longopt => 'Version',
+    type => 'flag',
+    description => 'show version information and exit.'
+  },
+	{
+	  name => 'verbose',
+	  shortopt => 'v',
+	  longopt => 'verbose',
+	  type => 'custom_flag',
+	  required => 0,
+	  parseopt_code => 'args->verbose++;',
+	  description => 'print verbose messages during execution'
+	},
+  {
+	  name => 'delim',
+	  shortopt => 'd',
+	  longopt => 'delim',
+	  type => 'var',
+	  required => 0,
+	  description => 'field separator string (default: 0xfe)'
+	},
+	{
+	  name        => 'preserve_header',
+	  shortopt    => 'p',
+	  longopt     => 'preserve-header',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'preserve the header line (just passes the first line through to the output file)'
+	},
+	{
+	  name        => 'replace',
+	  shortopt    => 'r',
+	  longopt     => 'replace',
+	  type        => 'flag',
+	  required    => 0,
+	  description => 'replace the value at the given index (instead of adding a new column)'
+	},
+	{
+	  name        => 'index',
+	  shortopt    => 'i',
+	  longopt     => 'insert',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'index for the new fields (1-based); if not given the new field will be appended'
+	},
+	{
+	  name        => 'label',
+	  shortopt    => 'B',
+	  longopt     => 'Before',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'place the new field before the field with the specified label'
+	},
+	{
+	  name        => 'label',
+	  shortopt    => 'A',
+	  longopt     => 'After',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'place the new field after the field with the specified label'
+	},
+	{
+	  name        => 'expr',
+	  shortopt    => 'e',
+	  longopt     => 'expression',
+	  type        => 'var',
+	  required    => 1,
+	  description => 'the expression to calculate (see below)'
+	},
+	{
+	  name        => 'fallback',
+	  shortopt    => 'b',
+	  longopt     => 'fallback',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'if the formula is not properly evaluated use this result as the fallback'
+	},
+	{
+	  name        => 'column_name',
+	  shortopt    => 'c',
+	  longopt     => 'new-label',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'the name of the column for the calculated field; implies -p'
+	},
+);
+

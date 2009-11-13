@@ -1,0 +1,120 @@
+# data relevant to the application as a whole
+%global = (
+  name          => 'hashjoin',
+  description   => 'joins dimensional fields from a file into a data stream',
+  version       => '0.1',
+  trailing_opts => '[file ...]',
+  usage_extra   => 'If using labels, the input data stream and the ' .
+                   'dimensional file must use the\\nsame field labels.',
+  do_long_opts  => 1,
+  preproc_extra => '',
+  language      => 'c',
+  copyright     => <<END_COPYRIGHT
+   Copyright 2009 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+# valid types are
+#  flag                - no argument
+#  var                 - required argument
+#  var_optional        - optional argument
+#  custom_flag         - no arg, and specify parseopt_code
+#  custom_var          - required arg, and specify parseopt_code
+#  custom_var_optional - optional arg, and specify parseopt_code
+@args = ( {
+    name        => 'help',
+    shortopt    => 'h',
+    longopt     => 'help',
+    type        => 'flag',
+    required    => 0,
+    main_code   => 'usage(argv[0]); exit(EXIT_HELP);',
+    description => 'print this message and exit'
+  },
+  {
+    name        => 'version',
+    shortopt    => 'V',
+    longopt     => 'version',
+    type        => 'flag',
+    required    => 0,
+    main_code   => 'version(); exit(1);',
+    description => 'print version info and exit'
+  },
+  {
+    name => 'delim',
+    shortopt => 'd',
+    longopt => 'delim',
+    type => 'var',
+    description => 'input data field separator string',
+  },
+  {
+    name => 'dimension_file',
+    shortopt => 'f',
+    longopt => 'dimension-file',
+    type => 'var',
+    description => 'the file containing dimensional data',
+  },
+  {
+    name => 'dimension_delim',
+    shortopt => 'D',
+    longopt => 'dimension-delim',
+    type => 'var',
+    description => 'dimension file field separator string (if different from ' .
+                   'the data stream delimiter)',
+  },
+  {
+    name => 'data_key_fields',
+    shortopt => 'k',
+    longopt => 'data-keys',
+    type => 'var',
+    description => 'a list of lookup key field indexes in the data stream',
+  },
+  {
+    name => 'dimension_key_fields',
+    shortopt => 'l',
+    longopt => 'lookup-keys',
+    type => 'var',
+    description => 'a list of lookup key field indexes in the dimension file',
+  },
+  {
+    name => 'key_labels',
+    shortopt => 'K',
+    longopt => 'key-labels',
+    type => 'var',
+    description => 'a list of lookup key field labels',
+  },
+  {
+    name => 'dimension_fields',
+    shortopt => 'j',
+    longopt => 'joined-fields',
+    type => 'var',
+    description => 'a list of dimensional field indexes to add to the data'
+  },
+  {
+    name => 'dimension_field_labels',
+    shortopt => 'J',
+    longopt => 'joined-labels',
+    type => 'var',
+    description => 'a list of dimensional field labels to add to the data'
+  },
+  {
+    name => 'dimension_labels',
+    shortopt => 'L',
+    longopt => 'label-dimensions',
+    type => 'var',
+    description => 'output labels for added fields when the data stream has ' .
+                   'a header and the dimension file does not.',
+  },
+);
