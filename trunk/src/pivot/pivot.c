@@ -296,29 +296,16 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
   n_pivot_keys = uniq_pivots.nelems;
 
   /* sort the collection of all pivot key strings */
-  {
-    llist_node_t *node;
-    llist_t *pivot_list;
-    pivot_array = xmalloc(sizeof(char *) * n_pivot_keys);
-    j = 0;
-    for (i = 0; i < uniq_pivots.arrsz; i++) {
-      pivot_list = uniq_pivots.arr[i];
-      if (pivot_list) {
-        for (node = pivot_list->head; node; node = node->next) {
-          pivot_array[j] = ((ht_elem_t *) node->data)->key;
-          j++;
-        }
-      }
-    }
-    qsort(pivot_array, n_pivot_keys, sizeof(char *),
-          (int (*)(const void *, const void *)) key_strcmp);
+  pivot_array = xmalloc(sizeof(char *) * n_pivot_keys);
+  ht_keys(&uniq_pivots, pivot_array);
+  qsort(pivot_array, n_pivot_keys, sizeof(char *),
+        (int (*)(const void *, const void *)) key_strcmp);
 #ifdef CRUSH_DEBUG
-    fprintf(stderr, "sorted pivot strings:\n");
-    for (i = 0; i < n_pivot_keys; i++) {
-      fprintf(stderr, "\t%s\n", pivot_array[i]);
-    }
-#endif
+  fprintf(stderr, "sorted pivot strings:\n");
+  for (i = 0; i < n_pivot_keys; i++) {
+    fprintf(stderr, "\t%s\n", pivot_array[i]);
   }
+#endif
 
   /* OUTPUT SECTION */
 
@@ -389,21 +376,7 @@ int pivot(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
 
     key_array = xmalloc(sizeof(char *) * n_key_strings);
-
-    j = 0;
-    for (i = 0; i < key_hash.arrsz; i++) {
-      key_list = key_hash.arr[i];
-      if (key_list) {
-        for (key_node = key_list->head; key_node; key_node = key_node->next) {
-#ifdef CRUSH_DEBUG
-          fprintf(stderr, "got key \"%s\" out of hash.\n",
-                  ((ht_elem_t *) key_node->data)->key);
-#endif
-          key_array[j] = ((ht_elem_t *) key_node->data)->key;
-          j++;
-        }
-      }
-    }
+    j = ht_keys(&key_hash, key_array);
 
     /* j now holds the number of distinct keys to be output */
     assert(j == n_key_strings);

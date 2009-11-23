@@ -23,7 +23,8 @@ libcrush_include_HEADERS = crush/bstree.h \
 libcrush_la_LDFLAGS = -version-info 1:0:0
 
 check_PROGRAMS = test/dbfr_test test/ffutils_test \
-							   test/mempool_test test/qsort_helper_test test/reutils_test
+							   test/mempool_test test/qsort_helper_test test/reutils_test \
+							   test/hashtbl_test
 
 TESTS = $(check_PROGRAMS)
 # test/datecmp_test
@@ -33,6 +34,7 @@ test_ffutils_test_LDADD = libcrush.la
 test_mempool_test_LDADD = libcrush.la
 test_qsort_helper_test_LDADD = libcrush.la
 test_reutils_test_LDADD = libcrush.la
+test_hashtbl_test_LDADD = libcrush.la
 
 EXTRA_DIST = $(check_PROGRAMS) config.h.in primes.dat
 

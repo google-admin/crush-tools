@@ -1,5 +1,5 @@
 /********************************
-   Copyright 2008 Google Inc.
+   Copyright 2008, 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->sums.count;
   } else if (conf->sums.count > 0) {
     decrement_values(conf->sums.indexes, conf->sums.count);
-    conf->sums.precisions = calloc(conf->sums.count, sizeof(int));
+    conf->sums.precisions = xcalloc(conf->sums.count, sizeof(int));
   }
 
   if (args->counts) {
@@ -82,7 +82,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->averages.count;
   } else if (conf->averages.count > 0) {
     decrement_values(conf->averages.indexes, conf->averages.count);
-    conf->averages.precisions = calloc(conf->averages.count, sizeof(int));
+    conf->averages.precisions = xcalloc(conf->averages.count, sizeof(int));
   }
 
   if (args->mins) {
@@ -97,7 +97,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     return conf->mins.count;
   } else if (conf->mins.count > 0) {
     decrement_values(conf->mins.indexes, conf->mins.count);
-    conf->mins.precisions = calloc(conf->mins.count, sizeof(int));
+    conf->mins.precisions = xcalloc(conf->mins.count, sizeof(int));
   }
 
   if (args->maxs) {
@@ -133,7 +133,8 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   int i, n;
 
   hashtbl_t aggregations;
-  llist_t *hash_keys;
+  struct aggregation *value;
+  char **key_array;
 
   size_t n_hash_elems;
 
@@ -263,7 +264,6 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   /* loop through all files */
   while (in != NULL) {
-    struct aggregation *value;
     char tmpbuf[AGG_TMP_BUF_SIZE];
     size_t tmplen;
     int in_hash;
@@ -386,47 +386,21 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     }
   }
 
-  /* print all of the output */
-  if (args->nosort) {
-    /* it will be a little faster if the user indicates that
-       the output sort order doesn't matter */
-    for (i = 0; i < aggregations.arrsz; i++) {
-      hash_keys = aggregations.arr[i];
-      if (hash_keys != NULL) {
-        ll_call_for_each(hash_keys, ht_print_keys_and_agg_vals);
-      }
-    }
-  } else {
-    llist_node_t *node;
-    struct aggregation *val;
-    char **key_array;
-    int j = 0;
-    key_array = xmalloc(sizeof(char *) * n_hash_elems);
+  /* Print all of the output. */
+  key_array = xmalloc(sizeof(char *) * n_hash_elems);
+  ht_keys(&aggregations, key_array);
 
-    /* put all the keys into an array */
-    for (i = 0; i < aggregations.arrsz; i++) {
-      hash_keys = aggregations.arr[i];
-      if (hash_keys != NULL) {
-        for (node = hash_keys->head; node; node = node->next) {
-          key_array[j] = ((ht_elem_t *) node->data)->key;
-          j++;
-        }
-      }
-    }
-
-    /* sort the keys */
+  if (! args->nosort) {
     qsort(key_array, n_hash_elems, sizeof(char *),
           (int (*)(const void *, const void *)) key_strcmp);
-    /* (int (*)(const void *, const void *))strcmp ); */
-
-    /* print everything out */
-    for (i = 0; i < n_hash_elems; i++) {
-      val = (struct aggregation *) ht_get(&aggregations, key_array[i]);
-      print_keys_and_agg_vals(key_array[i], val);
-    }
-
-    free(key_array);
   }
+
+  for (i = 0; i < n_hash_elems; i++) {
+    value = (struct aggregation *) ht_get(&aggregations, key_array[i]);
+    print_keys_and_agg_vals(key_array[i], value);
+  }
+
+  free(key_array);
 
   ht_destroy(&aggregations);
 
@@ -503,12 +477,12 @@ int print_keys_and_agg_vals(char *key, struct aggregation *val) {
   return 0;
 }
 
-int ht_print_keys_and_agg_vals(void *htelem) {
+void ht_print_keys_and_agg_vals(void *htelem) {
   char *key;
   struct aggregation *val;
   key = ((ht_elem_t *) htelem)->key;
   val = ((ht_elem_t *) htelem)->data;
-  return print_keys_and_agg_vals(key, val);
+  print_keys_and_agg_vals(key, val);
 }
 
 void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,

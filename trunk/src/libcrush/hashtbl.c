@@ -1,5 +1,5 @@
 /*****************************************
-   Copyright 2008 Google Inc.
+   Copyright 2008, 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,13 +14,29 @@
    limitations under the License.
  *****************************************/
 
+#include <stdio.h>
 #include <crush/general.h>
 #include <crush/hashtbl.h>
+
+
+static int ht_key_cmp(const void *a, const void *b) {
+  return strcmp(((ht_elem_t *) a)->key,
+                ((ht_elem_t *) b)->key);
+}
+
+static void ht_free_tree_data(void (*free_fn) (void *), bst_node_t *node) {
+  if (! node)
+    return;
+  ht_free_tree_data(free_fn, node->r);
+  ht_free_tree_data(free_fn, node->l);
+  free_fn(((ht_elem_t *) node->data)->data);
+}
 
 /* initialize a table. */
 int ht_init(hashtbl_t * tbl,
             size_t sz,
-            unsigned int (*hash) (unsigned char *), void (*memfree) (void *)) {
+            unsigned int (*hash) (unsigned char *),
+            void (*memfree) (void *)) {
 
   /* some things are required */
   if (tbl == NULL || sz == 0)
@@ -28,9 +44,8 @@ int ht_init(hashtbl_t * tbl,
 
   sz = ht_next_prime(sz);
 
-  /* allocate memory for the table */
-  tbl->arr = xmalloc(sizeof(llist_t *) * sz);
-  memset(tbl->arr, 0, sizeof(llist_t *) * sz);
+  tbl->arr = xmalloc(sizeof(bstree_t *) * sz);
+  memset(tbl->arr, 0, sizeof(bstree_t *) * sz);
 
   tbl->ht_elem_pool = mempool_create(sizeof(ht_elem_t) * 128);
   if (tbl->ht_elem_pool == NULL)
@@ -56,20 +71,15 @@ int ht_init(hashtbl_t * tbl,
 /* destroy a table */
 void ht_destroy(hashtbl_t * tbl) {
   int i;
-  llist_node_t *listnode;
+  bst_node_t *treenode;
 
-  /* loop through the array of linked lists */
+  /* Loop through the array of trees, freeing data if necessary, then
+   * deallocating the tree. */
   for (i = 0; i < tbl->arrsz; i++) {
-    /* if there's anything in this list, loop through its
-       members */
-    if (tbl->arr[i] && tbl->arr[i]->nnodes) {
-      /* free the data if appropriate */
-      if (tbl->free) {
-        for (listnode = tbl->arr[i]->head; listnode; listnode = listnode->next)
-          tbl->free(((ht_elem_t *) listnode->data)->data);
-      }
-      /* deallocate the list & its elements */
-      ll_destroy(tbl->arr[i]);
+    if (tbl->arr[i]) {
+      if (tbl->free)
+        ht_free_tree_data(tbl->free, tbl->arr[i]->root);
+      bst_destroy(tbl->arr[i]);
     }
     free(tbl->arr[i]);
   }
@@ -79,49 +89,47 @@ void ht_destroy(hashtbl_t * tbl) {
   memset(tbl, 0, sizeof(hashtbl_t));
 }
 
-/* put a new key/value pair into a table */
+/* Put a new key/value pair into a table. */
 int ht_put(hashtbl_t * tbl, char *key, void *data) {
   unsigned long h;
-  llist_node_t *listnode;
-  ht_elem_t *elem;
+  bst_node_t *treenode;
+  ht_elem_t *elem, key_elem;
 
-  if ((elem = mempool_alloc(tbl->ht_elem_pool, sizeof(ht_elem_t))) == NULL)
+  key_elem.key = key;
+  elem = mempool_alloc(tbl->ht_elem_pool, sizeof(ht_elem_t));
+  if (! elem)
     return -1;
-  if ((elem->key = mempool_alloc(tbl->key_pool,
-                                 sizeof(char) * strlen(key) + 1)) == NULL) {
-    free(elem);
+  elem->key = mempool_alloc(tbl->key_pool,
+                            sizeof(char) * strlen(key) + 1);
+  if (! elem->key) {
+    /* elem leaks here, but we cannot free it from the mempool. */
     return -1;
   }
   strcpy(elem->key, key);
   elem->data = data;
 
-  /** @todo get rid of the modulo for better performance (if it matters) */
   h = tbl->hash(elem->key) % tbl->arrsz;
 
   if (!tbl->arr[h]) {
-    tbl->arr[h] = xmalloc(sizeof(llist_t));
-    /* non free() fn for the list, since the list elems are in a mempool. */
-    ll_list_init(tbl->arr[h], NULL, NULL);
-    ll_add_elem(tbl->arr[h], elem, end);
+    tbl->arr[h] = xmalloc(sizeof(bstree_t));
+    /* No free() fn for the bst, since its elements are in a mempool. */
+    bst_init(tbl->arr[h], ht_key_cmp, NULL);
+    bst_insert(tbl->arr[h], elem);
     tbl->nelems++;
     return 0;
   }
 
-  /* look for a matching key already in the hash */
-  for (listnode = tbl->arr[h]->head; listnode; listnode = listnode->next)
-    if (strcmp(((ht_elem_t *) listnode->data)->key, key) == 0)
-      break;
+  treenode = bst_find(tbl->arr[h], &key_elem);
 
-  /* if no match found, insert the new one */
-  if (!listnode) {
-    ll_add_elem(tbl->arr[h], elem, end);
+  /* If no match is found, insert the new element and increase the counter.
+   * Otherwise, replace the old data with the new. */
+  if (!treenode) {
+    bst_insert(tbl->arr[h], elem);
     tbl->nelems++;
   } else {
-    /* match found: replace the old data with the new */
     if (tbl->free)
-      tbl->free(((ht_elem_t *) listnode->data)->data);
-    listnode->data = elem;
-    /* no size increment here */
+      tbl->free(((ht_elem_t *) treenode->data)->data);
+    treenode->data = elem;
   }
   return 0;
 }
@@ -129,84 +137,97 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
 /* retrieve a value from a table */
 void *ht_get(hashtbl_t * tbl, char *key) {
   unsigned long h;
-  llist_t *list;
-  llist_node_t *listnode;
+  bstree_t *tree;
+  bst_node_t *treenode;
+  ht_elem_t key_elem;
 
   h = tbl->hash(key) % tbl->arrsz;
-  list = tbl->arr[h];
+  tree = tbl->arr[h];
 
-  if (!list)                    /* invalid key - nothing in this slot yet */
+  if (! tree)  /* invalid key - nothing in this slot yet */
     return NULL;
-
-  /* find the node in the list with a matching key */
-  for (listnode = list->head; listnode; listnode = listnode->next)
-    if (strcmp(((ht_elem_t *) listnode->data)->key, key) == 0)
-      break;
-  if (!listnode)
+  key_elem.key = key;
+  treenode = bst_find(tree, &key_elem);
+  if (! treenode)
     return NULL;
-  return ((ht_elem_t *) listnode->data)->data;
+  return ((ht_elem_t *) treenode->data)->data;
 }
 
 /* remove a key/value pair from a table */
 void ht_delete(hashtbl_t * tbl, char *key) {
   unsigned long h;
-  llist_t *list;
-  llist_node_t *listnode;
+  bstree_t *tree;
+  bst_node_t *treenode;
 
   h = tbl->hash(key) % tbl->arrsz;
-  list = tbl->arr[h];
+  tree = tbl->arr[h];
 
-  if (!list)  /* unknown key - nothing in this slot yet */
+  if (! tree)  /* A NULL slot means the key is unknown. */
     return;
 
-  /* find the node in the list with a matching key */
-  for (listnode = list->head; listnode; listnode = listnode->next)
-    if (strcmp(((ht_elem_t *) listnode->data)->key, key) == 0)
-      break;
-
-  if (!listnode)  /* ht key not found - do nothing */
-    return;
-
-  /* free the value data inside the node */
-  tbl->free(((ht_elem_t *) listnode->data)->data);
-  /* remove the node itself from the list */
-  ll_rm_elem(list, listnode);
-  /* indicate that the hashtable is smaller now */
-  tbl->nelems--;
-}
-
-/* execute some function for all of the elements in a table */
-void ht_call_for_each(hashtbl_t * tbl, int (*func) (void *)) {
-  int i;
-  llist_node_t *node;
-  for (i = 0; i < tbl->arrsz; i++) {
-    if (tbl->arr[i] && tbl->arr[i]->nnodes > 0)
-      for (node = tbl->arr[i]->head; node; node = node->next)
-        func(((ht_elem_t *) node->data)->data);
+  treenode = bst_find(tree, key);
+  if (treenode) {
+    if (tbl->free)
+      tbl->free(((ht_elem_t *) treenode->data)->data);
+    tbl->nelems--;
+    bst_delete(tree, key);
   }
 }
 
-/* print some population statistics for a table - useful for judging how well
+static void ht_keys_bst_traverse(bst_node_t *node,
+                                 char **array,
+                                 int *index) {
+  if (! node)
+    return;
+  array[*index] = ((ht_elem_t *) node->data)->key;
+  (*index)++;
+  ht_keys_bst_traverse(node->l, array, index);
+  ht_keys_bst_traverse(node->r, array, index);
+}
+
+int ht_keys(hashtbl_t *tbl, char **array) {
+  bstree_t *tree;
+  int i, j = 0;
+  for (i = 0; i < tbl->arrsz; i++) {
+    if (tbl->arr[i])
+      ht_keys_bst_traverse(tbl->arr[i]->root, array, &j);
+  }
+  return j;
+}
+
+static void ht_call_bst_traverse(bst_node_t *node, void (*func) (void *)) {
+  if (! node)
+    return;
+  func(((ht_elem_t *)node->data)->data);
+  ht_call_bst_traverse(node->l, func);
+  ht_call_bst_traverse(node->r, func);
+}
+
+/* Execute some function for all of the elements in a table. */
+void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *)) {
+  int i;
+  for (i = 0; i < tbl->arrsz; i++) {
+    if (tbl->arr[i])
+      ht_call_bst_traverse(tbl->arr[i]->root, func);
+  }
+}
+
+/* Print some population statistics for a table - useful for judging how well
    a hashing algorithm is performing.
  */
 void ht_dump_stats(hashtbl_t * tbl) {
-  size_t empty = 0;
-  int avg_len = 0, maxlen = 0;
+  size_t uninitialized = 0;
   int i;
   for (i = 0; i < tbl->arrsz; i++) {
-    if ((!tbl->arr[i]) || tbl->arr[i]->nnodes == 0)
-      empty++;
-    else {
-      avg_len += tbl->arr[i]->nnodes;
-      if (tbl->arr[i]->nnodes > maxlen)
-        maxlen = tbl->arr[i]->nnodes;
+    if ((!tbl->arr[i])) {
+      uninitialized++;
     }
   }
-  if (tbl->arrsz != empty)
-    avg_len = avg_len / (tbl->arrsz - empty);
+
+  /** @todo Provide average bucket-fill metric here. */
   fprintf(stderr,
-          "size:\t%zd\nempty:\t%zd\naverage length (nonempty only): %d\nmax length:\t%d\ntotal elems:\t%zd\n",
-          tbl->arrsz, empty, avg_len, maxlen, tbl->nelems);
+          "size:\t%zd\nuninitialized buckets:\t%zd\nelements:\t%d",
+          tbl->arrsz, uninitialized, tbl->nelems);
 }
 
 

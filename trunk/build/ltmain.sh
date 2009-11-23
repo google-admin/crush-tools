@@ -43,8 +43,8 @@ EXIT_FAILURE=1
 
 PROGRAM=ltmain.sh
 PACKAGE=libtool
-VERSION=1.5.27a
-TIMESTAMP=" (1.1220.2.498 2008/02/27 20:30:24)"
+VERSION="1.5.26 Debian 1.5.26-1ubuntu1"
+TIMESTAMP=" (1.1220.2.493 2008/02/01 16:58:18)"
 
 # Be Bourne compatible (taken from Autoconf:_AS_BOURNE_COMPATIBLE).
 if test -n "${ZSH_VERSION+set}" && (emulate sh) >/dev/null 2>&1; then
@@ -2135,7 +2135,10 @@ EOF
 	case $pass in
 	dlopen) libs="$dlfiles" ;;
 	dlpreopen) libs="$dlprefiles" ;;
-	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
+	link)
+	  libs="$deplibs %DEPLIBS%"
+	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
+	  ;;
 	esac
       fi
       if test "$pass" = dlopen; then
@@ -3268,6 +3271,11 @@ EOF
 	    age="$number_minor"
 	    revision="$number_minor"
 	    lt_irix_increment=no
+	    ;;
+	  *)
+	    $echo "$modename: unknown library version type \`$version_type'" 1>&2
+	    $echo "Fatal configuration error.  See the $PACKAGE docs for more information." 1>&2
+	    exit $EXIT_FAILURE
 	    ;;
 	  esac
 	  ;;

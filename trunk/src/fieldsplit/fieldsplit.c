@@ -78,7 +78,7 @@ void store_mapping(const struct cmdargs const *args,
   * @arg data a pointer to an fp_wrapper.
   * @return 0.
   */
-int close_files(void *data);
+void close_files(void *data);
 
 /** @brief a wrapper around a file pointer to go inside the hashtable.
   * This allows us to keep an entry in the hashtable for files which have been
@@ -202,16 +202,16 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
 }
 
 
-int close_files(void *data) {
+void close_files(void *data) {
   struct fp_wrapper *ht_entry;
   if (! data)
-    return 0;
+    return;
   ht_entry = (struct fp_wrapper *) data;
   if (ht_entry->fp) {
     fclose(ht_entry->fp);
     ht_entry->fp = NULL;
   }
-  return 0;
+  return;
 }
 
 
