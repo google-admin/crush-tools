@@ -1,6 +1,0 @@
-
-sub crush_version {
-  print STDERR "CRUSH tools release @PACKAGE_VERSION@ compiled at @BUILD_DATE_TIME@\n";
-}
-
-1;
