@@ -1,5 +1,5 @@
 /*****************************************
-   Copyright 2008 Google Inc.
+   Copyright 2008, 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ void ht_destroy(hashtbl_t * tbl) {
   memset(tbl, 0, sizeof(hashtbl_t));
 }
 
-/* put a new key/value pair into a table */
+/* Put a new key/value pair into a table. */
 int ht_put(hashtbl_t * tbl, char *key, void *data) {
   unsigned long h;
   bst_node_t *treenode;
@@ -102,18 +102,17 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   elem->key = mempool_alloc(tbl->key_pool,
                             sizeof(char) * strlen(key) + 1);
   if (! elem->key) {
-    /* elem leaks here, but we cannot free data in a mempool. */
+    /* elem leaks here, but we cannot free it from the mempool. */
     return -1;
   }
   strcpy(elem->key, key);
   elem->data = data;
 
-  /** @todo get rid of the modulo for better performance (if it matters) */
   h = tbl->hash(elem->key) % tbl->arrsz;
 
   if (!tbl->arr[h]) {
     tbl->arr[h] = xmalloc(sizeof(bstree_t));
-    /* non free() fn for the list, since the list elems are in a mempool. */
+    /* No free() fn for the bst, since its elements are in a mempool. */
     bst_init(tbl->arr[h], ht_key_cmp, NULL);
     bst_insert(tbl->arr[h], elem);
     tbl->nelems++;
@@ -122,7 +121,7 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
 
   treenode = bst_find(tbl->arr[h], &key_elem);
 
-  /* If no match found, insert the new element and increase the counter.
+  /* If no match is found, insert the new element and increase the counter.
    * Otherwise, replace the old data with the new. */
   if (!treenode) {
     bst_insert(tbl->arr[h], elem);
@@ -145,11 +144,11 @@ void *ht_get(hashtbl_t * tbl, char *key) {
   h = tbl->hash(key) % tbl->arrsz;
   tree = tbl->arr[h];
 
-  if (!tree)  /* invalid key - nothing in this slot yet */
+  if (! tree)  /* invalid key - nothing in this slot yet */
     return NULL;
   key_elem.key = key;
   treenode = bst_find(tree, &key_elem);
-  if (!treenode)
+  if (! treenode)
     return NULL;
   return ((ht_elem_t *) treenode->data)->data;
 }
@@ -163,7 +162,7 @@ void ht_delete(hashtbl_t * tbl, char *key) {
   h = tbl->hash(key) % tbl->arrsz;
   tree = tbl->arr[h];
 
-  if (!tree)  /* unknown key - nothing in this slot yet */
+  if (! tree)  /* A NULL slot means the key is unknown. */
     return;
 
   treenode = bst_find(tree, key);
@@ -204,7 +203,7 @@ static void ht_call_bst_traverse(bst_node_t *node, void (*func) (void *)) {
   ht_call_bst_traverse(node->r, func);
 }
 
-/* execute some function for all of the elements in a table */
+/* Execute some function for all of the elements in a table. */
 void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *)) {
   int i;
   for (i = 0; i < tbl->arrsz; i++) {
@@ -213,7 +212,7 @@ void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *)) {
   }
 }
 
-/* print some population statistics for a table - useful for judging how well
+/* Print some population statistics for a table - useful for judging how well
    a hashing algorithm is performing.
  */
 void ht_dump_stats(hashtbl_t * tbl) {

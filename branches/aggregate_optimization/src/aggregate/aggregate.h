@@ -1,5 +1,5 @@
 /*****************************************
-   Copyright 2008 Google Inc.
+   Copyright 2008, 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -73,10 +73,10 @@ int float_str_precision(char *d);
 
 
 /** @brief allocates and initializes an aggregation struct
-  * 
+  *
   * @param nsum number of fields to sum
   * @param ncount number of fields to count
-  * 
+  *
   * @return a shiny new, zeroed-out structure
   */
 struct aggregation *alloc_agg(int nsum, int ncount, int naverage, int nmin,

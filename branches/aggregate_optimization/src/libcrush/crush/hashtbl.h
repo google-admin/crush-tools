@@ -1,5 +1,5 @@
 /*****************************************
-   Copyright 2008 Google Inc.
+   Copyright 2008, 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
   */
 
 #include <stdlib.h>
-#include <string.h>             /* strcmp(), strlen() */
+#include <string.h>  /* strcmp(), strlen() */
 #include <crush/bstree.h>
 #include <crush/hashfuncs.h>
 #include <crush/mempool.h>
@@ -57,9 +57,9 @@ typedef struct _ht_elem {
 
 /** @brief initializes a new hashtable.  the memfree function should be
   * specified iff the payload of a node will need to be deallocated when
-  * the hashtable is destroyed.  if a NULL hash function is specified 
+  * the hashtable is destroyed.  if a NULL hash function is specified
   * the BKDRHash function will be used.
-  * 
+  *
   * @param tbl the table to be initialized.
   * @param sz size to make the table.
   * @param hash function for hashing data when inserting or retrieving.
@@ -73,34 +73,34 @@ int ht_init(hashtbl_t * tbl, size_t sz, unsigned int (*hash) (unsigned char *),
 
 
 /** @brief deallocates memory for all elements and destroys a hashtable.
-  * 
+  *
   * @param tbl the table to be deallocated.
   */
 void ht_destroy(hashtbl_t * tbl);
 
 /** @brief adds an entry to the hashtable.  if an entry with the specified key
   * already exists, the value is overwritten.
-  * 
+  *
   * @param tbl hashtable in which the entry should be put
   * @param key string to use as the lookup key
   * @param data value to be stored.
-  * 
+  *
   * @return -1 on memory or 0 on success
   */
 int ht_put(hashtbl_t * tbl, char *key, void *data);
 
 /** @brief retrieves an entry's data from a hashtable.
-  * 
+  *
   * @param tbl table in which the data is stored
   * @param key string lookup key
-  * 
+  *
   * @return NULL if an element with the specified key does not exist, else
   * the data in the entry.
   */
 void *ht_get(hashtbl_t * tbl, char *key);
 
 /** @brief removes an entry from a hashtable
-  * 
+  *
   * @param tbl table in which the data is stored
   * @param key string lookup key
   */
@@ -116,7 +116,7 @@ void ht_delete(hashtbl_t * tbl, char *key);
 int ht_keys(hashtbl_t *tbl, char **array);
 
 /** @brief executes a function for the data in each hashtable entry
-  * 
+  *
   * @param tbl table to be traversed
   * @param func function to call which takes the entry's data as its
   * only argument.
@@ -130,7 +130,7 @@ void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *));
   * the number of empty cells, the average length of non-empty cells,
   * the maximum chain length, and the total number of elements in the
   * hashtable.
-  * 
+  *
   * @param tbl a hashtable
   */
 void ht_dump_stats(hashtbl_t * tbl);
