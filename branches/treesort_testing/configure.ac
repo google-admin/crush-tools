@@ -109,6 +109,7 @@ src/reorder/Makefile
 src/subtotal/Makefile
 src/tochar/Makefile
 src/translate_field/Makefile
+src/treesort/Makefile
 src/truncfield/Makefile
 ])
 

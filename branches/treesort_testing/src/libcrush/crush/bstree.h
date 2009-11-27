@@ -28,7 +28,8 @@ typedef enum {
   preorder, /**< @brief traverse the tree preorder */
   inorder, /**< @brief traverse the tree inorder */
   postorder, /**< @brief traverse the tree postorder */
-  breadthfirst /**< @brief traverse the tree breadth-first */
+  breadthfirst, /**< @brief traverse the tree breadth-first */
+  reversed /**< @brief traverse the tree in reverse order */
 } traversal_order_t;
 
 /** @brief indicates the balance status of a binary tree node.

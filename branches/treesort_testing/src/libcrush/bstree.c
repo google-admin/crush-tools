@@ -46,6 +46,8 @@ void bstn_call_preorder(bst_node_t * node, void (*func) (void *));
 
 void bstn_call_inorder(bst_node_t * node, void (*func) (void *));
 
+void bstn_call_reversed(bst_node_t * node, void (*func) (void *));
+
 void bstn_call_postorder(bst_node_t * node, void (*func) (void *));
 
 void bstn_call_breadthfirst(bst_node_t * node, void (*func) (void *));
@@ -394,6 +396,9 @@ void bstn_call_for_each(bst_node_t * node, void (*func) (void *),
     case breadthfirst:
       bstn_call_breadthfirst(node, func);
       break;
+    case reversed:
+      bstn_call_reversed(node, func);
+      break;
     default:  /* This shouldn't happen. */
       return;
   }
@@ -415,6 +420,14 @@ void bstn_call_inorder(bst_node_t * node, void (*func) (void *)) {
   bstn_call_inorder(node->l, func);
   func(node->data);
   bstn_call_inorder(node->r, func);
+}
+
+void bstn_call_reversed(bst_node_t * node, void (*func) (void *)) {
+  if (! node)
+    return;
+  bstn_call_reversed(node->r, func);
+  func(node->data);
+  bstn_call_reversed(node->l, func);
 }
 
 void bstn_call_postorder(bst_node_t * node, void (*func) (void *)) {
