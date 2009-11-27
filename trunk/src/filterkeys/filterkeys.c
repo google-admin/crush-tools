@@ -19,7 +19,6 @@
 #include <fcntl.h>
 #include <crush/general.h>
 #include <crush/ffutils.h>
-#include <crush/bstree.h>
 #include <crush/dbfr.h>
 #include "filterkeys_main.h"
 #include "filterkeys.h"
@@ -113,7 +112,7 @@ static int load_filter(struct fkeys_conf *conf, dbfr_t *filter_reader) {
   char *t_keybuf;
   int i, acum_len;
 
-  bst_init(&conf->ftree, (int (*)(const void*, const void*))strcmp, free);
+  ht_init(&conf->filter, 1024, NULL, NULL);
   while (dbfr_getline(filter_reader) > 0) {
 
     t_keybuf = (char *) xmalloc(filter_reader->current_line_sz);
@@ -123,7 +122,8 @@ static int load_filter(struct fkeys_conf *conf, dbfr_t *filter_reader) {
                                  filter_reader->current_line_sz - acum_len,
                                  conf->aindexes[i], delim);
     if (acum_len > 0)
-      bst_insert(&conf->ftree, t_keybuf);
+      ht_put(&conf->filter, t_keybuf, (void*)0xDEADBEEF);
+      //bst_insert(&conf->ftree, t_keybuf);
   }
   conf->key_buffer_sz = filter_reader->current_line_sz;
 
@@ -208,7 +208,8 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
       }
 
       if (acum_len > 0) {
-        int found = (bst_find(&fk_conf.ftree, t_keybuf) ? 1 : 0);
+        int found = (ht_get(&fk_conf.filter, t_keybuf) ==
+                     (void*) 0xDEADBEEF ? 1 : 0);
         if (found ^ args->invert)
           fputs(stream_reader->current_line, outfile);
       }
@@ -231,7 +232,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (t_keybuf)
     free(t_keybuf);
 
-  bst_destroy(&fk_conf.ftree);
+  ht_destroy(&fk_conf.filter);
 
   return 0;
 }

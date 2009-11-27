@@ -3,7 +3,7 @@
 
 #define MAX_FIELD_LEN 255
 
-#include <crush/bstree.h>
+#include <crush/hashtbl.h>
 
 struct fkeys_conf {
   ssize_t key_count;
@@ -11,7 +11,7 @@ struct fkeys_conf {
   size_t key_buffer_sz;
   int *aindexes, *bindexes;
   
-  bstree_t ftree;
+  hashtbl_t filter;
 };
 
 #endif // FILTERKEYS_H
