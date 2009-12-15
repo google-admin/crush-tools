@@ -10,7 +10,7 @@
 	do_long_opts => 1,
 	preproc_extra => '#include <crush/crush_version.h>',
 	copyright => <<END_COPYRIGHT
-   Copyright 2008 Google Inc.
+   Copyright 2009 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ END_COPYRIGHT
 	  longopt => 'keys',
 	  type => 'var',
 	  required => 0,
-	  description => 'cells for aggregation levels & output'
+	  description => 'keys used for sorting, unique\'ing and merging'
 	},
 	{
 	  name => 'key_labels',
@@ -59,7 +59,7 @@ END_COPYRIGHT
 	  longopt => 'key-labels',
 	  type => 'var',
 	  required => 0,
-	  description => 'labels of fields for aggregation levels & output'
+	  description => 'labels used for sorting, unique\'ing and merging'
 	},
 	{
 	  name => 'delim',

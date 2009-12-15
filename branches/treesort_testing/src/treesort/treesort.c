@@ -19,9 +19,12 @@
 #include "treesort_main.h"
 #include "treesort.h"
 
+#define INITIAL_BUF_SZ 512
+
 char *delim;
 struct tsort_conf conf;
-static char keysbuf[8192];
+static char *keysbuf;
+static size_t keysbuf_sz = 0;
 
 int configure_treesort(struct tsort_conf *conf,
                        struct cmdargs *args, const char *header) {
@@ -29,7 +32,9 @@ int configure_treesort(struct tsort_conf *conf,
   char *fval;
 
   /* parse traversal order */
-  sz = fields_in_line((args->keys ? args->keys : args->key_labels), ",");
+  if (!(sz = fields_in_line((args->keys ? args->keys : args->key_labels), ",")))
+    return 1;
+
   conf->order = xmalloc(sizeof(traversal_order_t) * sz);
   for (j = 0; j < sz; j++) {
     fval =
@@ -66,10 +71,6 @@ int configure_treesort(struct tsort_conf *conf,
     if (i == conf->keys_ct)
       conf->rest[k++] = j;
   }
-
-  /* debug keys */
-  //for (i=0; i<conf->keys_ct; i++)
-  //  fprintf(stderr, "key %d: %d - %d\n", i, conf->keys[i], conf->order[i]);
 
   return 0;
 }
@@ -124,19 +125,24 @@ int treesort(struct cmdargs *args, int argc, char *argv[], int optind) {
   stree_t *nextree = NULL, bogus_cmp;
   bst_node_t *ret;
 
-  memset(keysbuf, 0, sizeof(keysbuf));
+  keysbuf_sz = INITIAL_BUF_SZ;
+  keysbuf = xmalloc(keysbuf_sz * sizeof(char));
+  memset(keysbuf, 0, keysbuf_sz);
 
   if (args->preserve) {
     if (dbfr_getline(in_reader) > 0) {
+      if (in_reader->current_line_len > keysbuf_sz)
+        keysbuf = xrealloc(keysbuf, (keysbuf_sz *= 2));
+
       for (i = 0; i < conf.keys_ct; i++) {
         keylen += get_line_field(keysbuf + keylen, in_reader->current_line,
-            sizeof(keysbuf), conf.keys[i], delim);
+            keysbuf_sz, conf.keys[i], delim);
         strncat(keysbuf + keylen, delim, dlen);
         keylen += dlen;
       }
       for (i = 0; i < conf.rest_ct; i++) {
         keylen += get_line_field(keysbuf + keylen, in_reader->current_line,
-            sizeof(keysbuf), conf.rest[i], delim);
+            keysbuf_sz, conf.rest[i], delim);
         strncat(keysbuf + keylen, delim, dlen);
         keylen += dlen;
       }
@@ -147,7 +153,7 @@ int treesort(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
 
   keylen = 0;
-  memset(keysbuf, 0, sizeof(keysbuf));
+  memset(keysbuf, 0, keysbuf_sz);
 
   /* loop through all files */
   while (in != NULL) {
@@ -155,6 +161,10 @@ int treesort(struct cmdargs *args, int argc, char *argv[], int optind) {
     /* loop through each line of the file */
     while (dbfr_getline(in_reader) > 0) {
       chomp(in_reader->current_line);
+
+      /* resize the buffer if necesary, keep the longest line size */
+      if (in_reader->current_line_len > keysbuf_sz)
+        keysbuf = xrealloc(keysbuf, (keysbuf_sz *= 2));
 
       /* delimit line keys */
       keys_idx[0] = in_reader->current_line;
