@@ -23,6 +23,10 @@
 #include "filterkeys_main.h"
 #include "filterkeys.h"
 
+#ifndef HAVE_OPEN64
+#define open64 open
+#endif
+
 char default_delim[2] = { 0xfe, 0x00 };
 char *delim;
 struct fkeys_conf fk_conf;
