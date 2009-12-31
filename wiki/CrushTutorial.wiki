@@ -128,7 +128,7 @@ aal2d access_log |
 aal2d access_log |
   convdate -F Time -i "%d/%b/%Y:%H:%M:%S %z" -o "%Y-%m-%d" |
   aggregate -K Time,Auth-User -C IP
-  pivot -f Time -P Auth-User -A IP
+  pivot -F Time -P Auth-User -A IP
 }}}
 
 Now we get an output of
