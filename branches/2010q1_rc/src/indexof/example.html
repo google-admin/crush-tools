@@ -1,0 +1,15 @@
+
+# this example comes straight out of .bash_functions
+
+# wraps a call to indexof with a little bit of error checing/reporting
+function get_header_index {
+	local label="$1"
+	local header="$2"
+	local delim="$3"
+	local index=`<b>indexof</b> -l "$label" -s "$header" -d "$delim"`
+	if [ $index -eq 0 ]; then
+		echo $label NOT FOUND &lt;&2
+	fi
+	echo $index
+}
+
