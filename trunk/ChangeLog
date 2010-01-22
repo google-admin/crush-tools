@@ -1,3 +1,36 @@
+Changes in the "2010-01" release (2009-01-13 thru 2010-01-10):
+
+* aggregate
+  * Add support for min/max output.
+	* Bug fix: avoid seg-fault when labels are not found.
+	* Performance enhancements.
+
+* fieldsplit
+  * Bug fix: When running with -b, pad bucket numbers in output filenames
+	  with zeros instead of spaces.
+	* Rewritten in C for improved performance.
+
+* filterkeys
+  * New: a tool for filtering data streams using an external list of field
+	  values to either keep or discard.
+
+* mergekeys
+  * Remove in-order requirement for auto-detecting keys.
+
+* pivot
+  * Bug fix: Do not reference invalid dbfr_t in pivot's output phase.
+
+* Global
+  * Distribution filename changed from "crush_<release>.tar.gz" to
+	  "crush-tools_<release>.tar.gz".
+  * Better error-checking for memory allocation.
+	* General code cleanup.
+
+* translate_field
+  * Add missing documentation for the -F option.
+	* 
+
+
 Changes in the "2009-01" release (2008-10-05 thru 2009-01-13):
 
 * Field-label support: anywhere that you could use a field index as a command-
