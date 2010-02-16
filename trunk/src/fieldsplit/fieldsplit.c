@@ -144,8 +144,10 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
     field_index = atoi(args->field) - 1;
   }
   if (args->buckets) {
+    char blen[32];
     buckets = atoi(args->buckets);
-    bucket_len = strlen(args->buckets);
+    snprintf(blen, sizeof(blen), "%d", buckets-1);
+    bucket_len = strlen(blen);
   }
 
   field = xmalloc(128);
