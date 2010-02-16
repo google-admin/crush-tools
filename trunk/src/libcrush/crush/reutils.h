@@ -81,7 +81,7 @@ int main (int argc, char *argv[]) {
 #ifndef REUTILS_H
 #define REUTILS_H
 
-#ifdef HAVE_PCRE_H
+#if HAVE_PCRE_H && HAVE_LIBPCRE
 #include <pcre.h>
 
 /** @brief describes a part of a regex substitution.
@@ -148,5 +148,5 @@ char * crush_re_substitute(pcre *re, pcre_extra *re_extra,
                            char **target, size_t *target_sz,
                            int subst_globally);
 
-#endif /* HAVE_PCRE_H */
+#endif /* HAVE_PCRE_H && HAVE_LIBPCRE */
 #endif /* REUTILS_H */

@@ -21,7 +21,7 @@
 #include <crush/general.h>
 #include <crush/reutils.h>
 
-#ifdef HAVE_LIBPCRE
+#if HAVE_LIBPCRE && HAVE_PCRE_H
 int crush_re_make_flags(const char const *modifiers, int *global) {
   int flags = 0;
   int i, len;
@@ -253,4 +253,4 @@ char * crush_re_substitute(pcre *re, pcre_extra *re_extra,
   return *target;
 }
 
-#endif /* HAVE_LIBPCRE */
+#endif /* HAVE_LIBPCRE && HAVE_PCRE_H */
