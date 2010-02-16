@@ -27,8 +27,8 @@ Changes in the "2010-01" release (2009-01-13 thru 2010-01-10):
 	* General code cleanup.
 
 * translate_field
+	* Add a -k option for keeping the header row intact.
   * Add missing documentation for the -F option.
-	* 
 
 
 Changes in the "2009-01" release (2008-10-05 thru 2009-01-13):

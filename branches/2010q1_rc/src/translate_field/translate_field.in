@@ -21,7 +21,8 @@ use Memoize;
 Getopt::Long::Configure("no_ignore_case");
 
 my($help, $debug, $field, $field_label, $delim, $replace, $append, $prepend,
-   %mapping, $external, $show_version, @xpressions, $xpression_func);
+   %mapping, $external, $show_version, @xpressions, $xpression_func,
+   $keep_header);
 
 $delim = $ENV{"DELIMITER"} || chr(0xfe);
 
@@ -37,6 +38,7 @@ GetOptions("help" => \$help,
            "external=s" => \$external,
            "Version" => \$show_version,
            "xpression=s" => \@xpressions,
+           "keep-header" => \$keep_header,
           );
 
 if ($help) {
@@ -99,8 +101,15 @@ if (defined($field)) {
   }
 }
 
+if ($keep_header && ! $header) {
+  $header = <>;
+}
 if ($header) {
-  print translate_field($header);
+  if ($keep_header) {
+    print $header;
+  } else {
+    print translate_field($header);
+  }
 }
 
 while (my $line_str = <>) {

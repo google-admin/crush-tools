@@ -17,6 +17,8 @@
 #include <stdio.h>
 #include <crush/reutils.h>
 
+#if HAVE_PCRE_H && HAVE_LIBPCRE
+
 #define INIT_TEST(description, regex) \
   char *desc = (description); \
   pcre *re; \
@@ -251,3 +253,11 @@ int main (int argc, char *argv[]) {
     exit(1);
   exit(0);
 }
+
+# else /* not HAVE_PCRE_H && HAVE_LIBPCRE */
+int main (int argc, char *argv[]) {
+  printf("SKIP: pcre is not installed.\n");
+  exit(0);
+}
+#endif
+

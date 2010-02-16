@@ -123,5 +123,12 @@ END_COPYRIGHT
 	  required    => 0,
 	  description => 'specifies a list of regular expressions to apply to the specified input field'
 	},
+  {
+    name        => 'keep_header',
+    shortopt    => 'k',
+    lontopt     => 'keep-header',
+    type        => 'flag',
+    description => 'pass the first line of input through unmodified.'
+  },
 );
 
