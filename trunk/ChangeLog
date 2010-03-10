@@ -9,6 +9,8 @@ Changes in the "2010-01" release (2009-01-13 thru 2010-01-10):
   * Bug fix: When running with -b, pad bucket numbers in output filenames
 	  with zeros instead of spaces.
 	* Rewritten in C for improved performance.
+	* NOTE: This now depends on PCRE (dev package with library and header) in
+	  order to be fully backward-compatible.
 
 * filterkeys
   * New: a tool for filtering data streams using an external list of field
@@ -27,8 +29,8 @@ Changes in the "2010-01" release (2009-01-13 thru 2010-01-10):
 	* General code cleanup.
 
 * translate_field
+	* Add a -k option for keeping the header row intact.
   * Add missing documentation for the -F option.
-	* 
 
 
 Changes in the "2009-01" release (2008-10-05 thru 2009-01-13):
