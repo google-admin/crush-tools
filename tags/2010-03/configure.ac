@@ -1,5 +1,5 @@
 AC_INIT([crush-tools],
-        [2010q1_rc],
+        [2010-03],
         [http://code.google.com/p/crush-tools/])
 AM_CONFIG_HEADER(src/libcrush/config.h)
 AC_CONFIG_SRCDIR(src/libcrush/ffutils.c)
