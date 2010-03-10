@@ -115,13 +115,22 @@ src/truncfield/Makefile
 AC_OUTPUT
 
 if test $PERL_DBI_PRESENT = no; then
+  AC_MSG_WARN([])
   AC_MSG_WARN([The DBI Perl module was not found.])
   AC_MSG_WARN([$NEEDS_PERL_DBI will not be built])
   AC_MSG_WARN([You may want to run "cpan DBI" and rerun $0])
 fi
 
 if test $PERL_DATE_CALC_PRESENT = no; then
+  AC_MSG_WARN([])
   AC_MSG_WARN([The Date::Calc Perl module was not found.])
   AC_MSG_WARN([$NEEDS_PERL_DATE_CALC will not be built.])
   AC_MSG_WARN([You may want to run "cpan Date::Calc" and rerun $0])
+fi
+
+if test $ac_cv_header_pcre_h = no; then
+  AC_MSG_WARN([])
+  AC_MSG_WARN([pcre.h was not found.  Without PCRE support, "fieldsplit"])
+  AC_MSG_WARN([will not be fully compatible with older versions.  You may])
+  AC_MSG_WARN([want to install the pcre dev package and rerun $0])
 fi
