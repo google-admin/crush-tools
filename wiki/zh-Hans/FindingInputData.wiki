@@ -1,14 +1,14 @@
-#summary Locating input data
+#概要 定位输入数据
 
-= Introduction =
+= 简介 =
 
-For jobs that run periodically, you may be faced with figuring out what data needs to be consumed by the application.  CRUSH was developed in an environment where data files are published daily, and applications run at a particular frequency (e.g. daily, weekly, or monthly), and they need to either process files for an exact date range or process all data which has not yet been processed.
+对于定时运行的工作，你要弄清楚程序需要什么样的数据。我们经常要每天公布数据文件，让程序以特定频率运行(比如说每天、每周、每个月)，而且要处理的数据都要严格在某个范围内，或者处理所有尚未处理的数据。CRUSH 就是在这样的环境中诞生的。
 
-= Finding data within a particular date range =
+= 在指定范围内寻找数据 =
 
-For this discussion, we will assume that daily data feeds exist somewhere on disk, and those files contain date stamps in their names.
+在接下来的讨论中, 我们假定每天的数据源都在磁盘上, 而且这些文件名中都有日期邮戳.
 
-The `date(1)` utility provides a basic means of calculating date ranges, assuming they can be defined in terms of the current date.
+`date(1)` 工具提供了计算日期范围的一个基本方法，假定他们可以以当前日期为参照定义.
 
 {{{
 date_fmt="+%Y-%m-%d"
@@ -18,7 +18,7 @@ enddate=`date -d "-1 days" "$date_fmt"`
 startdate=`date -d "-6 days $enddate" "$date_fmt"`
 }}}
 
-From here, you have a few options.  One is to loop through each date using `dates_in_range`, building the filename based on the date (Dates_in_rangeUserDocs).
+在这里，你有一些选项.  其一就是用`dates_in_range` 遍历所有日期, 在日期的基础上建立文件名(Dates_in_rangeUserDocs).
 
 {{{
 for d in `dates_in_range -s $startdate -e $enddate`; do
@@ -27,14 +27,14 @@ for d in `dates_in_range -s $startdate -e $enddate`; do
 done
 }}}
 
-Another option is to use `findfiles` to identify the files directly (FindfilesUserDocs).
+另一个选择是用 `findfiles` to 直接鉴别文件 (FindfilesUserDocs).
 
 {{{
 files=`findfiles -d "$source_dir" -g "*.dat" -s $startdate -e $enddate`
 # process files...
 }}}
 
-When using the latter method, it may be a good idea to make sure you found as many files as you expected.  Extending the previous example:
+但用第二种方法时, 你最好找到了尽可能多的文件.  我们延伸前一个例子：
 
 {{{
 files=`findfiles -d "$source_dir" -g "*.dat" -s $startdate -e $enddate`
@@ -47,11 +47,11 @@ fi
 # process files...
 }}}
 
-Here we have used `deltadays` to tell us how many days there are in the date range (DeltadaysUserDocs).  That way the processing date range can be modified in the code or overridden by the user without impacting this part of the application.
+在这里我们用 `deltadays` 在指定的日期范围内出现了多少个日期 (DeltadaysUserDocs).  这样的话，数据处理的范围就可以在代码中改变或者被用户重写而不影响这部分程序.
 
-= Finding all files needing to be processed =
+= 寻找所有需要处理的文件 =
 
-The other usage pattern when looking for input data is to identify any files which have not yet been processed.  CRUSH handles this by letting the user keep a log file containing data which has been processed, and then scanning a directory for items not in that file.  This is done with the `find_not_processed` utility (Find_not_processedUserDocs).
+在寻找输入数据时的另外一种使用模式是鉴别出所有尚未处理的数据文件.  CRUSH 通过让用户保存一个日志文件来解决这个问题，这个日志文件中保存了已经被处理的数据, 然后扫描目录来寻找不再日志文件中的项. 这个工作由 `find_not_processed` 工具完成 (Find_not_processedUserDocs).
 
 {{{
 already_done_log="$WORKING_DIR/processed.log"
@@ -62,7 +62,7 @@ for f in $files; do
 done
 }}}
 
-Even if processing files which could be located by date, this pattern is useful when you need to have your application get itself caught up if it misses a day of processing.
+即使这在处理的文件可以按日期定位, 当你需要让你的程序弥补错过的一天的处理时，这种模式也是有用的.
 
 ----
-Back to ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush

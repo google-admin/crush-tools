@@ -1,10 +1,10 @@
-#summary Catching and handling errors
+#概要 捕捉并处理错误
 
-= Error handling =
+= 错误处理 =
 
-Properly handling errors is an important part of writing reliable applications.  To make sure it is done consistently without rendering the application code unreadable, it is worthwhile to have some functions for dealing with common cases.
+正确地处理错误是编写可靠的应用程序很重要的一部分. 为了坚持错误处理而且不致使代码可读性降低, 用一些函数来处理常见的错误是值得的.
 
-The variable "`$?`" contains the exit code of the most recently completed command, so that can be checked for simple statements.  And it is automatically used when using logical `&&` and `||` operators.
+变量"`$?`"存储了最近运行结束的命令的返回值，所以它可以用来检查命令的运行情况.  使用逻辑运算符`&&` 和 `||` 时会自动使用这个变量.
 
 {{{
 . /path/to/crushlib.sh || {
@@ -19,9 +19,9 @@ if test $? -ne 0; then
 fi
 }}}
 
-But when dealing with pipelines, you may need to do a little more work.  After a pipeline has executed, "`$?`" usually contains the exit code of the last element of the pipeline.  If errors occurred in some other element, this is insufficient for error detection.  Bash provides a couple of different options.
+但当处理管道时, 你要多做些工作. 在一个管道运行后, "`$?`" 通常存储了管道中最后一个元素的退出返回值. 如果管道中别的元素发生了错误,使用这个变量不能发现错误.  Bash 提供对此给出了多个选择.
 
- * Check the `PIPESTATUS` variable.  This is an array of exit codes from each of the pipeline members.  If all applications in the pipeline can be expected to exit 0 on success, you can define a function to handle errors like this:
+ * 检查 `PIPESTATUS` 变量. 这是一个管道中所有成员退出码的数组. 如果所有的程序在成功退出时都返回 0, 你可以这样定义一个函数来处理错误:
 
 {{{
 function DIE_ON_PIPE_ERROR {
@@ -37,7 +37,7 @@ function DIE_ON_PIPE_ERROR {
 }
 }}}
 
-  Which can be used like so, taking care to call `DIE_ON_PIPE_ERROR` before any other commands can overwrite the value of the `PIPESTATUS` array:
+ 它可以这样用，记着在别的命令重写`PIPESTATUS`之前调用`DIE_ON_PIPE_ERROR`:
 
 {{{
 zcat $files |
@@ -48,7 +48,7 @@ zcat $files |
 DIE_ON_PIPE_ERROR "line $LINENO: error processing data"
 }}}
 
- * Set the "`pipefail`" option, which causes "`$?`" to contain the last non-zero exit code in the pipeline.  This option was added in Bash version 3.
+ * 选中"`pipefail`"选项, 它可以让 "`$?`" 存储在管道中的最近一个非零退出码. 这个选项在Bash 版本3中加入.
 
 {{{
 set -o pipefail
@@ -65,9 +65,9 @@ fi
 }}}
 
 
-Note that the assumption that non-zero exit codes indicate a failure is not necessarily reliable.  Perhaps the most common example is the exit code used by `grep(1)` when no matches are found.  It is up to the developer to determine whether a function like `DIE_ON_PIPE_ERROR` can be used in light of such circumstances.
+注意，假定非零值就是错误返回值并不很可靠. 也许最常见的例子就是 `grep(1)` 在找不到匹配时的返回值. 在此类情况下，像`DIE_ON_PIPE_ERROR`这样的程序能不能使用取决于开发人员.
 
-The examples here are not portable to shells other than Bash.  Check your shell's manual for information about how to apply these concepts in such environments.
+这个例子不能移植到除 Bash shell 以外的 shell.  关于如何应用这些概念到你用的 shell 中，请查看你用的 shell 的手册.
 
 ----
-Back to ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush 

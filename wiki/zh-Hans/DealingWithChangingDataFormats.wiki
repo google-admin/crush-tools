@@ -1,12 +1,11 @@
-#summary Dealing with changing data formats
+#概要 改变数据格式
+= 简介 =
 
-= Introduction =
+CRUSH 工具箱是为 应对数据格式的变化而设计的.  即使你在有足够时间改变你的代码之前得到警告, 如果能只需接受改变而不重新开发还是会更好很多.
 
-The CRUSH toolkit was designed for use against data feeds which have potential to change in format.  Even if you get a warning with sufficient time to change the code, it would be better to be able to just accept the changes without having to do any development work.
+= 检测分隔符 =
 
-= Detecting the Delimiter =
-
-If your data feed has a configurable field separator, it is best to dynamically determine what the delimiter string is at run-time.  Assuming the data feed contains a header line which can contain alpha-numeric characters, hyphens, and underscores, you can define shell functions as below
+如果你的data feed 有一个可配置的字段分隔符，最好在运行时动态确定分隔字符串.  如果数据存在可以包含字母、数字、连字符和下划线字符的标题行, 你可以如下定义shell函数：
 
 {{{
 function get_file_header {
@@ -25,7 +24,7 @@ function get_file_delimiter {
 }
 }}}
 
-As we'll see below, it is useful to be able to extract the header line separately.  If there is any possibility at all that the delimiter will be a white-space character, then remember to quote all dereferences of your delimiter and header variables.   All of CRUSH utilities look for an environment variable `$DELIMITER`, which if defined, will be used as the field separator when the `-d` commandline option is not present.  So in your application code, you may have something like this:
+就像我们会在下面看到的, 分别提取标题行会很有用.  如果空格能够充当分隔符, 记着引用 所有的分隔符和标题变量的间接引用.   所有的 CRUSH 工具都会寻找环境变量 `$DELIMITER`, 如果该环境变量已经定义了, 而且如果没有命令行选项 `-d`，它就会被用作字段分隔符.  所以在你的应用程序代码中,可能会有这样的东西:
 
 {{{
 files=`findfiles -s $start_date -e $end_date -d $dir -g "*.gz"`
@@ -38,7 +37,7 @@ export DELIMITER
 
 = Detecting field location =
 
-For data sets which contain a header row with predictable values, it is possible to use this as meta-data to locate required fields at run-time.  As of the 2009-01 release, all CRUSH utilities accept field labels as an alternative to indexes on the command-line.  Locating indexes dynamically can still be useful when processing the data with standard Unix tools.
+对于数据集包含可预测值的标题行, 使用它作为元数据在运行时找到所需字段.  在 2009-01 发行版中, 所有的 CRUSH 工具在命令行下可以接受字段名作为索引.  动态确定索引在使用标准Unix工具处理数据时也是有用的.
 
 {{{
 function locate_field {
@@ -53,7 +52,7 @@ function locate_field {
 }
 }}}
 
-This uses the CRUSH utility "`index`" to find the location of a field with the specified label.  This lets you do things like
+这里使用 CRUSH 工具 "`index`" 来寻找指定名字的字段的位置.  这可以让你做这样的事：
 
 {{{
 aal2d access_log > access.log
@@ -73,7 +72,7 @@ aggregate -p -k $i_auth_name,$i_user_agent -c 1 access.log
 
 }}}
 
-Now if we go make tweaks to the aal2d and/or our apache log format output, our script will continue working just fine as long as the "Auth-User" and "User-Agent" fields aren't removed altogether.
+现在，如果我们对aal2d或Apache日志的输出格式进行改变，只要"Auth-User" 和 "User-Agent"字段不被取消，我们的脚本将继续工作.
 
 ----
-Back to ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush

@@ -1,29 +1,29 @@
-#summary Some basic considerations for application development
+#概要 开发应用程序的一些基本要点
 
-= Introduction =
+= 简介 =
 
-Writing reliable applications using the CRUSH toolkit is mostly about writing reliable shell scripts.  Here are a few things you might want to do to get started.
+使用 CRUSH 工具包编写可靠的应用程序主要是写可靠的shell脚本。这里有些建议可以帮你更好地开始。
 
-= A central library =
+= 一个中间类库 =
 
-Throughout the deep-dive we'll be defining shell functions to handle certain aspects of application development.  These can be put into a centralized library and sourced by all of your applications.  The source for these functions is available at http://crush-tools.googlecode.com/svn/trunk/contrib/crushlib.sh
+在整个探讨过程中，我们会用一系列的shell函数在开发的某些方面的应用来示例.  你可以把这些示例集中成为一个函数库，应用到你的开发中.  这些函数的源码可以在这儿得到 http://crush-tools.googlecode.com/svn/trunk/contrib/crushlib.sh
 
-= Scheduling considerations =
+= 计划(Scheduling)注意事项 =
 
-If you are running your applications from `cron` or some other scheduling system, you have to be careful to ensure that the environment in which the applications run is defined properly.  You can do this in the centralized library as well by exporting environment variables related, for example, to databases, locales, etc.
+如果你的程序正在`cron` 或别的计划系统(scheduling system), 你首先要确认恰当地定义了程序运行环境. 你可以在这个集中的库或相关的环境变量中定义.
 
-Another issue with applications run from `cron` is that you generally can't rely on relative paths to files to work properly.  If your application needs to access files in the same location as the application script itself (e.g. temporary files or state data), you will want to be able to refer to those resources with an absolute path while avoiding maintenance problems should the code location change.  In the central library, you can do
+关于在`cron`中运行的应用程序的另外一个问题是读取绝对路径的文件往往不能成功. 如果你的程序要读写跟脚本程序在同一个文件夹的文件，比如临时文件或状态记录文件，你要使用绝对路径以避免因程序移动后运行出现的问题. 在这个中间库中，你可以
 
 {{{
 WORKING_DIR=`dirname $0`
 export WORKING_DIR
 }}}
 
-and use `$WORKING_DIR` as the fully-qualified path to those resources.
+和用`$WORKING_DIR` 做那些资源的完整路径.
 
-= Error reporting =
+= 错误报告 =
 
-With scheduled jobs, it is not always obvious what application is producing errors or warnings.  To avoid extra typing, I like to define the following:
+在计划中运行的工作，并不能总可以清楚地知道那个程序出现了错误和警告. 话不多说，我如下定义函数:
 
 {{{
 function warn {
@@ -31,11 +31,11 @@ function warn {
 }
 }}}
 
-This precedes the warning message with the application filename to give context to the error messages which could be recieved in emails from `cron`.
+这个函数可以把错误信息的处理及其上下文环境用 `cron` 发送到到邮箱里 .
 
-= Avoiding multiple application instances =
+= 避免同时运行一个程序的多个实例 =
 
-If an application requires that only one instance of itself exist at one time, an easy way to manage that is to define a function like
+如果一个程序要在某一时刻只能有一个实例运行, 一个简单的方法就是定义这样一个函数
 
 {{{
 # check whether all of a list of processes are actually alive
@@ -75,14 +75,14 @@ function cleanup_pidfile {
 }
 }}}
 
-Ensuring that only one instance of your application is active at one time is then a simple matter of including a couple of lines in your application code.
+这样一来，要确保你的程序在某一时刻只有一个实例活动，就可以像下面一样在你的代码中引用简单地引用几行代码.
 
 {{{
 assert_single_instance
 trap 'cleanup_pidfile; exit $?' EXIT TERM INT HUP QUIT
 }}}
 
-In some cases, this trap could go into the global library.
+在某些情况下，这样的技巧可以应用到全局库中.
 
 ----
-Back to ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush

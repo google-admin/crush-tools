@@ -1,15 +1,15 @@
-﻿#summary Application development with CRUSH
+﻿#概要 使用 CRUSH 开发应用程序
 
-= Introduction =
+= 简介 =
 
-Between CRUSH and the standard set of Unix utilities, a lot of data processing functionality is available to the developer.  But more goes into building a good application than a couple of elegant pipelines.  This "book" covers some ways you can write simple, reliable shell scripts for data processing jobs.
+在 CRUSH 和标准的 Unix 工具中, 有很多数据处理的函数可供开发者使用.  但是它们更多的是要写 一个复杂的应用程序而非简单几个管道所能解决的.  这本"书" 提供了一些方法，使在数据处理工作中你可以写出简单、可靠的shell脚本.
 
 
-= Chapters =
- * CrushAppBasics
- * DealingWithChangingDataFormats
- * FindingInputData
- * CheckingForErrors
- * DataProcessingScenarios
+= 目录 =
+ * CrushAppBasics ：Crush 应用基础
+ * DealingWithChangingDataFormats ：改变数据格式
+ * FindingInputData ：寻找输入数据
+ * CheckingForErrors ：错误检查
+ * DataProcessingScenarios ：数据处理脚本
 
-This is a test: 发件人
+

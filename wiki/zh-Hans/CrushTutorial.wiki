@@ -1,15 +1,15 @@
-#summary A quick introduction to using CRUSH for data processing
+#概要 对用CRUSH进行数据处理的一个简单介绍
 
-= CRUSH Tutorial =
+= CRUSH 指南 =
 
-Here we will demonstrate some of the data-processing capabilities of the CRUSH toolkit.  We will primarily focus on processing access logs from an Apache web server, since such a data source is commonly available.
+在这里我们会演示一些CRUSH 工具包的数据处理能力.  首先我们看一看如何处理 Apache 网络服务器的访问日志, 因为这样的数据一般是可以得到的.
 
 
-== Reading the log file ==
+== 读取访问日志 ==
 
-It is common to need to write a small amount of custom code for a processing task using CRUSH.  In this case, the need arises almost immediately for dealing with the Apache access logs due to the fact that the default format of the files is not really character-delimited.  A simple Perl script will transform that data into something that's easier to handle with CRUSH.
+要在一个处理工作中使用CRUSH，往往要写少量的自定义代码.  在这里, 为了处理 Apache 访问日志，写一些代码是几乎是必不可少的，因为这些日志文件的默认格式并非真正的字符分隔格式. 一个简单的 Perl 脚本会把这些数据转变成 CRUSH 更容易处理的用字符分隔的格式.
 
-For an Apache httpd configuration of
+对于下面这个服务器配置：
 
 {{{
 LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
@@ -18,7 +18,7 @@ LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 }}}
 
-This script, named `aal2d` ("Apache access log to delimited") does the trick:
+可以写个脚本做到, 我们姑且叫它 `aal2d` ("Apache access log to delimited"):
 
 {{{
 #!/usr/bin/perl -w
@@ -43,13 +43,13 @@ while (<>) {
 exit(0);
 }}}
 
-The default delimiter 'þ' is used here for its low probability of collision with actual data.  Now that we've gotten that out of the way, we can start doing interesting things with the data.
+在这里使用缺省的分隔字符 'þ'，是因为它跟真实数据发生冲突的概率很小.  既然解决了分隔字符的问题, 我们就可以用这些数据做些有趣的事儿.
 
-In the examples that follow, a relative path to "access_log" is used.  To operate against a live Apache web log, `cd` to `/var/log/httpd`, or [http://crush-tools.googlecode.com/files/access_log.tar.gz download the example data file] and run the commands from the directory where that file is kept.
+在下面的例子当中, 使用相对于 "access_log" 的相对路径.  要对你计算机中的 Apache 日志进行操作, `cd` 到 `/var/log/httpd`, 或者 [http://crush-tools.googlecode.com/files/access_log.tar.gz 下载示例数据] 然后在这些数据所在的文件夹运行命令.
 
-== Simple aggregations ==
+== 简单的聚集 ==
 
-Let's say we want to know how many hits we're getting from each logged-in user.  The `aggregate` (AggregateUserDocs) utility is designed for this purpose.
+比如说，我们现在想知道每一个登陆我们网站的用户点击了多少下.  `aggregate` (AggregateUserDocs) 就是为此设计的.
 
 {{{
 aal2d access_log | aggregate -p -k 2 -c 1
@@ -59,9 +59,9 @@ aal2d access_log | aggregate -p -k 2 -c 1
 aal2d access_log | aggregate -K Auth-User -C IP
 }}}
 
-Refer to the AggregateUserDocs for details, but we're basically aggregating using field  2 as the key and counting all populated instances of field 1.
+详细用法请参考 AggregateUserDocs , 但在这儿我们做聚集仅仅是把 字段  2 当做主键(key) 然后对字段 1计数.
 
-The output is something like
+输出大致是这样的：
 
 {{{
 Auth-UserþIP
@@ -74,7 +74,7 @@ snimþ12
 sunnyjimþ141
 }}}
 
-If we wanted to get that broken out by day, we can convert the time format using `convdate` (ConvdateUserDocs) to contain only the date and add that as a key field.
+如果我们想按日把数据分开, 我们可以使用 `convdate` (ConvdateUserDocs) 转换日期格式，然后只包含日期，把日期当做 key field.
 
 {{{
 aal2d access_log |
@@ -88,7 +88,7 @@ aal2d access_log |
   aggregate -K Time,Auth-User -C IP
 }}}
 
-The `convdate` call takes strings like "08/Jul/2008:04:27:26 -0600" and turns them into strings like "2008-07-08", giving us
+函数 `convdate` 的调用使用"08/Jul/2008:04:27:26 -0600" 这样的字符串作为参数，然后把字符串转变成 "2008-07-08" 的格式输出
 
 {{{
 TimeþAuth-UserþIP
@@ -113,9 +113,9 @@ TimeþAuth-UserþIP
 }}}
 
 
-== More formatting ==
+== 更多的格式 ==
 
-In the example of login-page-hits by day, if you have a small number of users you may wish to have a column for each user and a row for each date.  The `pivot` (PivotUserDocs) utility handles this:
+在按日统计点击率的例子中, 如果用户较少，可以用每一列表示一个用户，每一行表示一个日期. `pivot` (PivotUserDocs) 工具可以做到这点：
 
 {{{
 aal2d access_log |
@@ -131,7 +131,7 @@ aal2d access_log |
   pivot -F Time -P Auth-User -A IP
 }}}
 
-Now we get an output of
+我们得到这样的输出：
 
 {{{
 Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsunnyjim: IP
@@ -141,7 +141,7 @@ Timeþ-: IPþbvanhorn: IPþhoofoos: IPþhotshot: IPþshadrack: IPþsnim: IPþsun
 2008-07-09þ342þ44þ111þ3þ0þ1þ79
 }}}
 
-Piping the same command to `csvformat` (CsvformatUserDocs) will produce a CSV file suitable for viewing in your favorite spreadsheet application.  We can use `translate_field` (Translate_fieldUserDocs) to change all of the requests not associated with a login session to "Anonymous".  And to turn the "IP" header in the aggregation output into something meaningful, we could use the standard `sed(1)` utility on just the header line:
+将命令管道连接到 `csvformat` (CsvformatUserDocs) 会产生适于在电子表格程序中查看的的逗号分隔的文件.  我们可以用 `translate_field` (Translate_fieldUserDocs) 改变所有没有登录的会话名为 "匿名".  要把聚集结果中的"IP" 头转变成有意义的东西, 可以用标准的 `sed(1)` 工具 处理标题:
 
 {{{
 # CRUSH 2008-10 and earlier:
@@ -156,7 +156,7 @@ aal2d access_log |
   csvformat 
 }}}
 
-Or we could add a `-l` option to the aggregate call:
+或者加一个 `-l` 选项到聚集函数的调用中:
 
 {{{
 # CRUSH 2009-01 and later:
@@ -169,7 +169,7 @@ aal2d access_log |
 }}}
 
 
-Output:
+输出:
 
 {{{
 "Time","Anonymous: Page-Views","bvanhorn: Page-Views","hoofoos: Page-Views","hotshot: Page-Views","shadrack: Page-Views","snim: Page-Views","sunnyjim: Page-Views"
@@ -180,9 +180,9 @@ Output:
 }}}
 
 
-== Joining Datasets ==
+== 连接数据集 ==
 
-Many times it is necessary to join different datasets together.  One way of doing this is with the `mergekeys` utility (MergekeysUserDocs), which uses column headers to join sorted data sets.  Say you have a file named `food.log` containing
+很多时候要把数据集连接起来.  一个方法就是使用 `mergekeys`(MergekeysUserDocs)工具, 它使用列标题连接不同的数据集.  比如说有一个文件 `food.log` 包含
 
 {{{
 Auth-UserþFavorite-Food
@@ -194,7 +194,7 @@ snimþSoup
 sunnyjimþFrankfurters
 }}}
 
-And you want to join this into the first aggregation above (page-views by user).
+现在要把这个文件跟上面的第一个聚集结果连接 ，可以这样：
 
 {{{
 aal2d access_log | aggregate -p -k 2 -c 1 > page_views.log
@@ -204,7 +204,7 @@ aal2d access_log | aggregate -K Auth-User -C IP > page_views.log
 mergekeys page_views.log food.log | csvformat
 }}}
 
-And you get
+就会得到
 
 {{{
 "Auth-User","IP","Favorite-Food"
@@ -217,12 +217,12 @@ And you get
 "sunnyjim","141","Frankfurters"
 }}}
 
-Note that currently `mergekeys` requires that
- * the two files should have the same column labels for all key fields
- * all key fields occur at the beginning of the lines in both files
- * both files be sorted by the key fields
+注意 `mergekeys` 要求：
+ * 所有的 key fields 要有相同的列标题
+ * 所有的 key fields 在两个文件中都要在每一行的开始
+ * 两个文件都已经按 key fields 排好序
 
 
-== So... ==
+== 所以... ==
 
-By building up pipelines of CRUSH and standard Unix utilities, complicated transformations and formatting can be accomplished with straight-forward shell scripting.
+通过建立 CRUSH 的管道和标准的Unix 工具, 复杂的转换和格式化都可以使用简单的 shell 脚本来完成.

@@ -1,56 +1,57 @@
-#summary Data processing scenarios and tools
+#概要 数据处理脚本和工具
 
-= Introduction =
+= 简介 =
 
-Data processing tasks can be classified filtering, transforming, merging/joining, or formatting.  CRUSH also has some miscellaneous utilities to make certain shell-scripting tasks easier.
+数据处理工作可以分为 过滤(filtering), 转变(transforming), 合并/连接(merging/joining), 或 格式化 (formatting).  CRUSH 有一些多功能的工具可以是特定的 shell 脚本工作更简单.
 
-Many of the CRUSH tools behave similarly to standard Unix utilities, but they have some specialized functionality and possibly some improved usability.
+许多 CRUSH 工具和标准的Unix工具功能相似，但它们有一些特殊的功能而且可能还有一些改进的可用性。 
 
-= Filtering =
+= 过滤 =
 
-Filtering data involves the removal of non-interesting records.
+过滤数据要删除不敢兴趣的记录
 
- * `grepfield` is like the `grep(1)` utility, but it operates against a specific field in a stream of delimited data.
- * `funiq` is similar to the `uniq(1)`, but it operates against specific fields in a stream of delimited data.
- * `cutfield` removes specific fields of a data stream, much like an inverted version of the `cut(1)` utility
- * `truncfield` truncates the values of fields in a data stream.
- * `subtotal` inserts roll-up lines for adjacent blocks of lines with common key fields.
+ * `grepfield` 很像 `grep(1)` 工具,但它在分隔的数据流针对某一特定字段 (field) 的进行操作. 
+ * `funiq` 很像 `uniq(1)`,但它在分隔的数据流针对某些特定字段的进行操作.
+ * `cutfield` 删除特定的某些字段, 很像一个反过来用的 `cut(1)` 工具
+ * `truncfield`截断数据流中的字段的值.
+ * `subtotal` 给拥有相同关键字段相邻的块插入roll-up lines .
 
-= Transforming =
+= 转化 =
 
-Data transformations change the "shape" of the data in some way.
+数据转化在一定程度上是改变数据的"形状".
 
- * `aggregate` calculates sums, counts, and averages of metric fields for each distinct values of a set of key fields.  It does not rely on the input being sorted, and holds the set of keys and metrics in memory.
- * `aggregate2` is better when there are too many distinct keys to hold in memory.  The input must be pre-sorted, but the memory footprint is much smaller than `aggregate`'s.
- * `reorder` changes the order of fields in each line.  When used with the `-f` option, it is a replacement for `cut(1)` which produces output in the requested order rather than the original input order.  It can also move or swap individual fields. 
- * `add_field` creates a new field with a set value.
- * `calcfield` creates a new field based on an expression calculated against existing fields.
- * `translate_field` maps a new value onto existing values in a field.
-
-
-= Merging and Joining =
-
- * `deltaforce` updates a large data set in one file with incremental updates from another file.
- * `mergekeys` joins two sorted files with some fields in common ("keys"), appending the non-common fields to each line.
+ * `aggregate` 计算出每一个字段下数据的和、数量和平均数.
+ 它不需要输入提前排序或者在内存中保存字段的数据.
+ * `aggregate2` 在有太多不同的字段要保存到内存时会更好. 输入要提前排序，但内存占用比`aggregate`小得多.
+ * `reorder` 改变每一行中的字段顺序.  当使用`-f`选项时 , 它可以按需要的顺序输出，可以代替`cut(1)`.  它也可以移动或交换个别字段. 
+ * `add_field` 用数据集创建一个新字段.
+ * `calcfield` 创建新的字段，字段值是按照一定的表达式对已存在的字段值的函数映射.
+ * `translate_field` 在一个字段上映射一个新的值到已存在的值.
 
 
-= Formatting =
+= 合并和连接 =
 
- * `pivot` takes distinct values from a set of fields and turns them into new columns.
- * `csvformat` turns delimited text into CSV (comma-separated values) format compatible with spreadsheet applications.
- * `convdate` changes the format of a field containing a date/time value.
+ * `deltaforce` 从另外一个文件增量更新在单个文件中的一个大数据集.
+ * `mergekeys` 连接有相同字段的已排序的文件, 把不同的字段合并到一个文件中.
 
 
-= Miscellaneous =
+= 格式化 =
 
- * `buffer` gathers input in memory and outputs it all at once to a file.  This is useful when you want to output to a file which is being used as input.  When using the shell's output redirection operator (`>`), the output file is opened for writing and truncated before the pipeline is executed.
- * `dates_in_range` prints out all of the dates falling within a specified start/end range.
- * `deltadays` prints the number of days within a start/end range.
- * `dbstream` executes a database query and prints the results as a delimited text stream.
- * `foreach_parallel` is like a parallelized `for` loop in shell.  It executes a block of code against multiple input values in parallel.
- * `find_not_processed` and `findfiles` may be used to locate input data files.
- * `indexof` reads a column-label header line to find the index of a particular field
+ * `pivot` 把独特的数据从字段的集合中提取出来并给这些数据建立新的列.
+ * `csvformat` 把已分隔的文本格式化为电子表格程序兼容的 CSV (comma-separated values 逗号分隔的数据).
+ * `convdate` 改变包含日期的字段的格式.
+
+
+= 杂项 =
+
+ * `buffer` 把内存输入收集到一起并且把这些数据一并输出到一个文件.  这在你想把结果输出到会被用作输入的一个文件. 当使用使用shell的输出重定向操作符(`>`)时, 输出文件以写格式打开而且在管道执行前会被截断.
+ * `dates_in_range` 打印出所有在 给定的日期范围内出现的日期.
+ * `deltadays` 打印出在给定日期范围内出现的日期的数量.
+ * `dbstream` 执行数据库查询并以分割的文本流打印出结果.
+ * `foreach_parallel` 类似于并行的shell中的`for`循环 . 它能并行执行有多个输入的一个代码块.
+ * `find_not_processed` 和 `findfiles` 可用来定位输入数据文件.
+ * `indexof` 读取列标题行并找到指定字段的索引值
 
 
 ----
-Back to ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush
