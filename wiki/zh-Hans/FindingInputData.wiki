@@ -1,14 +1,14 @@
-#¸ÅÒª ¶¨Î»ÊäÈëÊý¾Ý
+ï»¿#æ¦‚è¦ å®šä½è¾“å…¥æ•°æ®
 
-= ¼ò½é =
+= ç®€ä»‹ =
 
-¶ÔÓÚ¶¨Ê±ÔËÐÐµÄ¹¤×÷£¬ÄãÒªÅªÇå³þ³ÌÐòÐèÒªÊ²Ã´ÑùµÄÊý¾Ý¡£ÎÒÃÇ¾­³£ÒªÃ¿Ìì¹«²¼Êý¾ÝÎÄ¼þ£¬ÈÃ³ÌÐòÒÔÌØ¶¨ÆµÂÊÔËÐÐ(±ÈÈçËµÃ¿Ìì¡¢Ã¿ÖÜ¡¢Ã¿¸öÔÂ)£¬¶øÇÒÒª´¦ÀíµÄÊý¾Ý¶¼ÒªÑÏ¸ñÔÚÄ³¸ö·¶Î§ÄÚ£¬»òÕß´¦ÀíËùÓÐÉÐÎ´´¦ÀíµÄÊý¾Ý¡£CRUSH ¾ÍÊÇÔÚÕâÑùµÄ»·¾³ÖÐµ®ÉúµÄ¡£
+å¯¹äºŽå®šæ—¶è¿è¡Œçš„å·¥ä½œï¼Œä½ è¦å¼„æ¸…æ¥šç¨‹åºéœ€è¦ä»€ä¹ˆæ ·çš„æ•°æ®ã€‚æˆ‘ä»¬ç»å¸¸è¦æ¯å¤©å…¬å¸ƒæ•°æ®æ–‡ä»¶ï¼Œè®©ç¨‹åºä»¥ç‰¹å®šé¢‘çŽ‡è¿è¡Œ(æ¯”å¦‚è¯´æ¯å¤©ã€æ¯å‘¨ã€æ¯ä¸ªæœˆ)ï¼Œè€Œä¸”è¦å¤„ç†çš„æ•°æ®éƒ½è¦ä¸¥æ ¼åœ¨æŸä¸ªèŒƒå›´å†…ï¼Œæˆ–è€…å¤„ç†æ‰€æœ‰å°šæœªå¤„ç†çš„æ•°æ®ã€‚CRUSH å°±æ˜¯åœ¨è¿™æ ·çš„çŽ¯å¢ƒä¸­è¯žç”Ÿçš„ã€‚
 
-= ÔÚÖ¸¶¨·¶Î§ÄÚÑ°ÕÒÊý¾Ý =
+= åœ¨æŒ‡å®šèŒƒå›´å†…å¯»æ‰¾æ•°æ® =
 
-ÔÚ½ÓÏÂÀ´µÄÌÖÂÛÖÐ, ÎÒÃÇ¼Ù¶¨Ã¿ÌìµÄÊý¾ÝÔ´¶¼ÔÚ´ÅÅÌÉÏ, ¶øÇÒÕâÐ©ÎÄ¼þÃûÖÐ¶¼ÓÐÈÕÆÚÓÊ´Á.
+åœ¨æŽ¥ä¸‹æ¥çš„è®¨è®ºä¸­, æˆ‘ä»¬å‡å®šæ¯å¤©çš„æ•°æ®æºéƒ½åœ¨ç£ç›˜ä¸Š, è€Œä¸”è¿™äº›æ–‡ä»¶åä¸­éƒ½æœ‰æ—¥æœŸé‚®æˆ³.
 
-`date(1)` ¹¤¾ßÌá¹©ÁË¼ÆËãÈÕÆÚ·¶Î§µÄÒ»¸ö»ù±¾·½·¨£¬¼Ù¶¨ËûÃÇ¿ÉÒÔÒÔµ±Ç°ÈÕÆÚÎª²ÎÕÕ¶¨Òå.
+`date(1)`  å·¥å…·æä¾›äº†è®¡ç®—æ—¥æœŸèŒƒå›´çš„ä¸€ä¸ªåŸºæœ¬æ–¹æ³•ï¼Œå‡å®šä»–ä»¬å¯ä»¥ä»¥å½“å‰æ—¥æœŸä¸ºå‚ç…§å®šä¹‰.
 
 {{{
 date_fmt="+%Y-%m-%d"
@@ -18,7 +18,7 @@ enddate=`date -d "-1 days" "$date_fmt"`
 startdate=`date -d "-6 days $enddate" "$date_fmt"`
 }}}
 
-ÔÚÕâÀï£¬ÄãÓÐÒ»Ð©Ñ¡Ïî.  ÆäÒ»¾ÍÊÇÓÃ`dates_in_range` ±éÀúËùÓÐÈÕÆÚ, ÔÚÈÕÆÚµÄ»ù´¡ÉÏ½¨Á¢ÎÄ¼þÃû(Dates_in_rangeUserDocs).
+åœ¨è¿™é‡Œï¼Œä½ æœ‰ä¸€äº›é€‰é¡¹. å…¶ä¸€å°±æ˜¯ç”¨dates_in_range éåŽ†æ‰€æœ‰æ—¥æœŸ, åœ¨æ—¥æœŸçš„åŸºç¡€ä¸Šå»ºç«‹æ–‡ä»¶å(Dates_in_rangeUserDocs).
 
 {{{
 for d in `dates_in_range -s $startdate -e $enddate`; do
@@ -27,14 +27,14 @@ for d in `dates_in_range -s $startdate -e $enddate`; do
 done
 }}}
 
-ÁíÒ»¸öÑ¡ÔñÊÇÓÃ `findfiles` to Ö±½Ó¼ø±ðÎÄ¼þ (FindfilesUserDocs).
+å¦ä¸€ä¸ªé€‰æ‹©æ˜¯ç”¨ `findfiles` to ç›´æŽ¥é‰´åˆ«æ–‡ä»¶ (FindfilesUserDocs).
 
 {{{
 files=`findfiles -d "$source_dir" -g "*.dat" -s $startdate -e $enddate`
 # process files...
 }}}
 
-µ«ÓÃµÚ¶þÖÖ·½·¨Ê±, Äã×îºÃÕÒµ½ÁË¾¡¿ÉÄÜ¶àµÄÎÄ¼þ.  ÎÒÃÇÑÓÉìÇ°Ò»¸öÀý×Ó£º
+ä½†ç”¨ç¬¬äºŒç§æ–¹æ³•æ—¶, ä½ æœ€å¥½æ‰¾åˆ°äº†å°½å¯èƒ½å¤šçš„æ–‡ä»¶. æˆ‘ä»¬å»¶ä¼¸å‰ä¸€ä¸ªä¾‹å­ï¼š
 
 {{{
 files=`findfiles -d "$source_dir" -g "*.dat" -s $startdate -e $enddate`
@@ -47,11 +47,11 @@ fi
 # process files...
 }}}
 
-ÔÚÕâÀïÎÒÃÇÓÃ `deltadays` ÔÚÖ¸¶¨µÄÈÕÆÚ·¶Î§ÄÚ³öÏÖÁË¶àÉÙ¸öÈÕÆÚ (DeltadaysUserDocs).  ÕâÑùµÄ»°£¬Êý¾Ý´¦ÀíµÄ·¶Î§¾Í¿ÉÒÔÔÚ´úÂëÖÐ¸Ä±ä»òÕß±»ÓÃ»§ÖØÐ´¶ø²»Ó°ÏìÕâ²¿·Ö³ÌÐò.
+åœ¨è¿™é‡Œæˆ‘ä»¬ç”¨ `deltadays` åœ¨æŒ‡å®šçš„æ—¥æœŸèŒƒå›´å†…å‡ºçŽ°äº†å¤šå°‘ä¸ªæ—¥æœŸ (DeltadaysUserDocs). è¿™æ ·çš„è¯ï¼Œæ•°æ®å¤„ç†çš„èŒƒå›´å°±å¯ä»¥åœ¨ä»£ç ä¸­æ”¹å˜æˆ–è€…è¢«ç”¨æˆ·é‡å†™è€Œä¸å½±å“è¿™éƒ¨åˆ†ç¨‹åº.
 
-= Ñ°ÕÒËùÓÐÐèÒª´¦ÀíµÄÎÄ¼þ =
+= å¯»æ‰¾æ‰€æœ‰éœ€è¦å¤„ç†çš„æ–‡ä»¶ =
 
-ÔÚÑ°ÕÒÊäÈëÊý¾ÝÊ±µÄÁíÍâÒ»ÖÖÊ¹ÓÃÄ£Ê½ÊÇ¼ø±ð³öËùÓÐÉÐÎ´´¦ÀíµÄÊý¾ÝÎÄ¼þ.  CRUSH Í¨¹ýÈÃÓÃ»§±£´æÒ»¸öÈÕÖ¾ÎÄ¼þÀ´½â¾öÕâ¸öÎÊÌâ£¬Õâ¸öÈÕÖ¾ÎÄ¼þÖÐ±£´æÁËÒÑ¾­±»´¦ÀíµÄÊý¾Ý, È»ºóÉ¨ÃèÄ¿Â¼À´Ñ°ÕÒ²»ÔÙÈÕÖ¾ÎÄ¼þÖÐµÄÏî. Õâ¸ö¹¤×÷ÓÉ `find_not_processed` ¹¤¾ßÍê³É (Find_not_processedUserDocs).
+åœ¨å¯»æ‰¾è¾“å…¥æ•°æ®æ—¶çš„å¦å¤–ä¸€ç§ä½¿ç”¨æ¨¡å¼æ˜¯é‰´åˆ«å‡ºæ‰€æœ‰å°šæœªå¤„ç†çš„æ•°æ®æ–‡ä»¶. CRUSH é€šè¿‡è®©ç”¨æˆ·ä¿å­˜ä¸€ä¸ªæ—¥å¿—æ–‡ä»¶æ¥è§£å†³è¿™ä¸ªé—®é¢˜ï¼Œè¿™ä¸ªæ—¥å¿—æ–‡ä»¶ä¸­ä¿å­˜äº†å·²ç»è¢«å¤„ç†çš„æ•°æ®, ç„¶åŽæ‰«æç›®å½•æ¥å¯»æ‰¾ä¸å†æ—¥å¿—æ–‡ä»¶ä¸­çš„é¡¹. è¿™ä¸ªå·¥ä½œç”± `find_not_processed` å·¥å…·å®Œæˆ (Find_not_processedUserDocs).
 
 {{{
 already_done_log="$WORKING_DIR/processed.log"
@@ -62,7 +62,7 @@ for f in $files; do
 done
 }}}
 
-¼´Ê¹ÕâÔÚ´¦ÀíµÄÎÄ¼þ¿ÉÒÔ°´ÈÕÆÚ¶¨Î», µ±ÄãÐèÒªÈÃÄãµÄ³ÌÐòÃÖ²¹´í¹ýµÄÒ»ÌìµÄ´¦ÀíÊ±£¬ÕâÖÖÄ£Ê½Ò²ÊÇÓÐÓÃµÄ.
+å³ä½¿è¿™åœ¨å¤„ç†çš„æ–‡ä»¶å¯ä»¥æŒ‰æ—¥æœŸå®šä½, å½“ä½ éœ€è¦è®©ä½ çš„ç¨‹åºå¼¥è¡¥é”™è¿‡çš„ä¸€å¤©çš„å¤„ç†æ—¶ï¼Œè¿™ç§æ¨¡å¼ä¹Ÿæ˜¯æœ‰ç”¨çš„.
 
 ----
-»Øµ½ ApplicationDevelopmentWithCrush
+å›žåˆ° ApplicationDevelopmentWithCrush

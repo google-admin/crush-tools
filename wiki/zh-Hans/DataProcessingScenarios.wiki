@@ -1,57 +1,53 @@
-#��Ҫ ���ݴ����ű��͹���
+﻿#概要 数据处理脚本和工具
 
-= ��� =
+= 简介 =
 
-���ݴ����������Է�Ϊ ����(filtering), ת��(transforming), �ϲ�/����(merging/joining), �� ��ʽ�� (formatting).  CRUSH ��һЩ�๦�ܵĹ��߿������ض��� shell �ű���������.
+数据处理工作可以分为 过滤(filtering), 转变(transforming), 合并/连接(merging/joining), 或 格式化 (formatting). CRUSH 有一些多功能的工具可以是特定的 shell 脚本工作更简单.
 
-���� CRUSH ���ߺͱ�׼��Unix���߹������ƣ���������һЩ����Ĺ��ܶ��ҿ��ܻ���һЩ�Ľ��Ŀ����ԡ� 
+许多 CRUSH 工具和标准的Unix工具功能相似，但它们有一些特殊的功能而且可能还有一些改进的可用性。
 
-= ���� =
+= 过滤 =
 
-��������Ҫɾ��������Ȥ�ļ�¼
+过滤数据要删除不敢兴趣的记录
 
- * `grepfield` ���� `grep(1)` ����,�����ڷָ������������ĳһ�ض��ֶ� (field) �Ľ��в���. 
- * `funiq` ���� `uniq(1)`,�����ڷָ������������ĳЩ�ض��ֶεĽ��в���.
- * `cutfield` ɾ���ض���ĳЩ�ֶ�, ����һ���������õ� `cut(1)` ����
- * `truncfield`�ض��������е��ֶε�ֵ.
- * `subtotal` ��ӵ����ͬ�ؼ��ֶ����ڵĿ����roll-up lines .
+ * `grepfield` 很像 `grep(1)` 工具,但它在分隔的数据流针对某一特定字段 (field) 的进行操作.
+ * `funiq` 很像 `uniq(1)`,但它在分隔的数据流针对某些特定字段的进行操作.
+ * `cutfield` 删除特定的某些字段, 很像一个反过来用的 cut(1) 工具
+ * `truncfield` 截断数据流中的字段的值.
+ * `subtotal1 给拥有相同关键字段相邻的块插入roll-up lines .
 
-= ת�� =
+= 转化 =
 
-����ת����һ���̶����Ǹı����ݵ�"��״".
+数据转化在一定程度上是改变数据的"形状".
 
- * `aggregate` �����ÿһ���ֶ������ݵĺ͡�������ƽ����.
- ������Ҫ������ǰ����������ڴ��б����ֶε�����.
- * `aggregate2` ����̫�಻ͬ���ֶ�Ҫ���浽�ڴ�ʱ�����. ����Ҫ��ǰ���򣬵��ڴ�ռ�ñ�`aggregate`С�ö�.
- * `reorder` �ı�ÿһ���е��ֶ�˳��.  ��ʹ��`-f`ѡ��ʱ , �����԰���Ҫ��˳����������Դ���`cut(1)`.  ��Ҳ�����ƶ��򽻻������ֶ�. 
- * `add_field` �����ݼ�����һ�����ֶ�.
- * `calcfield` �����µ��ֶΣ��ֶ�ֵ�ǰ���һ���ı���ʽ���Ѵ��ڵ��ֶ�ֵ�ĺ���ӳ��.
- * `translate_field` ��һ���ֶ���ӳ��һ���µ�ֵ���Ѵ��ڵ�ֵ.
+ * `aggregate` 计算出每一个字段下数据的和、数量和平均数.
+它不需要输入提前排序或者在内存中保存字段的数据.
+ * `aggregate2` 在有太多不同的字段要保存到内存时会更好. 输入要提前排序，但内存占用比`aggregate`小得多.
+ * `reorder` 改变每一行中的字段顺序. 当使用-f选项时 , 它可以按需要的顺序输出，可以代替`cut(1)`. 它也可以移动或交换个别字段.
+ * `add_field` 用数据集创建一个新字段.
+ * `calcfield` 创建新的字段，字段值是按照一定的表达式对已存在的字段值的函数映射.
+ * `translate_field` 在一个字段上映射一个新的值到已存在的值.
 
+= 合并和连接 =
 
-= �ϲ������� =
+ * `deltaforce` 从另外一个文件增量更新在单个文件中的一个大数据集.
+ * `mergekeys` 连接有相同字段的已排序的文件, 把不同的字段合并到一个文件中.
 
- * `deltaforce` ������һ���ļ����������ڵ����ļ��е�һ�������ݼ�.
- * `mergekeys` ��������ͬ�ֶε���������ļ�, �Ѳ�ͬ���ֶκϲ���һ���ļ���.
+= 格式化 =
 
+ * `pivot` 把独特的数据从字段的集合中提取出来并给这些数据建立新的列.
+ * `csvformat` 把已分隔的文本格式化为电子表格程序兼容的 CSV (comma-separated values 逗号分隔的数据).
+ * `convdate` 改变包含日期的字段的格式.
 
-= ��ʽ�� =
+= 杂项 =
 
- * `pivot` �Ѷ��ص����ݴ��ֶεļ�������ȡ����������Щ���ݽ����µ���.
- * `csvformat` ���ѷָ����ı���ʽ��Ϊ���ӱ��������ݵ� CSV (comma-separated values ���ŷָ�������).
- * `convdate` �ı�������ڵ��ֶεĸ�ʽ.
-
-
-= ���� =
-
- * `buffer` ���ڴ������ռ���һ���Ұ���Щ����һ�������һ���ļ�.  ��������ѽ��������ᱻ���������һ���ļ�. ��ʹ��ʹ��shell������ض��������(`>`)ʱ, ����ļ���д��ʽ�򿪶����ڹܵ�ִ��ǰ�ᱻ�ض�.
- * `dates_in_range` ��ӡ�������� ���������ڷ�Χ�ڳ��ֵ�����.
- * `deltadays` ��ӡ���ڸ������ڷ�Χ�ڳ��ֵ����ڵ�����.
- * `dbstream` ִ�����ݿ��ѯ���Էָ���ı�����ӡ�����.
- * `foreach_parallel` �����ڲ��е�shell�е�`for`ѭ�� . ���ܲ���ִ���ж�������һ�������.
- * `find_not_processed` �� `findfiles` ��������λ���������ļ�.
- * `indexof` ��ȡ�б����в��ҵ�ָ���ֶε�����ֵ
-
+ * `buffer` 把内存输入收集到一起并且把这些数据一并输出到一个文件. 这在你想把结果输出到会被用作输入的一个文件. 当使用使用shell的输出重定向操作符(>)时, 输出文件以写格式打开而且在管道执行前会被截断.
+ * `dates_in_range` 打印出所有在 给定的日期范围内出现的日期.
+ * `deltadays` 打印出在给定日期范围内出现的日期的数量.
+ * `dbstream` 执行数据库查询并以分割的文本流打印出结果.
+ * `foreach_parallel` 类似于并行的shell中的for循环 . 它能并行执行有多个输入的一个代码块.
+ * `find_not_processed` 和 `findfiles` 可用来定位输入数据文件.
+ * `indexof` 读取列标题行并找到指定字段的索引值
 
 ----
-�ص� ApplicationDevelopmentWithCrush
+回到 ApplicationDevelopmentWithCrush

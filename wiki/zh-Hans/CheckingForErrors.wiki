@@ -1,10 +1,10 @@
-#¸ÅÒª ²¶×½²¢´¦Àí´íÎó
+ï»¿#æ¦‚è¦ æ•æ‰å¹¶å¤„ç†é”™è¯¯
 
-= ´íÎó´¦Àí =
+= é”™è¯¯å¤„ç† =
 
-ÕýÈ·µØ´¦Àí´íÎóÊÇ±àÐ´¿É¿¿µÄÓ¦ÓÃ³ÌÐòºÜÖØÒªµÄÒ»²¿·Ö. ÎªÁË¼á³Ö´íÎó´¦Àí¶øÇÒ²»ÖÂÊ¹´úÂë¿É¶ÁÐÔ½µµÍ, ÓÃÒ»Ð©º¯ÊýÀ´´¦Àí³£¼ûµÄ´íÎóÊÇÖµµÃµÄ.
+æ­£ç¡®åœ°å¤„ç†é”™è¯¯æ˜¯ç¼–å†™å¯é çš„åº”ç”¨ç¨‹åºå¾ˆé‡è¦çš„ä¸€éƒ¨åˆ†. ä¸ºäº†åšæŒé”™è¯¯å¤„ç†è€Œä¸”ä¸è‡´ä½¿ä»£ç å¯è¯»æ€§é™ä½Ž, ç”¨ä¸€äº›å‡½æ•°æ¥å¤„ç†å¸¸è§çš„é”™è¯¯æ˜¯å€¼å¾—çš„.
 
-±äÁ¿"`$?`"´æ´¢ÁË×î½üÔËÐÐ½áÊøµÄÃüÁîµÄ·µ»ØÖµ£¬ËùÒÔËü¿ÉÒÔÓÃÀ´¼ì²éÃüÁîµÄÔËÐÐÇé¿ö.  Ê¹ÓÃÂß¼­ÔËËã·û`&&` ºÍ `||` Ê±»á×Ô¶¯Ê¹ÓÃÕâ¸ö±äÁ¿.
+å˜é‡"$?"å­˜å‚¨äº†æœ€è¿‘è¿è¡Œç»“æŸçš„å‘½ä»¤çš„è¿”å›žå€¼ï¼Œæ‰€ä»¥å®ƒå¯ä»¥ç”¨æ¥æ£€æŸ¥å‘½ä»¤çš„è¿è¡Œæƒ…å†µ. ä½¿ç”¨é€»è¾‘è¿ç®—ç¬¦&& å’Œ || æ—¶ä¼šè‡ªåŠ¨ä½¿ç”¨è¿™ä¸ªå˜é‡.
 
 {{{
 . /path/to/crushlib.sh || {
@@ -19,9 +19,9 @@ if test $? -ne 0; then
 fi
 }}}
 
-µ«µ±´¦Àí¹ÜµÀÊ±, ÄãÒª¶à×öÐ©¹¤×÷. ÔÚÒ»¸ö¹ÜµÀÔËÐÐºó, "`$?`" Í¨³£´æ´¢ÁË¹ÜµÀÖÐ×îºóÒ»¸öÔªËØµÄÍË³ö·µ»ØÖµ. Èç¹û¹ÜµÀÖÐ±ðµÄÔªËØ·¢ÉúÁË´íÎó,Ê¹ÓÃÕâ¸ö±äÁ¿²»ÄÜ·¢ÏÖ´íÎó.  Bash Ìá¹©¶Ô´Ë¸ø³öÁË¶à¸öÑ¡Ôñ.
+ä½†å½“å¤„ç†ç®¡é“æ—¶, ä½ è¦å¤šåšäº›å·¥ä½œ. åœ¨ä¸€ä¸ªç®¡é“è¿è¡ŒåŽ, "$?" é€šå¸¸å­˜å‚¨äº†ç®¡é“ä¸­æœ€åŽä¸€ä¸ªå…ƒç´ çš„é€€å‡ºè¿”å›žå€¼. å¦‚æžœç®¡é“ä¸­åˆ«çš„å…ƒç´ å‘ç”Ÿäº†é”™è¯¯,ä½¿ç”¨è¿™ä¸ªå˜é‡ä¸èƒ½å‘çŽ°é”™è¯¯. Bash æä¾›å¯¹æ­¤ç»™å‡ºäº†å¤šä¸ªé€‰æ‹©.
 
- * ¼ì²é `PIPESTATUS` ±äÁ¿. ÕâÊÇÒ»¸ö¹ÜµÀÖÐËùÓÐ³ÉÔ±ÍË³öÂëµÄÊý×é. Èç¹ûËùÓÐµÄ³ÌÐòÔÚ³É¹¦ÍË³öÊ±¶¼·µ»Ø 0, Äã¿ÉÒÔÕâÑù¶¨ÒåÒ»¸öº¯ÊýÀ´´¦Àí´íÎó:
+ * æ£€æŸ¥ PIPESTATUS å˜é‡. è¿™æ˜¯ä¸€ä¸ªç®¡é“ä¸­æ‰€æœ‰æˆå‘˜é€€å‡ºç çš„æ•°ç»„. å¦‚æžœæ‰€æœ‰çš„ç¨‹åºåœ¨æˆåŠŸé€€å‡ºæ—¶éƒ½è¿”å›ž 0, ä½ å¯ä»¥è¿™æ ·å®šä¹‰ä¸€ä¸ªå‡½æ•°æ¥å¤„ç†é”™è¯¯:
 
 {{{
 function DIE_ON_PIPE_ERROR {
@@ -37,7 +37,7 @@ function DIE_ON_PIPE_ERROR {
 }
 }}}
 
- Ëü¿ÉÒÔÕâÑùÓÃ£¬¼Ç×ÅÔÚ±ðµÄÃüÁîÖØÐ´`PIPESTATUS`Ö®Ç°µ÷ÓÃ`DIE_ON_PIPE_ERROR`:
+ * å®ƒå¯ä»¥è¿™æ ·ç”¨ï¼Œè®°ç€åœ¨åˆ«çš„å‘½ä»¤é‡å†™PIPESTATUSä¹‹å‰è°ƒç”¨DIE_ON_PIPE_ERROR:
 
 {{{
 zcat $files |
@@ -48,7 +48,7 @@ zcat $files |
 DIE_ON_PIPE_ERROR "line $LINENO: error processing data"
 }}}
 
- * Ñ¡ÖÐ"`pipefail`"Ñ¡Ïî, Ëü¿ÉÒÔÈÃ "`$?`" ´æ´¢ÔÚ¹ÜµÀÖÐµÄ×î½üÒ»¸ö·ÇÁãÍË³öÂë. Õâ¸öÑ¡ÏîÔÚBash °æ±¾3ÖÐ¼ÓÈë.
+ * é€‰ä¸­"pipefail"é€‰é¡¹, å®ƒå¯ä»¥è®© "$?" å­˜å‚¨åœ¨ç®¡é“ä¸­çš„æœ€è¿‘ä¸€ä¸ªéžé›¶é€€å‡ºç . è¿™ä¸ªé€‰é¡¹åœ¨Bash ç‰ˆæœ¬3ä¸­åŠ å…¥.
 
 {{{
 set -o pipefail
@@ -64,10 +64,9 @@ if test $? -ne 0; then
 fi
 }}}
 
+æ³¨æ„ï¼Œå‡å®šéžé›¶å€¼å°±æ˜¯é”™è¯¯è¿”å›žå€¼å¹¶ä¸å¾ˆå¯é . ä¹Ÿè®¸æœ€å¸¸è§çš„ä¾‹å­å°±æ˜¯ grep(1) åœ¨æ‰¾ä¸åˆ°åŒ¹é…æ—¶çš„è¿”å›žå€¼. åœ¨æ­¤ç±»æƒ…å†µä¸‹ï¼ŒåƒDIE_ON_PIPE_ERRORè¿™æ ·çš„ç¨‹åºèƒ½ä¸èƒ½ä½¿ç”¨å–å†³äºŽå¼€å‘äººå‘˜.
 
-×¢Òâ£¬¼Ù¶¨·ÇÁãÖµ¾ÍÊÇ´íÎó·µ»ØÖµ²¢²»ºÜ¿É¿¿. Ò²Ðí×î³£¼ûµÄÀý×Ó¾ÍÊÇ `grep(1)` ÔÚÕÒ²»µ½Æ¥ÅäÊ±µÄ·µ»ØÖµ. ÔÚ´ËÀàÇé¿öÏÂ£¬Ïñ`DIE_ON_PIPE_ERROR`ÕâÑùµÄ³ÌÐòÄÜ²»ÄÜÊ¹ÓÃÈ¡¾öÓÚ¿ª·¢ÈËÔ±.
-
-Õâ¸öÀý×Ó²»ÄÜÒÆÖ²µ½³ý Bash shell ÒÔÍâµÄ shell.  ¹ØÓÚÈçºÎÓ¦ÓÃÕâÐ©¸ÅÄîµ½ÄãÓÃµÄ shell ÖÐ£¬Çë²é¿´ÄãÓÃµÄ shell µÄÊÖ²á.
+è¿™ä¸ªä¾‹å­ä¸èƒ½ç§»æ¤åˆ°é™¤ Bash shell ä»¥å¤–çš„ shell. å…³äºŽå¦‚ä½•åº”ç”¨è¿™äº›æ¦‚å¿µåˆ°ä½ ç”¨çš„ shell ä¸­ï¼Œè¯·æŸ¥çœ‹ä½ ç”¨çš„ shell çš„æ‰‹å†Œ.
 
 ----
-»Øµ½ ApplicationDevelopmentWithCrush 
+å›žåˆ° ApplicationDevelopmentWithCrush 
