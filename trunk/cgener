@@ -204,8 +204,10 @@ __END_USAGE__
              '\n");' . qq(\n);
   }
   if ( defined($global{usage_extra}) && length($global{usage_extra}) ){
+    my $usage_extra = $global{usage_extra};
+    $usage_extra =~ s/[\r\n]/\\n/smog;
     $ustr .= qq(\t) . 'fprintf' .
-             '(stderr, "\n' . $global{usage_extra} . '");' . qq(\n);
+             '(stderr, "\n' . $usage_extra . '");' . qq(\n);
   }
 
   $ustr .= qq(\tprintf("\\n\\n");\n\treturn;\n} );
