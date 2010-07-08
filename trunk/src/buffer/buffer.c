@@ -19,20 +19,17 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <crush/general.h>
+#include "buffer_main.h"
 
 /*! initial buffer size */
 #define BUFFER_INITIAL_SIZE 4096
 
-/*! prints usage message
- *
- * \param bin name of executable
- */
-void usage(char *bin);
-
 /*! main execution function
  *
+ * \para args contains the parsed cmd-line options & arguments.
  * \param argc number of arguments
  * \param argv argument vector
+ * \param optind index of the first non-option cmd-line argument.
  *
  * \return status indicator
  *	- 0 = success
@@ -42,7 +39,7 @@ void usage(char *bin);
  *	- <code>file(s)</code> - specifies input files
  *
  */
-int main(int argc, char *argv[]) {
+int buffer(struct cmdargs *args, int argc, char *argv[], int optind) {
   int opt;                      /*! option index */
   int fi;                       /*! index of current file within argv */
   FILE *fp;                     /*! pointer to input file */
@@ -57,24 +54,6 @@ int main(int argc, char *argv[]) {
 
   size_t amt_read = 0;          /*! number of bytes read from input */
   char tmp[512];                /*! holds input data before moving to buffer */
-
-  while ((opt = getopt(argc, argv, "ho:a:")) != -1) {
-    switch (opt) {
-      case 'h':
-        usage(argv[0]);
-        return (1);
-        break;
-
-      case 'o':
-        outname = optarg;
-        break;
-
-      case 'a':
-        outname = optarg;
-        outappend = 1;
-        break;
-    }
-  }
 
   buffer = (char *) xmalloc(BUFFER_INITIAL_SIZE);
   buffer_size = BUFFER_INITIAL_SIZE;
@@ -101,16 +80,16 @@ int main(int argc, char *argv[]) {
     fi++;
   } while (fi < argc);
 
-  if (outname == NULL)
+  if (args->output == NULL)
     out = stdout;
-  else if (outappend) {
-    if ((out = fopen(outname, "ab")) == NULL) {
-      perror(outname);
+  else if (args->append) {
+    if ((out = fopen(args->output, "ab")) == NULL) {
+      perror(args->output);
       exit(1);
     }
   } else {
-    if ((out = fopen(outname, "wb")) == NULL) {
-      perror(outname);
+    if ((out = fopen(args->output, "wb")) == NULL) {
+      perror(args->output);
       exit(1);
     }
   }
@@ -120,24 +99,4 @@ int main(int argc, char *argv[]) {
   free(buffer);
 
   return (0);
-}
-
-
-
-void usage(char *bin) {
-  fprintf(stderr, "\nbuffers all input and prints it out all at once.\n");
-  fprintf(stderr,
-          "useful if the output should go to one of the input files.\n\n");
-  fprintf(stderr, "usage: %s -[h|[o|a <file>]] [file(s)]\n", bin);
-  fprintf(stderr, "\t-h\t\tprints this message and exits.\n");
-  fprintf(stderr, "\t-o <file>\tspecifies output file for writing.\n");
-  fprintf(stderr, "\t-a <file>\tspecifies output file for appending.\n");
-  fprintf(stderr, "\tfile(s)\t\toptional input files.\n\n");
-  fprintf(stderr,
-          "if no files are specified, stdin is used for input, and stdout for output.\n");
-  fprintf(stderr,
-          "be forewarned that this has potential to use up a lot of memory.\n\n");
-  fprintf(stderr,
-          "NOTE: when redirecting output, your shell may open the target file for writing\nbefore the processes begin executing.  so using the \"-o\" option is safer than\nredirecting to a file.\n\n");
-
 }
