@@ -15,6 +15,7 @@
  *****************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <crush/reutils.h>
 
 #if HAVE_PCRE_H && HAVE_LIBPCRE
@@ -62,7 +63,6 @@
 
 int test_make_flags() {
   char *desc = "make flags";
-  char *modifiers;
   int flags, is_global = 0;
   int has_error = 0;
 
@@ -260,4 +260,3 @@ int main (int argc, char *argv[]) {
   exit(0);
 }
 #endif
-

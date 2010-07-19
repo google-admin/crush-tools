@@ -71,7 +71,6 @@ int ht_init(hashtbl_t * tbl,
 /* destroy a table */
 void ht_destroy(hashtbl_t * tbl) {
   int i;
-  bst_node_t *treenode;
 
   /* Loop through the array of trees, freeing data if necessary, then
    * deallocating the tree. */
@@ -108,7 +107,7 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   strcpy(elem->key, key);
   elem->data = data;
 
-  h = tbl->hash(elem->key) % tbl->arrsz;
+  h = tbl->hash((unsigned char *) elem->key) % tbl->arrsz;
 
   if (!tbl->arr[h]) {
     tbl->arr[h] = xmalloc(sizeof(bstree_t));
@@ -141,7 +140,7 @@ void *ht_get(hashtbl_t * tbl, char *key) {
   bst_node_t *treenode;
   ht_elem_t key_elem;
 
-  h = tbl->hash(key) % tbl->arrsz;
+  h = tbl->hash((unsigned char *) key) % tbl->arrsz;
   tree = tbl->arr[h];
 
   if (! tree)  /* invalid key - nothing in this slot yet */
@@ -159,7 +158,7 @@ void ht_delete(hashtbl_t * tbl, char *key) {
   bstree_t *tree;
   bst_node_t *treenode;
 
-  h = tbl->hash(key) % tbl->arrsz;
+  h = tbl->hash((unsigned char *) key) % tbl->arrsz;
   tree = tbl->arr[h];
 
   if (! tree)  /* A NULL slot means the key is unknown. */
@@ -186,7 +185,6 @@ static void ht_keys_bst_traverse(bst_node_t *node,
 }
 
 int ht_keys(hashtbl_t *tbl, char **array) {
-  bstree_t *tree;
   int i, j = 0;
   for (i = 0; i < tbl->arrsz; i++) {
     if (tbl->arr[i])
@@ -226,7 +224,7 @@ void ht_dump_stats(hashtbl_t * tbl) {
 
   /** @todo Provide average bucket-fill metric here. */
   fprintf(stderr,
-          "size:\t%zd\nuninitialized buckets:\t%zd\nelements:\t%d",
+          "size:\t%lu\nuninitialized buckets:\t%lu\nelements:\t%lu",
           tbl->arrsz, uninitialized, tbl->nelems);
 }
 

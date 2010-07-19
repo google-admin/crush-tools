@@ -42,7 +42,6 @@ int crush_resubst_compile(const char *subst_pattern,
                           size_t *compiled_subst_sz) {
   int n_elems = 0;
   int is_escaped = 0;
-  unsigned int capt_var;
   char *p;
   size_t needed_sz = strlen(subst_pattern) *
                      sizeof(struct crush_resubst_elem);
@@ -147,7 +146,7 @@ static char * _crush_re_expand_subst(const char *subject,
 
   for (i = 0; i < n_subst_elems; i++) {
     if (compiled_subst[i].elem_type == resubst_variable) {
-      int capt_var = compiled_subst[i].variable_num;
+      capt_var = compiled_subst[i].variable_num;
       for (;;) {
         int var_val_len = pcre_copy_substring(subject, ovector, n_pairs,
                                               capt_var,
@@ -240,7 +239,7 @@ char * crush_re_substitute(pcre *re, pcre_extra *re_extra,
       int i;
       for (i=0; i < 20; i+=2)
         printf("(%d, %d) ", ovector[i], ovector[i+1]);
-      printf("\nprev_match_stop = %d\ntarget_offset = %d\n",
+      printf("\nprev_match_stop = %d\ntarget_offset = %lu\n",
              prev_match_stop, target_offset);
       printf("target = %s\n", *target);
     }

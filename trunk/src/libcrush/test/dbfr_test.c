@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <crush/dbfr.h>
 
 #define DIE(s, ...) \
@@ -81,7 +82,7 @@ int test_dbfr_getline_1() {
   }
   retval = dbfr_getline(reader);
   if (retval != strlen("this is line 1\n")) {
-    sprintf(failure_reason, "dbfr_getline() returned %d.", retval);
+    sprintf(failure_reason, "dbfr_getline() returned %ld.", retval);
     return 1;
   }
   if (reader->line_no != 1) {
@@ -116,7 +117,7 @@ int test_dbfr_getline_2() {
     i++;
     dbfr_getline(reader);
     if (i != reader->line_no) {
-      sprintf(failure_reason, "line number set to %d after %d reads",
+      sprintf(failure_reason, "line number set to %ld after %d reads",
               reader->line_no, i);
       return 1;
     }
@@ -136,7 +137,7 @@ int test_dbfr_getline_2() {
   retval = dbfr_getline(reader);
   if (retval > 0) {
     sprintf(failure_reason,
-            "dbfr_getline() returned %d where EOF should be.", retval);
+            "dbfr_getline() returned %ld where EOF should be.", retval);
     return 1;
   }
   if (! reader->eof) {
@@ -183,8 +184,3 @@ int main (int argc, char *argv[]) {
     return 1;
   return 0;
 }
-
-
-
-
-

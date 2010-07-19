@@ -19,6 +19,7 @@
 #endif
 
 #include <crush/ffutils.h>
+#include <crush/general.h>
 #include <fcntl.h>              /* open64() and O_* flags */
 #include <ctype.h>              /* isdigit(), isspace() */
 
@@ -194,7 +195,7 @@ void expand_chars(char *s) {
   if (strchr(s, '\\') == NULL)
     return;
 
-  w = (char *) xmalloc(strlen(s));
+  w = xmalloc(strlen(s));
   memset(w, 0, strlen(s));
 
   p = s;
@@ -266,7 +267,7 @@ ssize_t expand_nums(char *arg, int **array, size_t * array_size) {
   i = 0;
 
   if (*array == NULL && *array_size == 0) {
-    *array = (char *) xmalloc(sizeof(int) * FFUTILS_RESIZE_AMT);
+    *array = xmalloc(sizeof(int) * FFUTILS_RESIZE_AMT);
     *array_size = FFUTILS_RESIZE_AMT;
   }
 
@@ -320,7 +321,7 @@ ssize_t expand_label_list(const char *labels,
                           int **array, size_t *array_sz) {
   int i = 0, j = 0;
   size_t labels_len = strlen(labels);
-  char *labels_copy = (char *) xmalloc(labels_len + 1);
+  char *labels_copy = xmalloc(labels_len + 1);
   size_t tokens = 0;
   char *pos, *labels_end;
 
@@ -362,7 +363,7 @@ ssize_t expand_label_list(const char *labels,
 
   /* make sure the array can hold all of the indexes */
   if (*array == NULL) {
-    *array = (int *) xmalloc(sizeof(int) * tokens);
+    *array = xmalloc(sizeof(int) * tokens);
     *array_sz = tokens;
   } else {
     if (*array_sz < tokens) {
@@ -467,7 +468,7 @@ ssize_t field_str(const char *value, const char *line, const char *delim) {
      bigger, just for fun.  and allocating max+1 so there's room for
      the null terminator. */
   max_field_chars = strlen(value) + 3;
-  curfield = (char *) xmalloc(max_field_chars + 1);
+  curfield = xmalloc(max_field_chars + 1);
 
   i = 0;
   curfield_len = 0;

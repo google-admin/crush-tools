@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
   for (j = 0; j < 3; j++) {
     for (i = 0; i < 10; i++) {
-      char *key[12];
+      char key[12];
 
       sprintf(key, "hello %d", i);
       data = strdup("world");
@@ -72,4 +72,3 @@ int main(int argc, char *argv[]) {
 
   return has_failures;
 }
-

@@ -88,7 +88,7 @@ int test_fields_in_line() {
   if (n != TE0) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %u instead of %u\n",
+            ": failed (test 0)\n\treturned %lu instead of %lu\n",
             "fields_in_line()", n, TE0);
     n_errors++;
   }
@@ -97,7 +97,7 @@ int test_fields_in_line() {
   if (n != TE1) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %u instead of %u\n",
+            ": failed (test 1)\n\treturned %lu instead of %lu\n",
             "fields_in_line()", n, TE1);
     n_errors++;
   }
@@ -106,7 +106,7 @@ int test_fields_in_line() {
   if (n != TE2) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %u instead of %u\n",
+            ": failed (test 2)\n\treturned %lu instead of %lu\n",
             "fields_in_line()", n, TE2);
     n_errors++;
   }
@@ -115,7 +115,7 @@ int test_fields_in_line() {
   if (n != TE3) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 3)\n\treturned %u instead of %u\n",
+            ": failed (test 3)\n\treturned %lu instead of %lu\n",
             "fields_in_line()", n, TE3);
     n_errors++;
   }
@@ -441,7 +441,7 @@ int test_expand_nums(void) {
   if (n != TE0) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %u instead of %u\n",
+            ": failed (test 0)\n\treturned %lu instead of %lu\n",
             "expand_nums()", n, TE0);
     n_errors++;
   }
@@ -451,7 +451,7 @@ int test_expand_nums(void) {
   if (n != TE1) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %u instead of %u\n",
+            ": failed (test 1)\n\treturned %lu instead of %lu\n",
             "expand_nums()", n, TE1);
     n_errors++;
   }
@@ -461,7 +461,7 @@ int test_expand_nums(void) {
   if (n != TE2) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %u instead of %u\n",
+            ": failed (test 2)\n\treturned %lu instead of %lu\n",
             "expand_nums()", n, TE2);
     n_errors++;
   }
@@ -471,7 +471,7 @@ int test_expand_nums(void) {
   if (n != TE3) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 3)\n\treturned %u instead of %u\n",
+            ": failed (test 3)\n\treturned %lu instead of %lu\n",
             "expand_nums()", n, TE3);
     n_errors++;
   }
@@ -510,7 +510,7 @@ int test_expand_label_list(void) {
   if (retval != T0_retval) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %u instead of %u\n",
+            ": failed (test 0)\n\treturned %d instead of %d\n",
             "expand_label_list()", retval, T0_retval);
   	n_errors++;
   } else {
@@ -528,7 +528,7 @@ int test_expand_label_list(void) {
   if (retval != T1_retval) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %u instead of %u\n",
+            ": failed (test 1)\n\treturned %d instead of %d\n",
             "expand_label_list()", retval, T0_retval);
   	n_errors++;
   }
@@ -537,7 +537,7 @@ int test_expand_label_list(void) {
   if (retval != T2_retval) {
     fprintf(stderr,
             FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %u instead of %u\n",
+            ": failed (test 2)\n\treturned %d instead of %d\n",
             "expand_label_list()", retval, T2_retval);
   	n_errors++;
   } else {

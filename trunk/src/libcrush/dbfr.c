@@ -39,7 +39,7 @@
 
 #include <crush/dbfr.h>
 
-#ifdef HAVE_FCNTL_H || HAVE_SYS_FCNTL_H
+#if defined HAVE_FCNTL_H || defined HAVE_SYS_FCNTL_H
 int dbfr_is_readable(FILE *fp) {
   int fd = fileno(fp);
   int flags = fcntl(fd, F_GETFL);
@@ -138,4 +138,3 @@ void dbfr_close(dbfr_t *reader) {
     fclose(reader->file);
   free(reader);
 }
-
