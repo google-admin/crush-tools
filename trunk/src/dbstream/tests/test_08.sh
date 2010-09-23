@@ -1,18 +1,17 @@
-test_number=02
-description="update with placeholders"
+test_number=08
+description="delete with placeholders"
 
 $test_dir/setup.pl || {
   test_status $test_number 1 "$description (setup failed)" SKIP
   continue
 }
 
-echo "1000" |
-  $bin -s "UPDATE crush_test SET Pages = ? WHERE Title = 'Anathem'"
+echo 'Anathem' | $bin -s "DELETE from crush_test WHERE Title = ?"
 output=`$bin -s "SELECT Pages from crush_test where Title = 'Anathem'"`
 if [ $? -ne 0 ]; then
   test_status $test_number 1 "$description (bad exit code)" FAIL
-elif [ "$output" != 1000 ]; then
-  test_status $test_number 1 "$description (bad output: $output)" FAIL
+elif [ "$output" ]; then
+  test_status $test_number 1 "$description (row not deleted.)" FAIL
 else
   test_status $test_number 1 "$description" PASS
 fi

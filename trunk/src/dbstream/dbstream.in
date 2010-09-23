@@ -25,10 +25,11 @@ $dsn = $ENV{'DB_DSN'};
 $uid = $ENV{'DB_UID'};
 $pwd = $ENV{'DB_PWD'};
 
+my $CRUSH_DEBUG = $ENV{'CRUSH_DEV_DEBUG'};
 
-# file or sql contain the query
-# input will be a stream of values for insert or update queries
-# d (delimiter) provided for spliting input lines or joining output
+# --file or --sql contain the query.
+# --input will be a stream of values for insert or update queries
+# --delimiter is provided for spliting input lines and/or joining output.
 
 my ($help, $sqlfile, $sql, $infile, $outfile, $d, $show_version, $include_header);
 $d = $ENV{"DELIMITER"} || chr(0xfe);
@@ -45,8 +46,6 @@ GetOptions('help' => \$help,
            'Version' => \$show_version,
            'Header'  => \$include_header,
           );
-  
-
 
 if ($help) {
   usage();
@@ -77,55 +76,80 @@ if (defined($sql)) {
   exit(1);
 }
 
+my $fhout;
+if (defined($outfile) and $outfile ne '-') {
+  $fhout = new FileHandle($outfile, "w");
+  die "$0: $outfile: $!\n" unless $fhout;
+} else {
+  $fhout = new FileHandle;
+  $fhout->fdopen("STDOUT", "w");
+  die "$0: stdout: $!\n" unless $fhout;
+}
+
+my $fhin;
+if (defined($infile) and $infile ne '-') {
+  $fhin = new FileHandle($infile, "r");
+  die "$0: $infile: $!\n" unless $fhin;
+} else {
+  $fhin = new FileHandle;
+  $fhin->fdopen("STDIN", "r");
+  die "$0: stdin: $!\n" unless $fhin;
+}
+
 my $dbh = DBI->connect($dsn, $uid, $pwd, {RaiseError => 1, AutoCommit => 1} );
 my $dbq = $dbh->prepare($query);
+my $header_printed = 0;
 
-if ($query =~ /^\(*\s*select/mi) {
-  my $fhout;
-  if (defined($outfile)) {
-    $fhout = new FileHandle($outfile, "w");
-    die "$0: $outfile: $!\n" unless $fhout;
-  } else {
-    $fhout = new FileHandle;
-    $fhout->fdopen("STDOUT", "w");
-    die "$0: stdout: $!\n" unless $fhout;
+# NOTE: Some DB Drivers require an execute() before the Statement handle has
+# access to NUM_OF_FIELDS.
+if ($dbq->{NUM_OF_PARAMS}) {
+  # This query has placeholders.
+  my $input_line;
+  while ($input_line = <$fhin>) {
+    $input_line =~ s/[\r\n]*//;
+    print STDERR "$0: Executing with placeholder values: $input_line\n" if $CRUSH_DEBUG;
+    chomp(my @vals = split(/\Q$d\E/o, $input_line));
+    $dbq->execute(@vals);
+    if ($dbq->{NUM_OF_FIELDS}) {
+      # DB-read query.
+      if (! $header_printed && $include_header) {
+        print $fhout join($d, @{ $dbq->{NAME} }), qq(\n);
+        $header_printed = 1;
+      }
+      fetch_and_print_results($dbq, $fhout);
+    }
   }
+} else {
+  print STDERR "$0: Executing with no placeholder values\n" if $CRUSH_DEBUG;
   $dbq->execute();
-  if ($include_header) {
-    print $fhout join($d, @{ $dbq->{NAME} }), qq(\n);
+  if ($dbq->{NUM_OF_FIELDS}) {
+    # DB-read query.
+    if (! $header_printed && $include_header) {
+      print $fhout join($d, @{ $dbq->{NAME} }), qq(\n);
+      $header_printed = 1;
+    }
+    fetch_and_print_results($dbq, $fhout);
   }
-  while (my $results = $dbq->fetchrow_arrayref()) {
+}
+ 
+$dbh->disconnect();
+$fhin->close;
+$fhout->close;
+
+exit(0);
+
+
+sub fetch_and_print_results {
+  my ($qh, $fh) = @_;
+  while (my $results = $qh->fetchrow_arrayref()) {
     for (my $ri = 0; $ri < scalar(@{ $results }); $ri++) {
       if (! defined($results->[$ri])) {
         $results->[$ri] = '';
       }
     }
-    print $fhout join($d, @{ $results }) , qq(\n);
+    print $fh join($d, @{ $results }) , qq(\n);
   }
-  $fhout->close;
-} elsif ($query =~ /^(insert|update)/i) {
-  my $fhin;
-  if (defined($infile)) {
-    $fhin = new FileHandle($infile, "r");
-    die "$0: $infile: $!\n" unless $fhin;
-  } else {
-    $fhin = new FileHandle;
-    $fhin->fdopen("STDIN", "r");
-    die "$0: stdin: $!\n" unless $fhin;
-  }
-  while (<$fhin>) {
-    chomp(my @vals = split(/\Q$d\E/));
-    $dbq->execute(@vals);
-  }
-  $fhin->close;
-} else {
-  print STDERR "$0: invalid query syntax\n";
-  exit(1);
 }
-
-$dbh->disconnect();
-
-exit(0);
 
 
 sub usage {
@@ -141,15 +165,18 @@ options:
   -H, --Header         output the sql field names
   -f, --file <file>    take sql from specified file
   -s, --sql <query>    take sql on the commandline
-  -i, --input <file>   input of placeholder values
-  -o, --output <file>  write to specified file instead of stdout
-  --delimiter <delim>  use specified field separator
+  -i, --input <file>   input of placeholder values (default: stdin)
+  -o, --output <file>  write to specified file (default: stdout)
+  --delimiter <delim>  use specified field separator for input and output
   --dsn <dsn>          use DBI-style data-source name
   --uid <username>     database username
   --pwd <password>     database password
 
-if --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN,
+If --dsn, --uid, or --pwd aren't specified, environment variables DB_DSN,
 DB_UID, and DB_PWD will be used for the unprovided values.
+
+If the query contains value placeholders ('?'), values for those placeholders
+will be taken from the file named by --input, or from STDIN.
 
 ENDUSAGE
 }
