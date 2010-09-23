@@ -47,7 +47,7 @@ done
 cat << END_SUMMARY
 =====================================================
 test results for $application:
-  PASSED:  $pass 
+  PASSED:  $pass
   FAILED:  $fail unexpected, $xfail expected
   SKIPPED: $skip
 =====================================================

@@ -19,7 +19,7 @@ sub date_parse {
   $h = substr($datestr, $HH, 2) if($HH != -1);
   $i = substr($datestr, $MI, 2) if($MI != -1);
   $s = substr($datestr, $SS, 2) if($SS != -1);
-  
+
   return ($y, $m, $d, $h, $i, $s);
 }
 

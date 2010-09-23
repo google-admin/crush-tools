@@ -1,6 +1,6 @@
 =item * expand_chars
 
-expand escape sequences like '\t' in a string to their expansions. 
+expand escape sequences like '\t' in a string to their expansions.
 
 =cut
 sub expand_chars {
@@ -52,7 +52,7 @@ Get the data at position field from the delim deliminated string line.
 
 $field_index is 0 based
 
-=cut    
+=cut
 sub get_line_field {
   my $pos = 0;
   for (my $i = 0; $i < $_[1]; $i++) {
