@@ -1,4 +1,4 @@
-main.c usage.c aggregate_main.h : args.tab $(CGENER)
+main.c usage.c buffer_main.h : args.tab $(CGENER)
 	"$(CGENER)" -a ./args.tab
 
 BUILT_SOURCES = main.c usage.c buffer_main.h
