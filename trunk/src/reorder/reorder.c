@@ -14,6 +14,7 @@
    limitations under the License.
  ********************************/
 
+#include <crush/crushstr.h>
 #include <crush/general.h>
 
 #include "reorder_main.h"
@@ -269,7 +270,7 @@ void doswap(llist_t *list, char *s, char *ct, const char *d) {
 int docut(char **s, const char *ct, size_t * s_sz, const char *d,
           const int *order, const size_t n) {
   int i;
-  char buffer[512];
+  crushstr_t buffer;
   size_t s_len;
   size_t buf_len;
   size_t delim_len;
@@ -280,13 +281,14 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
     *s_sz = strlen(ct);
   }
 
+  crushstr_init(&buffer, *s_sz);
   (*s)[0] = '\0';
   s_len = 0;
   delim_len = strlen(d);
 
   for (i = 0; i < n; i++) {
 
-    if ((buf_len = get_line_field(buffer, ct, 511,
+    if ((buf_len = get_line_field(buffer.buffer, ct, *s_sz,
                                   order[i] - 1, (char *) d)) >= 0) {
 
       if (*s_sz < s_len + buf_len + delim_len) {
@@ -296,8 +298,8 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
         *s_sz += buf_len + delim_len + 2;
       }
 
-      chomp(buffer);
-      strcat(*s, buffer);
+      chomp(buffer.buffer);
+      strcat(*s, buffer.buffer);
       s_len += buf_len;
 
       if (i < n - 1) {
@@ -307,7 +309,7 @@ int docut(char **s, const char *ct, size_t * s_sz, const char *d,
     }
   }
   strcat(*s, "\n");
-
+  crushstr_destroy(&buffer);
   return s_len + 1;
 }
 
