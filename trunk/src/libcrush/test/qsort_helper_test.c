@@ -17,49 +17,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <crush/qsort_helper.h>
+#include "unittest.h"
 
 
-void test_qsort_strcmp();
-void test_qsort_intcmp();
-void test_qsort_uintcmp();
+void test_qsort_strcmp() {
+  char *array[] = { "hello", "world", "there" };
+  char *expected[] = { "hello", "there", "world" };
+  qsort(array, 3, sizeof(char *), (qsort_cmp_func_t) qsort_strcmp);
+  ASSERT_STR_ARRAY_EQ(expected, array, 3, "qsort_strcmp: valid sort order");
+}
+
+void test_qsort_intcmp() {
+  int array[] = { 3, 5, -1, 2, 1 };
+  int expected[] = { -1, 1, 2, 3, 5 };
+  qsort(array, 5, sizeof(int), (qsort_cmp_func_t) qsort_intcmp);
+  ASSERT_INT_ARRAY_EQ(expected, array, 5, "qsort_intcmp: valid sort order");
+}
+
+void test_qsort_uintcmp() {
+  unsigned int array[] = { 3, 5, 1, 2, 1 };
+  unsigned int expected[] = { 1, 1, 2, 3, 5 };
+  qsort(array, 5, sizeof(int), (qsort_cmp_func_t) qsort_uintcmp);
+  ASSERT_INT_ARRAY_EQ(expected, array, 5, "qsort_uintcmp: valid sort order");
+}
 
 int main(int argc, char *argv[]) {
   test_qsort_strcmp();
   test_qsort_intcmp();
   test_qsort_uintcmp();
-  return 0;
+  return unittest_has_error;
 }
 
-void test_qsort_strcmp() {
-  char *array[] = { "hello", "world", "there" };
-  qsort(array, 3, sizeof(char *), (qsort_cmp_func_t) qsort_strcmp);
-
-  if (strcmp(array[0], "hello") == 0
-      && strcmp(array[1], "there") == 0 && strcmp(array[2], "world") == 0)
-    printf("qsort_strcmp:\tok.\n");
-  else
-    printf("qsort_strcmp:\tfailed: (%s, %s, %s)\n",
-           array[0], array[1], array[2]);
-}
-
-void test_qsort_intcmp() {
-  int array[] = { 3, 5, -1, 2, 1 };
-  qsort(array, 5, sizeof(int), (qsort_cmp_func_t) qsort_intcmp);
-  if (array[0] == -1
-      && array[1] == 1 && array[2] == 2 && array[3] == 3 && array[4] == 5)
-    printf("qsort_intcmp:\tok\n");
-  else
-    printf("qsort_intcmp:\tfailed: (%d, %d, %d, %d, %d)\n",
-           array[0], array[1], array[2], array[3], array[4]);
-}
-
-void test_qsort_uintcmp() {
-  unsigned int array[] = { 3, 5, 1, 2, 1 };
-  qsort(array, 5, sizeof(int), (qsort_cmp_func_t) qsort_intcmp);
-  if (array[0] == 1
-      && array[1] == 1 && array[2] == 2 && array[3] == 3 && array[4] == 5)
-    printf("qsort_uintcmp:\tok\n");
-  else
-    printf("qsort_uintcmp:\tfailed: (%d, %d, %d, %d, %d)\n",
-           array[0], array[1], array[2], array[3], array[4]);
-}

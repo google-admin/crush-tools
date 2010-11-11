@@ -14,58 +14,13 @@
    limitations under the License.
  *****************************************/
 
-
 #include <stdio.h>
 #include <crush/linklist.h>
-
 #include <crush/ffutils.h>
+#include "unittest.h"
 
-int XFAIL(int n) {
-  if (n == 0)
-    return 1;
-  return 0;
-}
-
-/* for output padding */
-#define FUNC_NAME_FMT "%16s"
-
-int test_fields_in_line(void);
-int test_get_line_field(void);
-int test_get_line_pos(void);
-int test_field_start(void);
-int test_mdyhms_datecmp(void);
-int test_chomp(void);
-int test_nextfile(void);
-int test_expand_chars(void);
-int test_expand_nums(void);
-int test_expand_label_list(void);
-int test_field_str(void);
-
-/* void test_get_spot_tag_attributes(void); */
-
-int main(int argc, char *argv[]) {
-  int errs = 0;
-  printf("\n-------------\n");
-  errs += test_fields_in_line();
-  errs += test_get_line_field();
-  errs += test_get_line_pos();
-  errs += test_field_start();
-  errs += test_mdyhms_datecmp();
-  errs += test_chomp();
-  errs += test_nextfile();
-  errs += test_expand_chars();
-  errs += test_expand_nums();
-  errs += test_expand_label_list();
-  errs += test_field_str();
-  /* errs += test_get_spot_tag_attributes(); */
-  printf("-------------\n");
-  if (errs)
-    return EXIT_FAILURE;
-  return EXIT_SUCCESS;
-}
 
 int test_fields_in_line() {
-  int n_errors = 0;
   size_t n;
 
   char *TL0 = "";
@@ -84,51 +39,23 @@ int test_fields_in_line() {
   char *TD3 = ",";
   size_t TE3 = 0;
 
+  unittest_has_error = 0;
   n = fields_in_line(TL0, TD0);
-  if (n != TE0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %lu instead of %lu\n",
-            "fields_in_line()", n, TE0);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE0, n, "fields_in_line: correct return value (1)");
 
   n = fields_in_line(TL1, TD1);
-  if (n != TE1) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %lu instead of %lu\n",
-            "fields_in_line()", n, TE1);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE1, n, "fields_in_line: correct return value (2)");
 
   n = fields_in_line(TL2, TD2);
-  if (n != TE2) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %lu instead of %lu\n",
-            "fields_in_line()", n, TE2);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE2, n, "fields_in_line: correct return value (3)");
 
   n = fields_in_line(TL3, TD3);
-  if (n != TE3) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 3)\n\treturned %lu instead of %lu\n",
-            "fields_in_line()", n, TE3);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE3, n, "fields_in_line: correct return value (4)");
 
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "fields_in_line()");
-  }
-  return n_errors;
+  return unittest_has_error;
 }
 
 int test_get_line_field(void) {
-  int n_errors = 0;
-
   char buffer[6];
   size_t bufsz = 6;
   int n;
@@ -153,30 +80,44 @@ int test_get_line_field(void) {
   char *TE3_buffer = "";
   int TE3_ret = -1;
 
-#define RUN_TEST(testno, lnvar) \
-	n = get_line_field( buffer, (lnvar), bufsz, TF##testno, TD ); \
-	if ( n != TE##testno##_ret \
-	  || strcmp(buffer, TE##testno##_buffer) != 0 ) { \
-		fprintf(stderr, \
-			FUNC_NAME_FMT \
-			": failed (test " #testno ")\n\treturned (%d, \"%s\") instead of (%d, \"%s\")\n", \
-			"get_line_field()", \
-			n, buffer, TE##testno##_ret, TE##testno##_buffer ); \
-		n_errors++; \
-	}
+  unittest_has_error = 0;
 
-  RUN_TEST(0, TL0)
-    RUN_TEST(0, TL1)
-    RUN_TEST(1, TL0)
-    RUN_TEST(2, TL0)
-    RUN_TEST(3, TL0)
-#undef RUN_TEST
-    return n_errors;
+	n = get_line_field(buffer, TL0, bufsz, TF0, TD);
+  ASSERT_INT_EQ(TE0_ret, n, "get_line_field: correct return value (1a)");
+  ASSERT_STR_EQ(TE0_buffer, buffer, "get_line_field: correct field value (1a)");
+
+	n = get_line_field(buffer, TL1, bufsz, TF0, TD);
+  ASSERT_INT_EQ(TE0_ret, n, "get_line_field: correct return value (1b)");
+  ASSERT_STR_EQ(TE0_buffer, buffer, "get_line_field: correct field value (1b)");
+
+	n = get_line_field(buffer, TL0, bufsz, TF1, TD);
+  ASSERT_INT_EQ(TE1_ret, n, "get_line_field: correct return value (2a)");
+  ASSERT_STR_EQ(TE1_buffer, buffer, "get_line_field: correct field value (2a)");
+
+	n = get_line_field(buffer, TL1, bufsz, TF1, TD);
+  ASSERT_INT_EQ(TE1_ret, n, "get_line_field: correct return value (2b)");
+  ASSERT_STR_EQ(TE1_buffer, buffer, "get_line_field: correct field value (2b)");
+
+	n = get_line_field(buffer, TL0, bufsz, TF2, TD);
+  ASSERT_INT_EQ(TE2_ret, n, "get_line_field: correct return value (3a)");
+  ASSERT_STR_EQ(TE2_buffer, buffer, "get_line_field: correct field value (3a)");
+
+	n = get_line_field(buffer, TL1, bufsz, TF2, TD);
+  ASSERT_INT_EQ(TE2_ret, n, "get_line_field: correct return value (3b)");
+  ASSERT_STR_EQ(TE2_buffer, buffer, "get_line_field: correct field value (3b)");
+
+	n = get_line_field(buffer, TL0, bufsz, TF3, TD);
+  ASSERT_INT_EQ(TE3_ret, n, "get_line_field: correct return value (4a)");
+  ASSERT_STR_EQ(TE3_buffer, buffer, "get_line_field: correct field value (4a)");
+
+	n = get_line_field(buffer, TL1, bufsz, TF3, TD);
+  ASSERT_INT_EQ(TE3_ret, n, "get_line_field: correct return value (4b)");
+  ASSERT_STR_EQ(TE3_buffer, buffer, "get_line_field: correct field value (4b)");
+
+  return unittest_has_error;
 }
 
 int test_get_line_pos(void) {
-  int n_errors = 0;
-
   /* populated last field */
   char *TD0 = ",";
   char *TL0 = "hello\n";
@@ -219,37 +160,32 @@ int test_get_line_pos(void) {
 
   int n, start, end;
 
-#define RUN_TEST(testno) \
-	n = get_line_pos( TL##testno, TF##testno, TD##testno, &start, &end ); \
-	if ( n != TE##testno##_ret \
-	  || start != TE##testno##_start \
-	  || end != TE##testno##_end ) { \
-		fprintf(stderr, \
-			FUNC_NAME_FMT \
-			": failed (test " #testno ")\n\treturned (%d, %d, %d) instead of (%d, %d, %d)\n", \
-			"get_line_pos()", \
-			n, start, end, TE##testno##_ret, TE##testno##_start, TE##testno##_end ); \
-		n_errors++; \
-	}
+  unittest_has_error = 0;
 
-  RUN_TEST(0);
-  RUN_TEST(1);
-  RUN_TEST(2);
-  RUN_TEST(3);
-  RUN_TEST(4);
+	n = get_line_pos(TL0, TF0, TD0, &start, &end);
+  ASSERT_INT_EQ(TE0_ret, n, "get_line_pos: correct return value (1)");
+  ASSERT_TRUE(start == TE0_start, "get_line_pos: correct start position (1)");
+  ASSERT_TRUE(end == TE0_end, "get_line_pos: correct end position (1)");
 
-#undef RUN_TEST
+	n = get_line_pos(TL1, TF1, TD1, &start, &end);
+  ASSERT_INT_EQ(TE1_ret, n, "get_line_pos: correct return value (2)");
+  ASSERT_TRUE(start == TE1_start, "get_line_pos: correct start position (2)");
+  ASSERT_TRUE(end == TE1_end, "get_line_pos: correct end position (2)");
 
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "get_line_pos()");
-  }
+	n = get_line_pos(TL2, TF2, TD2, &start, &end);
+  ASSERT_INT_EQ(TE2_ret, n, "get_line_pos: correct return value (3)");
+  ASSERT_TRUE(start == TE2_start, "get_line_pos: correct start position (3)");
+  ASSERT_TRUE(end == TE2_end, "get_line_pos: correct end position (3)");
 
-  return n_errors;
+	n = get_line_pos(TL3, TF3, TD3, &start, &end);
+  ASSERT_INT_EQ(TE3_ret, n, "get_line_pos: correct return value (4)");
+  ASSERT_TRUE(start == TE3_start, "get_line_pos: correct start position (4)");
+  ASSERT_TRUE(end == TE3_end, "get_line_pos: correct end position (4)");
+
+  return unittest_has_error;
 }
 
 int test_field_start(void) {
-  int n_errors = 0;
-
   char *TL = "this,is,a,test\n";
   char *TD = ",";
   char *ret;
@@ -266,27 +202,22 @@ int test_field_start(void) {
   int TF3 = 5;
   char *TE3 = NULL;
 
-#define RUN_TEST(testno) \
-	ret = field_start( TL, TF##testno, TD ); \
-	if ( ret != TE##testno ) { \
-		fprintf(stderr, \
-			FUNC_NAME_FMT \
-			": failed (test " #testno ")\n\treturned %s instead of %s\n", \
-			"field_start()", \
-			ret, TE##testno ); \
-		n_errors++; \
-	}
+  unittest_has_error = 0;
 
-  RUN_TEST(0)
-    RUN_TEST(1)
-    RUN_TEST(2)
-    RUN_TEST(3)
-#undef RUN_TEST
-    if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "field_start()");
-  }
+	ret = field_start(TL, TF0, TD);
+  ASSERT_STR_EQ(TE0, ret, "field_start: correct return value (1)");
 
-  return n_errors;
+	ret = field_start(TL, TF1, TD);
+  ASSERT_STR_EQ(TE1, ret, "field_start: correct return value (2)");
+
+	ret = field_start(TL, TF2, TD);
+  ASSERT_STR_EQ(TE2, ret, "field_start: correct return value (3)");
+
+	ret = field_start(TL, TF3, TD);
+  /* The return value should be NULL, so don't use STR_EQ */
+  ASSERT_TRUE(ret == TE3, "field_start: correct return value (4)");
+
+  return unittest_has_error;
 }
 
 int test_mdyhms_datecmp(void) {
@@ -305,26 +236,18 @@ int test_mdyhms_datecmp(void) {
   char *TD2_b = "09-06-2008 11:59:59";
   int TE2 = 1;
 
-#define RUN_TEST(testno) \
-	ret = mdyhms_datecmp( TD##testno##_a, TD##testno##_b ); \
-	if ( ret != TE##testno ) { \
-		fprintf(stderr, \
-			FUNC_NAME_FMT \
-			": failed (test " #testno ")\n\treturned %d instead of %d\n", \
-			"mdyhms_datecmp()", \
-			ret, TE##testno ); \
-		n_errors++; \
-	}
+  unittest_has_error = 0;
 
-  RUN_TEST(0)
-    RUN_TEST(1)
-    RUN_TEST(2)
-#undef RUN_TEST
-    if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "mdyhms_datecmp()");
-  }
+	ret = mdyhms_datecmp(TD0_a, TD0_b);
+  ASSERT_INT_EQ(TE0, ret, "mdyhms_datecmp: correct return value (1)");
 
-  return n_errors;
+	ret = mdyhms_datecmp(TD1_a, TD1_b);
+  ASSERT_INT_EQ(TE1, ret, "mdyhms_datecmp: correct return value (2)");
+
+	ret = mdyhms_datecmp(TD2_a, TD2_b);
+  ASSERT_INT_EQ(TE2, ret, "mdyhms_datecmp: correct return value (3)");
+
+  return unittest_has_error;
 }
 
 int test_chomp(void) {
@@ -339,37 +262,25 @@ int test_chomp(void) {
   char T2_pre[] = "hello world";
   char T2_post[] = "hello world";
 
-#define RUN_TEST(testno) \
-	chomp( T##testno##_pre ); \
-	if ( strcmp( T##testno##_pre, T##testno##_post ) != 0 ) { \
-		fprintf(stderr, \
-			FUNC_NAME_FMT \
-			": failed (test " #testno ")\n\treturned \"%s\" instead of \"%s\"\n", \
-			"chomp()", \
-			T##testno##_pre, T##testno##_post ); \
-		n_errors++; \
-	}
+  unittest_has_error = 0;
 
-  RUN_TEST(0)
-    RUN_TEST(1)
-    RUN_TEST(2)
-#undef RUN_TEST
-    if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "chomp()");
-  }
+  chomp(T0_pre);
+  ASSERT_STR_EQ(T0_pre, T0_post, "chomp: \\n linebreak");
+  chomp(T1_pre);
+  ASSERT_STR_EQ(T1_pre, T1_post, "chomp: \\r\\n linebreak");
+  chomp(T2_pre);
+  ASSERT_STR_EQ(T2_pre, T2_post, "chomp: no linebreak");
 
-  return n_errors;
+  return unittest_has_error;
 }
 
 int test_nextfile(void) {
-  int n_errors = 0;
-  printf(FUNC_NAME_FMT ": skip (not implemented)\n", "nextfile()");
-  return n_errors;
+  unittest_has_error = 0;
+  ASSERT_TRUE(1, "nextfile: skip - not implemented.");
+  return unittest_has_error;
 }
 
 int test_expand_chars(void) {
-  int n_errors = 0;
-
   char *TL0 = "\t";
   char TE0[] = { 0x09, 0x00 };
 
@@ -379,42 +290,19 @@ int test_expand_chars(void) {
   char TL2[] = { 0x5c, 0x5c, 0x00 };  /* \\ */
   char TE2[] = { 0x5c, 0x00 };
 
+  unittest_has_error = 0;
+
   expand_chars(TL0);
-  if (strcmp(TL0, TE0) != 0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed\n\treturned \"%s\" instead of \"%s\"\n",
-            "expand_chars()", TL0, TE0);
-    n_errors++;
-  }
-
+  ASSERT_STR_EQ(TL0, TE0, "expand_chars: tab expanded");
   expand_chars(TL1);
-  if (strcmp(TL1, TE1) != 0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed\n\treturned \"%s\" instead of \"%s\"\n",
-            "expand_chars()", TL1, TE1);
-    n_errors++;
-  }
-
+  ASSERT_STR_EQ(TL1, TE1, "expand_chars: no special chars");
   expand_chars(TL2);
-  if (strcmp(TL2, TE2) != 0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed\n\treturned \"%s\" instead of \"%s\"\n",
-            "expand_chars()", TL2, TE2);
-    n_errors++;
-  }
+  ASSERT_STR_EQ(TL2, TE2, "expand_chars: escaped backslash");
 
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "expand_chars()");
-  }
-  return n_errors;
+  return unittest_has_error;
 }
 
 int test_expand_nums(void) {
-  int n_errors = 0;
-
   ssize_t n;
 
   int *target = NULL;
@@ -433,62 +321,33 @@ int test_expand_nums(void) {
   char *TL3 = NULL;
   ssize_t TE3 = 0;
 
-
+  unittest_has_error = 0;
   tmpstr = malloc(16);
 
   strcpy(tmpstr, TL0);
   n = expand_nums(tmpstr, &target, &target_size);
-  if (n != TE0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %lu instead of %lu\n",
-            "expand_nums()", n, TE0);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE0, n, "expand_nums: return value with list");
 
   strcpy(tmpstr, TL1);
   n = expand_nums(tmpstr, &target, &target_size);
-  if (n != TE1) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %lu instead of %lu\n",
-            "expand_nums()", n, TE1);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE1, n, "expand_nums: return value with range)");
 
   strcpy(tmpstr, TL2);
   n = expand_nums(tmpstr, &target, &target_size);
-  if (n != TE2) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %lu instead of %lu\n",
-            "expand_nums()", n, TE2);
-    n_errors++;
-  }
+  ASSERT_LONG_EQ(TE2, n, "expand_nums: return value with bad input");
 
   /* TL3 is null */
   n = expand_nums(TL3, &target, &target_size);
-  if (n != TE3) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 3)\n\treturned %lu instead of %lu\n",
-            "expand_nums()", n, TE3);
-    n_errors++;
-  }
-
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "expand_nums()");
-  }
+  ASSERT_LONG_EQ(TE3, n, "expand_nums: return value with null input");
 
   free(target);
   free(tmpstr);
 
-  return n_errors;
+  return unittest_has_error;
 }
 
 
 int test_expand_label_list(void) {
-	int n_errors = 0;
 	char *line = "L1|L2|L3|L4|L5|L,6\n";
   char *delim = "|";
   int *array = NULL;
@@ -506,62 +365,30 @@ int test_expand_label_list(void) {
   int T2_retval = 1;
   int T2_elems[] = {6};
 
+  unittest_has_error = 0;
+
   retval = expand_label_list(T0_labels, line, delim, &array, &array_sz);
-  if (retval != T0_retval) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %d instead of %d\n",
-            "expand_label_list()", retval, T0_retval);
-  	n_errors++;
-  } else {
-    for (i = 0; i < retval; i++) {
-    	if (T0_elems[i] != array[i]) {
-        fprintf(stderr,
-                FUNC_NAME_FMT
-                ": failed (test 0)\n\telem %d is %d instead of %d\n",
-                "expand_label_list()", i, array[i], T0_elems[i]);
-      }
-    }
+  ASSERT_INT_EQ(T0_retval, retval, "expand_label_list: return value (0)");
+
+  for (i = 0; i < retval; i++) {
+    ASSERT_INT_EQ(T0_elems[i], array[i], "expand_label_list: field index (0)");
   }
 
   retval = expand_label_list(T1_labels, line, delim, &array, &array_sz);
-  if (retval != T1_retval) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %d instead of %d\n",
-            "expand_label_list()", retval, T0_retval);
-  	n_errors++;
-  }
+  ASSERT_INT_EQ(T1_retval, retval, "expand_label_list: return value (1)");
 
   retval = expand_label_list(T2_labels, line, delim, &array, &array_sz);
-  if (retval != T2_retval) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %d instead of %d\n",
-            "expand_label_list()", retval, T2_retval);
-  	n_errors++;
-  } else {
-    for (i = 0; i < retval; i++) {
-    	if (T2_elems[i] != array[i]) {
-        fprintf(stderr,
-                FUNC_NAME_FMT
-                ": failed (test 2)\n\telem %d is %d instead of %d\n",
-                "expand_label_list()", i, array[i], T2_elems[i]);
-      }
-    }
-  }
-
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "expand_label_list()");
+  ASSERT_INT_EQ(T2_retval, retval, "expand_label_list: return value (2)");
+  for (i = 0; i < retval; i++) {
+    ASSERT_INT_EQ(T2_elems[i], array[i], "expand_label_list: field index (2)");
   }
 
   free(array);
-  return n_errors;
+  return unittest_has_error;
 }
 
 
 int test_field_str() {
-  int n_errors = 0;
   int n;
 
   /* test case: empty line - considered a no-match */
@@ -622,152 +449,47 @@ int test_field_str() {
   char *TD9 = " ";
   int TE9 = -1;
 
+  unittest_has_error = 0;
+
   /* test case: field exists, multi-char delimiter */
   n = field_str(TV0, TL0, TD0);
-  if (n != TE0) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 0)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE0);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE0, n, "field_str: return value (0)");
   n = field_str(TV1, TL1, TD1);
-  if (n != TE1) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 1)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE1);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE1, n, "field_str: return value (1)");
   n = field_str(TV2, TL2, TD2);
-  if (n != TE2) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 2)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE2);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE2, n, "field_str: return value (2)");
   n = field_str(TV3, TL3, TD3);
-  if (n != TE3) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 3)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE3);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE3, n, "field_str: return value (3)");
   n = field_str(TV4, TL4, TD4);
-  if (n != TE4) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 4)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE4);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE4, n, "field_str: return value (4)");
   n = field_str(TV5, TL5, TD5);
-  if (n != TE5) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 5)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE5);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE5, n, "field_str: return value (5)");
   n = field_str(TV6, TL6, TD6);
-  if (n != TE6) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 6)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE6);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE6, n, "field_str: return value (6)");
   n = field_str(TV7, TL7, TD7);
-  if (n != TE7) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 7)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE7);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE7, n, "field_str: return value (7)");
   n = field_str(TV8, TL8, TD8);
-  if (n != TE8) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 8)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE8);
-    n_errors++;
-  }
-
+  ASSERT_INT_EQ(TE8, n, "field_str: return value (8)");
   n = field_str(TV9, TL9, TD9);
-  if (n != TE9) {
-    fprintf(stderr,
-            FUNC_NAME_FMT
-            ": failed (test 9)\n\treturned %d instead of %d\n",
-            "field_str()", n, TE9);
-    n_errors++;
-  }
+  ASSERT_INT_EQ(TE9, n, "field_str: return value (9)");
 
-  if (n_errors == 0) {
-    printf(FUNC_NAME_FMT ": passed\n", "field_str()");
-  }
-  return n_errors;
+  return unittest_has_error;
 }
 
-/*
-int test_get_spot_tag_attributes ( void ) {
-	int spot_id = 673394;
-	char *db_name = "PROD";
-	char *db_uid  = getenv("DB_UID");
-	char *db_pass = getenv("DB_PWD");
-	llist_t tag_list;
-
-	int n_tags;
-
-	ll_list_init( &tag_list, free, NULL );
-
-	n_tags = get_spot_tag_attributes(&tag_list, spot_id, db_name, db_uid, db_pass);
-
-	if ( n_tags == 0 ) {
-		printf("get_spot_tag_attributes(): failure (no tags returned)\n");
-	}
-	else {
-		llist_node_t *curnode;
-		struct spotlight_tag_attributes *tag_attribs;
-
-		printf("get_spot_tag_attributes(): ok\n");
-
-		for ( curnode = tag_list.head;
-		      curnode != NULL;
-		      curnode = curnode->next ) {
-
-			tag_attribs = curnode->data;
-
-			printf("    src=%d;type=%s;cat=%s",
-					tag_attribs->spot_id,
-					tag_attribs->type,
-					tag_attribs->cat );
-
-			if ( tag_attribs->group_type == spotlight_group_type_sales ) {
-				printf(";qty=1;cost=0.00");
-			}
-			else {
-				if ( tag_attribs->tag_method == spotlight_method_standard )
-					printf(";ord=[rand]");
-				else
-					printf(";num=[rand];ord=1");
-			}
-			printf("\n");
-		}
-	}
-
-	ll_destroy(&tag_list);
-
-	return 0;
+int main(int argc, char *argv[]) {
+  int errs = 0;
+  errs += test_fields_in_line();
+  errs += test_get_line_field();
+  errs += test_get_line_pos();
+  errs += test_field_start();
+  errs += test_mdyhms_datecmp();
+  errs += test_chomp();
+  errs += test_nextfile();
+  errs += test_expand_chars();
+  errs += test_expand_nums();
+  errs += test_expand_label_list();
+  errs += test_field_str();
+  if (errs)
+    return EXIT_FAILURE;
+  return EXIT_SUCCESS;
 }
-*/

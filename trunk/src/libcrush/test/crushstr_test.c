@@ -24,14 +24,14 @@ int main (int argc, char *argv[]) {
               "crushstr_init: buffer initialized to non-null");
   ASSERT_STR_EQ("", str.buffer,
                 "crushstr_init: buffer is an empty string");
-  ASSERT_INT_EQ(8, str.capacity, "crushstr_init: capacity set");
-  ASSERT_INT_EQ(0, str.length, "crushstr_init: length zeroed out");
+  ASSERT_LONG_EQ(8L, str.capacity, "crushstr_init: capacity set");
+  ASSERT_LONG_EQ(0L, str.length, "crushstr_init: length zeroed out");
 
   str_ptr = crushstr_copy(&str, "hello world");
   ASSERT_TRUE(str.capacity == strlen("hello world") + 1,
               "crushstr_copy: increased capacity");
   ASSERT_STR_EQ(str.buffer, "hello world", "crushstr_copy: copy to buffer");
-  ASSERT_INT_EQ(strlen("hello world"), str.length, "crushstr_copy: set length");
+  ASSERT_LONG_EQ(strlen("hello world"), str.length, "crushstr_copy: set length");
   ASSERT_TRUE(str_ptr == &str, "crushstr_copy: returned the string object");
 
   crushstr_copy(&str, "hello world");
@@ -42,8 +42,8 @@ int main (int argc, char *argv[]) {
 
   crushstr_destroy(&str);
   ASSERT_TRUE(str.buffer == NULL, "crushstr_destroy: buffer nulled out");
-  ASSERT_INT_EQ(0, str.capacity, "crushstr_destroy: capacity zeroed out");
-  ASSERT_INT_EQ(0, str.length, "crushstr_destroy: length zeroed out");
+  ASSERT_LONG_EQ(0L, str.capacity, "crushstr_destroy: capacity zeroed out");
+  ASSERT_LONG_EQ(0L, str.length, "crushstr_destroy: length zeroed out");
 
   return unittest_has_error;
 }

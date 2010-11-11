@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <crush/dbfr.h>
+#include "unittest.h"
 
 #define DIE(s, ...) \
   do { \
@@ -12,8 +13,6 @@
 
 #define TEST_FILENAME "test_input.log"
 #define LINES_IN_TEST_FILE 10
-
-char failure_reason[256];
 
 int setup() {
   int i;
@@ -35,24 +34,19 @@ void teardown() {
  */
 int test_dbfr_open() {
   dbfr_t *reader = dbfr_open(TEST_FILENAME);
-  if (! reader) {
-    strcpy(failure_reason, "dbfr_open() returned null.");
+  unittest_has_error = 0;
+  ASSERT_TRUE(reader != NULL, "dbfr_open: return non-null");
+  if (reader == NULL) {
     return 1;
   }
-  if (reader->current_line != NULL) {
-    strcpy(failure_reason, "current_line was not initialized to null");
-    return 1;
-  }
-  if (reader->line_no != 0) {
-    strcpy(failure_reason, "line_no was not initialized to zero");
-    return 1;
-  }
-  if (strcmp(reader->next_line, "this is line 1\n") != 0) {
-    strcpy(failure_reason, "next_line was not initialized properly");
-    return 1;
-  }
+  ASSERT_TRUE(reader->current_line == NULL,
+              "dbfr_open: initialize current_line to NULL");
+  ASSERT_LONG_EQ(0, reader->line_no,
+                 "dbfr_open: initialized line_no to zero");
+  ASSERT_STR_EQ("this is line 1\n", reader->next_line,
+                "dbfr_open: read next_line");
   dbfr_close(reader);
-  return 0;
+  return unittest_has_error;
 }
 
 /* dbfr_init should fail on file pointers opened for writing.  dbfr_open()
@@ -64,11 +58,10 @@ int test_dbfr_init() {
   unlink("test_input_2.log");
   reader = dbfr_init(f);
   fclose(f);
-  if (reader != NULL) {
-    strcpy(failure_reason, "dbfr_init succeeded on a file opened for writing.");
-    return 1;
-  }
-  return 0;
+  unittest_has_error = 0;
+  ASSERT_TRUE(reader == NULL,
+              "dbfr_init: fail on file opened for writing.");
+  return unittest_has_error;
 }
 
 /* tests all conditions which should hold after reading the first line 
@@ -76,29 +69,22 @@ int test_dbfr_init() {
 int test_dbfr_getline_1() {
   dbfr_t *reader = dbfr_open(TEST_FILENAME);
   ssize_t retval;
+  unittest_has_error = 0;
+  ASSERT_TRUE(reader != NULL, "dbfr_open: return non-null");
   if (! reader) {
-    strcpy(failure_reason, "dbfr_open() returned null.");
     return 1;
   }
   retval = dbfr_getline(reader);
-  if (retval != strlen("this is line 1\n")) {
-    sprintf(failure_reason, "dbfr_getline() returned %ld.", retval);
-    return 1;
-  }
-  if (reader->line_no != 1) {
-    strcpy(failure_reason, "line_no was not incremented properly");
-    return 1;
-  }
-  if (strcmp(reader->current_line, "this is line 1\n") != 0) {
-    strcpy(failure_reason, "current_line was not initialized properly");
-    return 1;
-  }
-  if (strcmp(reader->next_line, "this is line 2\n") != 0) {
-    strcpy(failure_reason, "next_line was not initialized properly");
-    return 1;
-  }
+  ASSERT_LONG_EQ(strlen("this is line 1\n"), retval,
+                 "dbfr_getline: return string length");
+  ASSERT_LONG_EQ(1, reader->line_no,
+                 "dbfr_getline: increment line_no");
+  ASSERT_STR_EQ("this is line 1\n", reader->current_line,
+                "dbfr_getline: initialize current_line");
+  ASSERT_STR_EQ("this is line 2\n", reader->next_line,
+                "dbfr_getline: initialize next_line");
   dbfr_close(reader);
-  return 0;
+  return unittest_has_error;
 }
 
 /* tests all conditions which should hold when reading to the end of the file. */
@@ -106,49 +92,29 @@ int test_dbfr_getline_2() {
   dbfr_t *reader = dbfr_open(TEST_FILENAME);
   ssize_t retval;
   int i = 0;
-  char expected[32];
+  char expected[80];
+  unittest_has_error = 0;
 
+  ASSERT_TRUE(reader != NULL, "dbfr_open: return non-null");
   if (! reader) {
-    strcpy(failure_reason, "dbfr_open() returned null.");
     return 1;
   }
 
   while (i < LINES_IN_TEST_FILE) {
     i++;
     dbfr_getline(reader);
-    if (i != reader->line_no) {
-      sprintf(failure_reason, "line number set to %ld after %d reads",
-              reader->line_no, i);
-      return 1;
-    }
+    ASSERT_LONG_EQ(i, reader->line_no, "dbfr_getline: line_no incremented");
   }
 
-  if (reader->next_line != NULL) {
-    strcpy(failure_reason, "next_line not NULL at last line");
-    return 1;
-  }
+  ASSERT_TRUE(reader->current_line != NULL, "current_line not NULL at EOF");
+  ASSERT_TRUE(reader->next_line == NULL, "next_line NULL at EOF");
 
   sprintf(expected, "this is line %d\n", LINES_IN_TEST_FILE); 
-  if (strcmp(reader->current_line, expected) != 0) {
-    sprintf(failure_reason, "current_line not set as expected");
-    return 1;
-  }
+  ASSERT_STR_EQ(expected, reader->current_line, "current_line intact at EOF");
 
   retval = dbfr_getline(reader);
-  if (retval > 0) {
-    sprintf(failure_reason,
-            "dbfr_getline() returned %ld where EOF should be.", retval);
-    return 1;
-  }
-  if (! reader->eof) {
-    strcpy(failure_reason, "dbfr_t.eof not not set");
-    return 1;
-  }
-
-  if (reader->current_line == NULL) {
-    strcpy(failure_reason, "current_line was NULLified after EOF");
-    return 1;
-  }
+  ASSERT_LONG_GT(0, retval, "dbfr_getline() returns < 0 at EOF");
+  ASSERT_TRUE(reader->eof, "dbfr_t.eof set at EOF");
 
   dbfr_close(reader);
   return 0;
@@ -156,28 +122,17 @@ int test_dbfr_getline_2() {
 
 int main (int argc, char *argv[]) {
   int has_failures = 0;
-  int has_error;
 
-  has_error = setup();
-  if (has_error)
-    DIE("failure during test setup");
+  if (setup() != 0) {
+    fprintf(stderr, "(%s:%d): %s",
+            __FILE__, __LINE__, "setup failed.");
+    exit(EXIT_FAILURE);
+  }
 
-#define RUN_TEST(fn) \
-  do { \
-    has_error = fn(); \
-    if (has_error) { \
-      has_failures = 1; \
-      printf("FAIL: %s - %s\n", #fn, failure_reason); \
-    } else { \
-      printf("PASS: %s\n", #fn); \
-    } \
-  } while (0)
-
-
-  RUN_TEST(test_dbfr_open);
-  RUN_TEST(test_dbfr_init);
-  RUN_TEST(test_dbfr_getline_1);
-  RUN_TEST(test_dbfr_getline_2);
+  has_failures += test_dbfr_open();
+  has_failures += test_dbfr_init();
+  has_failures += test_dbfr_getline_1();
+  has_failures += test_dbfr_getline_2();
 
   teardown();
   if (has_failures)

@@ -18,19 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <crush/hashtbl.h>
+#include "unittest.h"
 
 int has_failures = 0;
-
-#define test_assert(cond, msg) \
-  do { \
-    if (! (cond)) { \
-      fprintf(stderr, "FAIL: %s\n", (msg)); \
-      has_failures = 1; \
-    } else { \
-      fprintf(stderr, "PASS: %s\n", (msg)); \
-    } \
-  } while (0)
-
 
 int n_calls = 0;
 void call_for_each_test(void *data) {
@@ -40,35 +30,40 @@ void call_for_each_test(void *data) {
 
 int main(int argc, char *argv[]) {
   hashtbl_t ht;
-  char *data;
   char **keys;
-  int i, j;
-  test_assert(ht_init(&ht, 5, NULL, free) == 0, "clean initialization");
+  int i, j, retval;
+  retval = ht_init(&ht, 5, NULL, free);
+  ASSERT_INT_EQ(0, retval, "ht_init: clean initialization");
 
   for (j = 0; j < 3; j++) {
     for (i = 0; i < 10; i++) {
+      char *data;
       char key[12];
 
       sprintf(key, "hello %d", i);
-      data = strdup("world");
+      data = strdup("world");  /* free()d by ht_destroy(). */
 
-      ht_put(&ht, key, data);
-      test_assert(ht_get(&ht, key) == data, "look up newly-put key");
+      retval = ht_put(&ht, key, data);
+      ASSERT_INT_EQ(0, retval, "ht_put: returns 0 on success.");
+      ASSERT_TRUE(ht_get(&ht, key) == data, "ht_get: look up newly-put key");
     }
   }
-  test_assert(ht.nelems == 10, "ht_put updats elements correctly");
+  ASSERT_LONG_EQ(10, ht.nelems, "ht_put: update element count correctly");
 
-  test_assert(ht_get(&ht, "hello 13") == NULL, "look up non-existing key");
+  ASSERT_TRUE(ht_get(&ht, "hello 13") == NULL,
+              "ht_get: look up non-existing key");
   ht_call_for_each(&ht, call_for_each_test);
-  test_assert(n_calls == 10, "ht_call_for_each");
+  ASSERT_INT_EQ(10, n_calls, "ht_call_for_each: verify repeated invokations");
 
   keys = malloc(ht.nelems * sizeof(char *));
-  test_assert(ht_keys(&ht, keys) == 10, "ht_keys");
-/*
-  for (i = 0; i < 10; i++) {
-    puts(keys[i]);
-  }
-*/
+  retval = ht_keys(&ht, keys);
+  ASSERT_INT_EQ(10, retval, "ht_keys: returns the number of keys.");
+  /* TODO(jhinds): verify the contents of keys[] */
 
-  return has_failures;
+  ht_delete(&ht, "hello 0");
+  ASSERT_TRUE(ht_get(&ht, "hello 0") == NULL,
+              "ht_delete: removes entry successfully");
+  ASSERT_LONG_EQ(9, ht.nelems, "ht_delete: updates element count correctly");
+
+  return unittest_has_error;
 }

@@ -17,11 +17,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <crush/reutils.h>
+#include "unittest.h"
 
 #if HAVE_PCRE_H && HAVE_LIBPCRE
 
-#define INIT_TEST(description, regex) \
-  char *desc = (description); \
+#define INIT_TEST(regex) \
   pcre *re; \
   const char *re_error; \
   int re_err_offset; \
@@ -30,228 +30,161 @@
   int n_subst_elems = 0; \
   char *target = NULL; \
   size_t target_sz = 0; \
-  int has_error = 0; \
   re = pcre_compile((regex), 0, &re_error, &re_err_offset, NULL);
 
 
 #define TEST(subtest, subject, substitution, global, expected) \
-  n_subst_elems = crush_resubst_compile((substitution), \
-                                        &compiled_subst, \
-                                        &compiled_subst_sz); \
-  if (crush_re_substitute(re, NULL, compiled_subst, n_subst_elems, \
-                          (subject), (substitution), \
-                          &target, &target_sz, (global))) { \
-    if (strcmp(target, (expected)) != 0) { \
-      printf("FAIL: reutils: %s %d: expected \"%s\", got \"%s\".\n", \
-             desc, subtest, (expected), target); \
-      has_error = 1; \
-    } \
-  } else { \
-    printf("FAIL: reutils: %s %d: error performing substitution.\n", \
-           desc, subtest); \
-    has_error = 1; \
-  }
+  do { \
+    char *substitute_retval; \
+    n_subst_elems = crush_resubst_compile((substitution), \
+                                          &compiled_subst, \
+                                          &compiled_subst_sz); \
+    substitute_retval = crush_re_substitute( \
+        re, NULL, compiled_subst, n_subst_elems, (subject), \
+        (substitution), &target, &target_sz, (global)); \
+    ASSERT_TRUE(substitute_retval != NULL, \
+                "crush_re_substitute: return non-null"); \
+    ASSERT_STR_EQ((expected), target, TEST_DESC); \
+  } while (0)
 
 
 #define FINISH_TEST() \
   if (target) \
-    free(target); \
-  if (! has_error) \
-    printf("PASS: reutils: %s.\n", desc); \
-  return has_error;
+    free(target);
 
 
-int test_make_flags() {
-  char *desc = "make flags";
+void test_make_flags() {
   int flags, is_global = 0;
-  int has_error = 0;
 
   flags = crush_re_make_flags("", &is_global);
-  if (flags != 0 || is_global != 0) {
-    printf("FAIL: reutils: %s %d: error translating flags.\n", \
-           desc, 1); \
-    has_error = 1;
-  }
+  ASSERT_INT_EQ(0, flags, "crush_re_make_flags: translate empty flag string");
+  ASSERT_INT_EQ(0, is_global, "crush_re_make_flags: empty flags not global");
 
   flags = crush_re_make_flags("i", &is_global);
-  if (flags != PCRE_CASELESS || is_global != 0) {
-    printf("FAIL: reutils: %s %d: error translating flags.\n", \
-           desc, 2); \
-    has_error = 1;
-  }
+  ASSERT_INT_EQ(PCRE_CASELESS, flags, "crush_re_make_flags: caseless flag");
+  ASSERT_INT_EQ(0, is_global, "crush_re_make_flags: caseless flags not global");
 
   flags = crush_re_make_flags("ig", &is_global);
-  if (flags != PCRE_CASELESS || ! is_global) {
-    printf("FAIL: reutils: %s %d: error translating flags.\n", \
-           desc, 3); \
-    has_error = 1;
-  }
-  if (! has_error)
-    printf("PASS: reutils: %s.\n", desc);
-  return has_error;
+  ASSERT_INT_EQ(PCRE_CASELESS, flags,
+                "crush_re_make_flags: caseless global flag");
+  ASSERT_INT_EQ(1, is_global, "crush_re_make_flags: set global flag");
 }
 
-int test_resubst_compile() {
-  char *desc = "resubst compile";
+void test_resubst_compile() {
   struct crush_resubst_elem *subst_elems = NULL;
   size_t subst_elems_sz = 0;
-  int n_elems, has_error = 0;
+  int n_elems;
   char pattern[64];
 
   strcpy(pattern, "");
   n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
-  if (n_elems != 1) {
-    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
-           desc, 1, n_elems, 1);
-    has_error = 1;
-  } else {
-    if (subst_elems[0].elem_type != resubst_literal) {
-      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 1);
-      has_error = 1;
-    }
-    if (subst_elems[0].begin != pattern) {
-      printf("FAIL: reutils: %s %d: bad start of element.\n", desc, 1);
-      has_error = 1;
-    }
-    if (subst_elems[0].elem_len != 0) {
-      printf("FAIL: reutils: %s %d: bad length of element.\n", desc, 1);
-      has_error = 1;
-    }
-  }
+  ASSERT_INT_EQ(1, n_elems, "crush_resubst_compile: empty pattern retval");
+  ASSERT_INT_EQ(resubst_literal, subst_elems[0].elem_type,
+                "crush_resubst_compile: literal element type");
+  ASSERT_PTR_EQ(pattern, subst_elems[0].begin,
+                "crush_resubst_compile: start of element");
+  ASSERT_LONG_EQ(0, subst_elems[0].elem_len,
+                 "crush_resubst_compile: element length");
 
   strcpy(pattern, "$1");
   n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
-  if (n_elems != 1) {
-    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
-           desc, 2, n_elems, 1);
-    has_error = 1;
-  } else {
-    if (subst_elems[0].elem_type != resubst_variable) {
-      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 2);
-      has_error = 1;
-    }
-    if (subst_elems[0].variable_num != 1) {
-      printf("FAIL: reutils: %s %d: bad variable number.\n", desc, 2);
-      has_error = 1;
-    }
-  }
+  ASSERT_INT_EQ(1, n_elems, "crush_resubst_compile: number of elements");
+  ASSERT_INT_EQ(resubst_variable, subst_elems[0].elem_type,
+                "crush_resubst_compile: variable element type");
+  ASSERT_INT_EQ(1, subst_elems[0].variable_num,
+                "crush_resubst_compile: variable number");
 
   strcpy(pattern, "hello$1world");
   n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
-  if (n_elems != 3) {
-    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
-           desc, 3, n_elems, 3);
-    has_error = 1;
-  } else {
-    if (subst_elems[0].elem_type != resubst_literal) {
-      printf("FAIL: reutils: %s %d: bad element 1 type.\n", desc, 3);
-      has_error = 1;
-    } else if (subst_elems[0].begin != pattern) {
-      printf("FAIL: reutils: %s %d: bad start of element 1.\n", desc, 3);
-      has_error = 1;
-    } else if (subst_elems[0].elem_len != 5) {
-      printf("FAIL: reutils: %s %d: bad length of element 1.\n", desc, 3);
-      has_error = 1;
-    }
+  ASSERT_INT_EQ(3, n_elems, "crush_resubst_compile: number of elements");
+  ASSERT_INT_EQ(resubst_literal, subst_elems[0].elem_type,
+                "crush_resubst_compile: first element type");
+  ASSERT_PTR_EQ(pattern, subst_elems[0].begin,
+                "crush_resubst_compile: start of first element");
+  ASSERT_LONG_EQ(5, subst_elems[0].elem_len,
+                 "crush_resubst_compile: first element length");
 
-    if (subst_elems[1].elem_type != resubst_variable) {
-      printf("FAIL: reutils: %s %d: bad element 2 type.\n", desc, 3);
-      has_error = 1;
-    } else if (subst_elems[1].variable_num != 1) {
-      printf("FAIL: reutils: %s %d: bad variable number.\n", desc, 3);
-      has_error = 1;
-    }
+  ASSERT_INT_EQ(resubst_variable, subst_elems[1].elem_type,
+                "crush_resubst_compile: second element type");
+  ASSERT_INT_EQ(1, subst_elems[1].variable_num,
+                "crush_resubst_compile: second variable number");
 
-    if (subst_elems[2].elem_type != resubst_literal) {
-      printf("FAIL: reutils: %s %d: bad element 3 type.\n", desc, 3);
-      has_error = 1;
-    } else if (subst_elems[2].begin != pattern + 7) {
-      printf("FAIL: reutils: %s %d: bad start of element 3.\n", desc, 3);
-      has_error = 1;
-    } else if (subst_elems[2].elem_len != 5) {
-      printf("FAIL: reutils: %s %d: bad length of element 3.\n", desc, 3);
-      has_error = 1;
-    }
-  }
+  ASSERT_INT_EQ(resubst_literal, subst_elems[2].elem_type,
+                "crush_resubst_compile: third element type");
+  ASSERT_PTR_EQ(pattern + 7, subst_elems[2].begin,
+                "crush_resubst_compile: start of third element");
+  ASSERT_LONG_EQ(5, subst_elems[2].elem_len,
+                 "crush_resubst_compile: third element length");
 
   strcpy(pattern, "${1${}$hello");
   n_elems = crush_resubst_compile(pattern, &subst_elems, &subst_elems_sz);
-  if (n_elems != 1) {
-    printf("FAIL: reutils: %s %d: compiled %d elems instead of %d.\n",
-           desc, 4, n_elems, 1);
-    has_error = 1;
-  } else {
-    if (subst_elems[0].elem_type != resubst_literal) {
-      printf("FAIL: reutils: %s %d: bad element type.\n", desc, 4);
-      has_error = 1;
-    } else {
-      if (subst_elems[0].begin != pattern) {
-        printf("FAIL: reutils: %s %d: bad start of element.\n", desc, 4);
-        has_error = 1;
-      }
-      if (subst_elems[0].elem_len != strlen(pattern)) {
-        printf("FAIL: reutils: %s %d: bad element length.\n", desc, 4);
-        has_error = 1;
-      }
-    }
-  }
-
-  if (! has_error)
-    printf("PASS: reutils: %s.\n", desc);
-  return has_error;
+  ASSERT_INT_EQ(1, n_elems, "crush_resubst_compile: number of elements");
+  ASSERT_INT_EQ(resubst_literal, subst_elems[0].elem_type,
+                "crush_resubst_compile: element type");
+  ASSERT_PTR_EQ(pattern, subst_elems[0].begin,
+                "crush_resubst_compile: start of element");
+  ASSERT_LONG_EQ(strlen(pattern), subst_elems[0].elem_len,
+                 "crush_resubst_compile: element length");
 }
 
-int test_basic_substitution() {
-  INIT_TEST("basic substitution", "l")
-  TEST(1, "hello", "r", 0, "herlo")
-  TEST(2, "hello", "\\$1", 0, "he$1lo")
-  TEST(3, "hello", "\\\\", 0, "he\\lo")
-  FINISH_TEST()
+void test_basic_substitution() {
+#define TEST_DESC "basic substitution"
+  INIT_TEST("l");
+  TEST(1, "hello", "r", 0, "herlo");
+  TEST(2, "hello", "\\$1", 0, "he$1lo");
+  TEST(3, "hello", "\\\\", 0, "he\\lo");
+  FINISH_TEST();
+#undef TEST_DESC
 }
 
-int test_global_substitution() {
-  INIT_TEST("global substitution", "l")
-  TEST(1, "hello", "r", 1, "herro")
-  TEST(2, "hello", "", 1, "heo")
-  FINISH_TEST()
+void test_global_substitution() {
+#define TEST_DESC "global substitution"
+  INIT_TEST("l");
+  TEST(1, "hello", "r", 1, "herro");
+  TEST(2, "hello", "", 1, "heo");
+  FINISH_TEST();
+#undef TEST_DESC
 }
 
-int test_good_variables() {
-  INIT_TEST("variable substitution", "(l+)")
-  TEST(1, "hello", "$1", 0, "hello")
-  TEST(2, "hello", "${1}", 0, "hello")
-  TEST(3, "hello", "$1$2", 0, "hello")
-  TEST(4, "hello", "$1$1", 0, "hellllo")
-  FINISH_TEST()
+void test_good_variables() {
+#define TEST_DESC "variable substitution"
+  INIT_TEST("(l+)");
+  TEST(1, "hello", "$1", 0, "hello");
+  TEST(2, "hello", "${1}", 0, "hello");
+  TEST(3, "hello", "$1$2", 0, "hello");
+  TEST(4, "hello", "$1$1", 0, "hellllo");
+  FINISH_TEST();
+#undef TEST_DESC
 }
 
-int test_multi_variables() {
-  INIT_TEST("multiple variable substitution", "^(.)(.*)")
-  TEST(1, "hello", "$2$1ay", 0, "ellohay")
-  TEST(2, "hello", "$2$1ay", 1, "ellohay")
-  FINISH_TEST()
+void test_multi_variables() {
+#define TEST_DESC "multiple variable substitution"
+  INIT_TEST("^(.)(.*)");
+  TEST(1, "hello", "$2$1ay", 0, "ellohay");
+  TEST(2, "hello", "$2$1ay", 1, "ellohay");
+  FINISH_TEST();
+#undef TEST_DESC
 }
 
-int test_bad_variables() {
-  INIT_TEST("malformed variable substitution", "(l+)")
-  TEST(1, "hello", "${}", 0, "he${}o")
-  TEST(2, "hello", "$x", 0, "he$xo")
-  TEST(3, "hello", "${1", 0, "he${1o")
-  FINISH_TEST()
+void test_bad_variables() {
+#define TEST_DESC "malformed variable substitution"
+  INIT_TEST("(l+)");
+  TEST(1, "hello", "${}", 0, "he${}o");
+  TEST(2, "hello", "$x", 0, "he$xo");
+  TEST(3, "hello", "${1", 0, "he${1o");
+  FINISH_TEST();
+#undef TEST_DESC
 }
 
 int main (int argc, char *argv[]) {
-  int n_failures = 0;
-  n_failures += test_make_flags();
-  n_failures += test_resubst_compile();
-  n_failures += test_basic_substitution();
-  n_failures += test_global_substitution();
-  n_failures += test_good_variables();
-  n_failures += test_multi_variables();
-  n_failures += test_bad_variables();
-  if (n_failures)
-    exit(1);
-  exit(0);
+  test_make_flags();
+  test_resubst_compile();
+  test_basic_substitution();
+  test_global_substitution();
+  test_good_variables();
+  test_multi_variables();
+  test_bad_variables();
+  return unittest_has_error;
 }
 
 # else /* not HAVE_PCRE_H && HAVE_LIBPCRE */
