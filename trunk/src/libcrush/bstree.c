@@ -195,7 +195,9 @@ void bst_delete(bstree_t * tree, void *data) {
   } else if (cur->r && ! cur->l) {
     /* there's a right node, but not a left.  "replace" the
        current node in the tree with its right child */
-    if (cur->parent->l == cur)
+    if (cur == tree->root)
+      tree->root = cur->r;
+    else if (cur->parent->l == cur)
       cur->parent->l = cur->r;
     else if (cur->parent->r == cur)
       cur->parent->r = cur->r;
@@ -203,7 +205,9 @@ void bst_delete(bstree_t * tree, void *data) {
   } else if (cur->l && ! cur->r) {
     /* there's a left node, but not a right.  "replace" the
        current node in the tree with its left child */
-    if (cur->parent->l == cur)
+    if (cur == tree->root)
+      tree->root = cur->l;
+    else if (cur->parent->l == cur)
       cur->parent->l = cur->l;
     else if (cur->parent->r == cur)
       cur->parent->r = cur->l;
@@ -211,13 +215,22 @@ void bst_delete(bstree_t * tree, void *data) {
   } else {
     /** @todo add a call to bst_rotate_right() or bst_rotate_left() here after
       * rotation has been fixed. */
-    /* find the smallest node greater than the current one and put
-       it in the place of the current node */
-      bst_node_t * nextgreatest = cur->r;
-    while (nextgreatest->l)    /* search until there's no left child */
-      nextgreatest = nextgreatest->l;
+
+    /* find the smallest node greater than the current one, or the next largest
+       node if cur is the largest) and put it in the place of the current node.
+     */
+    bst_node_t * nextgreatest;
+    if (cur->r) {
+      nextgreatest = cur->r;
+      while (nextgreatest->l)  /* search until there's no left child */
+        nextgreatest = nextgreatest->l;
+    } else {
+      nextgreatest = cur->l;
+      while (nextgreatest->r)  /* search until there's no right child */
+        nextgreatest = nextgreatest->r;
+    }
     /* if this has a right child, push it up to the parent */
-    if (nextgreatest->r)
+    if (nextgreatest->parent && nextgreatest->r)
       nextgreatest->parent->l = nextgreatest->r;
     /* set the pointers */
     if (nextgreatest != cur->r)

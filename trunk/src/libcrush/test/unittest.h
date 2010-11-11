@@ -61,7 +61,22 @@ int unittest_has_error = 0;
  
 #define ASSERT_STR_GT(s1, s2, msg) \
   ASSERT_(strcmp((s1), (s2)) > 0, msg, (s1), (s2), "%s")
- 
+
+#define ASSERT_STR_ARRAY_EQ(a1, a2, sz, msg) \
+  do { \
+    int i, local_error = 0; \
+    for (i=0; i < (sz); i++) { \
+      if (strcmp((a1)[i], (a2)[i]) != 0) { \
+        FAIL(msg "\n  element %d\n  expected: %s\n  actual: %s", \
+             i, (a1)[i], (a2)[i]); \
+        local_error = 1; \
+      } \
+    } \
+    if (! local_error) { \
+      PASS(msg); \
+    } \
+  } while (0)
+
 #define ASSERT_INT_EQ(n1, n2, msg) \
   ASSERT_((n1) == (n2), msg, (n1), (n2), "%d")
 
@@ -73,3 +88,48 @@ int unittest_has_error = 0;
 
 #define ASSERT_INT_GT(n1, n2, msg) \
   ASSERT_((n1) > (n2), msg, (n1), (n2), "%d")
+
+#define ASSERT_INT_ARRAY_EQ(a1, a2, sz, msg) \
+  do { \
+    int i, local_error = 0; \
+    for (i=0; i < (sz); i++) { \
+      if ((a1)[i] != (a2)[i]) { \
+        FAIL(msg "\n  element %d\n  expected: %d\n  actual: %d", \
+             i, (a1)[i], (a2)[i]); \
+        local_error = 1; \
+      } \
+    } \
+    if (! local_error) { \
+      PASS(msg); \
+    } \
+  } while (0)
+
+#define ASSERT_LONG_EQ(n1, n2, msg) \
+  ASSERT_((n1) == (n2), msg, (n1), (n2), "%ld")
+
+#define ASSERT_LONG_NE(n1, n2, msg) \
+  ASSERT_((n1) != (n2), msg, (n1), (n2), "%ld")
+
+#define ASSERT_LONG_LT(n1, n2, msg) \
+  ASSERT_((n1) < (n2), msg, (n1), (n2), "%ld")
+
+#define ASSERT_LONG_GT(n1, n2, msg) \
+  ASSERT_((n1) > (n2), msg, (n1), (n2), "%ld")
+
+#define ASSERT_LONG_ARRAY_EQ(a1, a2, sz, msg) \
+  do { \
+    int i, local_error = 0; \
+    for (i=0; i < (sz); i++) { \
+      if ((a1)[i] != (a2)[i]) { \
+        FAIL(msg "\n  element %d\n  expected: %ld\n  actual: %ld", \
+             i, (a1)[i], (a2)[i]); \
+        local_error = 1; \
+      } \
+    } \
+    if (! local_error) { \
+      PASS(msg); \
+    } \
+  } while (0)
+
+#define ASSERT_PTR_EQ(n1, n2, msg) \
+  ASSERT_((n1) == (n2), msg, (n1), (n2), "%p")

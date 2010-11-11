@@ -157,19 +157,20 @@ void ht_delete(hashtbl_t * tbl, char *key) {
   unsigned long h;
   bstree_t *tree;
   bst_node_t *treenode;
+  ht_elem_t key_elem;
 
   h = tbl->hash((unsigned char *) key) % tbl->arrsz;
   tree = tbl->arr[h];
 
   if (! tree)  /* A NULL slot means the key is unknown. */
     return;
-
-  treenode = bst_find(tree, key);
+  key_elem.key = key;
+  treenode = bst_find(tree, &key_elem);
   if (treenode) {
     if (tbl->free)
       tbl->free(((ht_elem_t *) treenode->data)->data);
+    bst_delete(tree, &key_elem);
     tbl->nelems--;
-    bst_delete(tree, key);
   }
 }
 
