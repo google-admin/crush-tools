@@ -38,8 +38,8 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
   size_t fields_sz = 0; /* the size of the array */
   size_t n_fields;      /* the number of things in the array */
 
-  FILE *in;
-  dbfr_t *in_reader;
+  FILE *in = NULL;
+  dbfr_t *in_reader = NULL;
 
   char **prev_line;             /* fields from previous line of input */
   char cur_field[FIELD_LEN_LIMIT];
@@ -57,16 +57,27 @@ int funiq(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
   expand_chars(args->delim);
 
-  /* get the first file */
-  if (optind < argc)
-    in = nextfile(argc, argv, &optind, "r");
-  else
+  /* Get the first file, skipping any 0-byte files. */
+  if (optind < argc) {
+    do {
+      in = nextfile(argc, argv, &optind, "r");
+      if (in)
+        in_reader = dbfr_init(in);
+    } while (in && in_reader->eof);
+  } else {
     in = stdin;
-  if (!in) {
+    in_reader = dbfr_init(in);
+  }
+
+  if (!in && !in_reader) {
     fprintf(stderr, "%s: no valid input files\n", argv[0]);
     return EXIT_HELP;
   }
-  in_reader = dbfr_init(in);
+
+  if (in_reader->eof) {
+    /* There were valid input files, but they were all empty. */
+    return EXIT_OKAY;
+  }
 
   if (args->fields)
     n_fields = expand_nums(args->fields, &fields, &fields_sz);
