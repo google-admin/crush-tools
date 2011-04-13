@@ -489,8 +489,8 @@ void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
                               int *fields, size_t nfields, char *delim,
                               char *suffix) {
   char *pos;
-  int i;
-  size_t delim_len = 0, field_len = 0, suffix_len = 0;
+  int i, field_len = 0;
+  size_t delim_len = 0, suffix_len = 0;
 
   delim_len = strlen(delim);
   if (suffix)
@@ -498,9 +498,10 @@ void extract_fields_to_string(char *line, char *destbuf, size_t destbuf_sz,
   pos = destbuf;
 
   for (i = 0; i < nfields; i++) {
-    field_len =
-        get_line_field(pos, line, destbuf_sz - (pos - destbuf),
-                       fields[i], delim);
+    if ((field_len = get_line_field(pos, line, destbuf_sz - (pos - destbuf),
+                                    fields[i], delim)) < 0)
+      DIE("Cant find field %d.\n", fields[i]);
+
     pos += field_len;
     if (suffix) {
     	strncat(pos, suffix, destbuf_sz - (pos - destbuf));
