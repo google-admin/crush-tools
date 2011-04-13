@@ -34,7 +34,7 @@ int cutfield(struct cmdargs *args, int argc, char *argv[], int optind) {
   char default_delim[] = { 0xfe, 0x00 };
 
   int *field_list = NULL;       /* list of fields to remove */
-  size_t field_list_sz = 0;
+  ssize_t field_list_sz = 0;
 
   FILE *in;
   dbfr_t *in_reader;
