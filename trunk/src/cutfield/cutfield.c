@@ -56,12 +56,12 @@ int cutfield(struct cmdargs *args, int argc, char *argv[], int optind) {
 
   if (args->output_fname) {
     if (!freopen(args->output_fname, "w", stdout)) {
-      warn(args->output_fname);
+      warn("%s", args->output_fname);
       return EXIT_FILE_ERR;
     }
   } else if (args->append_fname) {
     if (!freopen(args->append_fname, "a", stdout)) {
-      warn(args->append_fname);
+      warn("%s", args->append_fname);
       return EXIT_FILE_ERR;
     }
   }
