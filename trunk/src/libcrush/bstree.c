@@ -219,24 +219,24 @@ void bst_delete(bstree_t * tree, void *data) {
     /* find the smallest node greater than the current one, or the next largest
        node if cur is the largest) and put it in the place of the current node.
      */
-    bst_node_t * nextgreatest;
-    if (cur->r) {
-      nextgreatest = cur->r;
-      while (nextgreatest->l)  /* search until there's no left child */
-        nextgreatest = nextgreatest->l;
-    } else {
-      nextgreatest = cur->l;
-      while (nextgreatest->r)  /* search until there's no right child */
-        nextgreatest = nextgreatest->r;
-    }
-    /* if this has a right child, push it up to the parent */
-    if (nextgreatest->parent && nextgreatest->r)
+    bst_node_t * nextgreatest = cur->r;
+    while (nextgreatest->l)  /* search until there's no left child */
+      nextgreatest = nextgreatest->l;
+
+    /* unlink parent from nextgreatest so we can move nextgreatest */
+    if (nextgreatest != cur->r)
       nextgreatest->parent->l = nextgreatest->r;
-    /* set the pointers */
+    /* unlink nextgreatest child (if it has one) so we can move nextgreatest */
+    if (nextgreatest != cur->r && nextgreatest->r)
+      nextgreatest->r->parent = nextgreatest->parent;
+
+    /* link nextgreatest's surroundings */
+    nextgreatest->parent = cur->parent;
+    nextgreatest->l = cur->l;
     if (nextgreatest != cur->r)
       nextgreatest->r = cur->r;
-    nextgreatest->l = cur->l;
-    nextgreatest->parent = cur->parent;
+
+    /* relink cur's surroundings */
     if (cur->parent) {
       if (cur->parent->l == cur)
         cur->parent->l = nextgreatest;
@@ -245,6 +245,9 @@ void bst_delete(bstree_t * tree, void *data) {
     } else {
       tree->root = nextgreatest;
     }
+    cur->l->parent = nextgreatest;
+    if (nextgreatest != cur->r)
+      cur->r->parent = nextgreatest;
   }
   if (tree->free)            /* free the data */
     tree->free(cur->data);
