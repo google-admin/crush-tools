@@ -32,6 +32,8 @@ static void ht_free_tree_data(void (*free_fn) (void *), bst_node_t *node) {
   free_fn(((ht_elem_t *) node->data)->data);
 }
 
+static int ht_rehash_2x(hashtbl_t *tbl);
+
 /* initialize a table. */
 int ht_init(hashtbl_t * tbl,
             size_t sz,
@@ -130,6 +132,10 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
       tbl->free(((ht_elem_t *) treenode->data)->data);
     treenode->data = elem;
   }
+
+  if (tbl->nelems > tbl->arrsz)
+    return ht_rehash_2x(tbl);
+
   return 0;
 }
 
@@ -173,6 +179,60 @@ void ht_delete(hashtbl_t * tbl, char *key) {
     tbl->nelems--;
   }
 }
+
+
+/* context for element rehashing */
+static struct {
+  hashtbl_t *tbl;
+  size_t newsz;
+  bstree_t **newarr;
+} rehash_binding;
+
+/* rehash an element to the new HT */
+static void ht_rehash_elem(ht_elem_t *elem) {
+  unsigned long h;
+  if (rehash_binding.tbl == NULL || rehash_binding.newarr == NULL)
+    return;
+
+  h = rehash_binding.tbl->hash((unsigned char *)elem->key) %
+      rehash_binding.newsz;
+  if (!rehash_binding.newarr[h]) {
+    rehash_binding.newarr[h] = xmalloc(sizeof(bstree_t));
+    bst_init(rehash_binding.newarr[h], ht_key_cmp, NULL);
+  }
+  bst_insert(rehash_binding.newarr[h], elem);
+}
+
+/* grow the hash table */
+static int ht_rehash_2x(hashtbl_t *tbl) {
+  int i;
+  if (tbl == NULL)
+    return 1;
+
+#ifdef CRUSH_DEBUG
+  fprintf(stderr, "rehashing ... ");
+#endif
+  memset(&rehash_binding, 0, sizeof(rehash_binding));
+  rehash_binding.tbl = tbl;
+  rehash_binding.newsz = ht_next_prime(tbl->arrsz * 2);
+  rehash_binding.newarr = xmalloc(sizeof(bstree_t *) * rehash_binding.newsz);
+  memset(rehash_binding.newarr, 0, sizeof(bstree_t *) * rehash_binding.newsz);
+  for (i = 0; i < tbl->arrsz; i++) {
+    if (tbl->arr[i]) {
+      bst_call_for_each(tbl->arr[i], (void(*)(void*))ht_rehash_elem, preorder);
+      bst_destroy(tbl->arr[i]);
+      free(tbl->arr[i]);
+    }
+  }
+  free(tbl->arr);
+  tbl->arrsz = rehash_binding.newsz;
+  tbl->arr = rehash_binding.newarr;
+#ifdef CRUSH_DEBUG
+  fprintf(stderr, "done, new size: %d\n", tbl->arrsz);
+#endif
+  return 0;
+}
+
 
 static void ht_keys_bst_traverse(bst_node_t *node,
                                  char **array,
