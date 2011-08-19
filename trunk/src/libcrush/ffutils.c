@@ -92,6 +92,37 @@ int get_line_field(char *dest, const char *line, size_t n, int i,
 }
 
 
+int copy_field(const char const *line, char **dest, size_t *dest_sz,
+               size_t field_no, const char const *delim) {
+  int len;
+  char *start, *end;
+  start = field_start(line, field_no + 1, delim);
+  if (!start)
+    return -1;
+  end = strstr(start, delim);
+  if (!end) {
+    end = start + strlen(start);
+    while (*(end - 1) == '\n' || *(end - 1) == '\r')
+      end--;
+  }
+  if (start == end)
+    return 0;
+  len = end - start;
+
+  if (*dest == NULL || dest_sz == 0) {
+    *dest = xmalloc(len + 1);
+    *dest_sz = len + 1;
+  } else if (len + 1 > *dest_sz) {
+    *dest = xrealloc(*dest, len + 1);
+    *dest_sz = len + 1;
+  }
+
+  (*dest)[len] = '\0';
+  strncpy(*dest, start, len);
+  return len;
+}
+
+
 char *field_start(const char * const line, size_t fn, const char *delim) {
   int i;
   char *p = (char *) line; /* cast away constness */

@@ -108,6 +108,21 @@ size_t fields_in_line(const char *l, const char *d);
 int get_line_field(char *cs, const char *ct, size_t n, int i,
                    const char *delim);
 
+/** @brief copies a field value into a buffer, reallocating the buffer to fit.
+  *
+  * Trailing line breaks are omitted from the field value.
+  *
+  * @param line a delimited string
+  * @param dest the destination buffer
+  * @param dest_sz the size of the destination buffer
+  * @param field_no field index, counting from zero
+  * @param delim field separator string
+  *
+  * @return the length of the field, or -1 if out of bounds.
+  */
+int copy_field(const char const *line, char **dest, size_t *dest_sz,
+               size_t field_no, const char const *delim);
+
 /** @brief returns a pointer into a delimited string where a particular
   * field begins.
   *

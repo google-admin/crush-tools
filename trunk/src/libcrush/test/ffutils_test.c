@@ -117,6 +117,50 @@ int test_get_line_field(void) {
   return unittest_has_error;
 }
 
+
+int test_copy_field(void) {
+  char *buffer = NULL;
+  size_t buffer_sz = 0;
+  int retval;
+  const char *line = "A||BB|CCC\n";
+
+  unittest_has_error = 0;
+
+  /* out-of-bounds field number */
+  retval = copy_field(line, &buffer, &buffer_sz, 5, "|");
+  ASSERT_TRUE(retval == -1, "copy_field: Negative return value expected");
+  ASSERT_TRUE(buffer_sz == 0, "copy_field: No buffer size change expected");
+  ASSERT_TRUE(buffer == NULL, "copy_field: No alloc expected");
+
+  retval = copy_field(line, &buffer, &buffer_sz, 1, "|");
+  ASSERT_TRUE(retval == 0, "copy_field: Zero return value expected");
+  ASSERT_TRUE(buffer_sz == 0, "copy_field: No buffer size change expected");
+  ASSERT_TRUE(buffer == NULL, "copy_field: No alloc expected");
+
+  retval = copy_field(line, &buffer, &buffer_sz, 0, "|");
+  ASSERT_TRUE(retval == 1, "copy_field: Return value 1 expected");
+  ASSERT_TRUE(buffer_sz == 2, "copy_field: Update buffer size");
+  ASSERT_STR_EQ(buffer, "A", "copy_field: Alloc and populate buffer");
+
+  retval = copy_field(line, &buffer, &buffer_sz, 2, "|");
+  ASSERT_TRUE(retval == 2, "copy_field: Return value 2 expected");
+  ASSERT_TRUE(buffer_sz == 3, "copy_field: Update buffer size");
+  ASSERT_STR_EQ(buffer, "BB", "copy_field: Relloc and populate buffer");
+
+  retval = copy_field(line, &buffer, &buffer_sz, 3, "|");
+  ASSERT_TRUE(retval == 3, "copy_field: Return value 3 expected");
+  ASSERT_TRUE(buffer_sz == 4, "copy_field: Update buffer size");
+  ASSERT_STR_EQ(buffer, "CCC", "copy_field: Relloc and populate buffer");
+
+  retval = copy_field(line, &buffer, &buffer_sz, 0, "|");
+  ASSERT_TRUE(retval == 1, "copy_field: Return value 1 expected");
+  ASSERT_TRUE(buffer_sz == 4, "copy_field: No update to buffer size");
+  ASSERT_STR_EQ(buffer, "A", "copy_field: Populate buffer (no realloc)");
+
+  return unittest_has_error;
+}
+
+
 int test_get_line_pos(void) {
   /* populated last field */
   char *TD0 = ",";
@@ -489,6 +533,7 @@ int main(int argc, char *argv[]) {
   errs += test_expand_nums();
   errs += test_expand_label_list();
   errs += test_field_str();
+  errs += test_copy_field();
   if (errs)
     return EXIT_FAILURE;
   return EXIT_SUCCESS;
