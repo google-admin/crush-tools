@@ -148,13 +148,6 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
                 FILE * out, struct cmdargs *args) {
 
   int retval = EXIT_OKAY;
-
-  /* buffer for holding field values */
-  char field_right[MAX_FIELD_LEN + 1];
-
-  /* general-purpose counter */
-  int i;
-
   int keycmp = 0;
 
   if (dbfr_getline(left) <= 0) {
@@ -201,9 +194,9 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
   }
 
   if (args->verbose) {
-    fprintf(stderr, "VERBOSE: # key fields:       %d\n", nkeys);
-    fprintf(stderr, "VERBOSE: left merge fields:  %d\n", left_ntomerge);
-    fprintf(stderr, "VERBOSE: right merge fields: %d\n", right_ntomerge);
+    fprintf(stderr, "VERBOSE: # key fields:       %lu\n", nkeys);
+    fprintf(stderr, "VERBOSE: left merge fields:  %lu\n", left_ntomerge);
+    fprintf(stderr, "VERBOSE: right merge fields: %lu\n", right_ntomerge);
   }
 
   /* print the headers which were already read in above */
@@ -226,7 +219,7 @@ int merge_files(dbfr_t *left, dbfr_t *right, enum join_type_t join_type,
      the left-hand file.
    */
   keycmp = LEFT_RIGHT_EQUAL;
-  
+
   if (dbfr_getline(right) <= 0) {
     free(right->current_line);
     right->current_line = NULL;
@@ -346,17 +339,18 @@ left_file_loop:
 static void extract_and_print_fields(char *line, int *field_list,
                                      size_t nfields, char *delim, FILE *out) {
   int i;
-  char field_buffer[MAX_FIELD_LEN + 1];
+  char *field_buffer = NULL;
+  size_t field_buffer_sz = 0;
   if (nfields == 0)
     return;
   for (i = 0; i < nfields - 1; i++) {
-    field_buffer[0] = '\0';
-    get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);
+    copy_field(line, &field_buffer, &field_buffer_sz, field_list[i], delim);
     fputs(field_buffer, out);
     fputs(delim, out);
   }
-  get_line_field(field_buffer, line, MAX_FIELD_LEN, field_list[i], delim);
+  copy_field(line, &field_buffer, &field_buffer_sz, field_list[i], delim);
   fputs(field_buffer, out);
+  free(field_buffer);
 }
 
 
@@ -365,7 +359,6 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
                 FILE * out) {
 
   int i;
-  char field_right[MAX_FIELD_LEN + 1];
 
   if (left_line == NULL && right_line == NULL)
     return;
@@ -403,21 +396,6 @@ void join_lines(char *left_line, char *right_line, char *merge_default,
   }
 
   fputc('\n', out);
-}
-
-
-static int Expand_nums(const char *str, int **arr,
-                       size_t *sz, const char *desc) {
-  ssize_t retval = expand_nums(str, arr, sz);
-  switch (retval) {
-    case -1: fprintf(stderr, "%s: out of memory\n", getenv("_"));
-             break;
-    case  0:
-    case -2: fprintf(stderr, "%s: bad %s key string: \"%s\"\n",
-                     getenv("_"), desc, str);
-             break;
-  }
-  return retval;
 }
 
 
@@ -506,15 +484,16 @@ int set_field_types() {
 void classify_fields(char *left_header, char *right_header) {
 
   int i, j;
-  char label_left[MAX_FIELD_LEN + 1], label_right[MAX_FIELD_LEN + 1];
+  char *label_left = NULL, *label_right = NULL;
+  size_t label_left_sz = 0, label_right_sz = 0;
 
   nkeys = left_ntomerge = right_ntomerge = 0;
 
   for (i = 0; i < nfields_left; i++) {
     for (j = 0; j < nfields_right; j++) {
 
-      get_line_field(label_right, right_header, MAX_FIELD_LEN, j, delim);
-      get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
+      copy_field(right_header, &label_right, &label_right_sz, j, delim);
+      copy_field(left_header, &label_left, &label_left_sz, i, delim);
 
       /* add common fields as merge keys */
       if (str_eq(label_left, label_right)) {
@@ -532,8 +511,8 @@ void classify_fields(char *left_header, char *right_header) {
   for (j = 0; j < nfields_right; j++) {
     for (i = 0; i < nfields_left; i++) {
 
-      get_line_field(label_right, right_header, MAX_FIELD_LEN, j, delim);
-      get_line_field(label_left, left_header, MAX_FIELD_LEN, i, delim);
+      copy_field(right_header, &label_right, &label_right_sz, j, delim);
+      copy_field(left_header, &label_left, &label_left_sz, i, delim);
 
       if (str_eq(label_left, label_right))
         break;
@@ -542,14 +521,16 @@ void classify_fields(char *left_header, char *right_header) {
     if (i == nfields_left)
       right_mergefields[right_ntomerge++] = j;
   }
+  free(label_left);
+  free(label_right);
 }
 
 
 int compare_keys(char *buffer_left, char *buffer_right) {
   int keycmp = 0;
   int i;
-  char field_left[MAX_FIELD_LEN + 1];
-  char field_right[MAX_FIELD_LEN + 1];
+  char *field_left = NULL, *field_right = NULL;
+  size_t field_left_sz = 0, field_right_sz = 0;
 
   if (buffer_left == NULL && buffer_right == NULL)
     return LEFT_RIGHT_EQUAL;
@@ -565,13 +546,15 @@ int compare_keys(char *buffer_left, char *buffer_right) {
     return RIGHT_GREATER;
 
   for (i = 0; i < nkeys; i++) {
-    get_line_field(field_left, buffer_left, MAX_FIELD_LEN,
-                   left_keyfields[i], delim);
-    get_line_field(field_right, buffer_right, MAX_FIELD_LEN,
-                   right_keyfields[i], delim);
+    copy_field(buffer_left, &field_left, &field_left_sz,
+               left_keyfields[i], delim);
+    copy_field(buffer_right, &field_right, &field_right_sz,
+               right_keyfields[i], delim);
     if ((keycmp = strcoll(field_left, field_right)) != 0)
       break;
   }
+  free(field_left);
+  free(field_right);
   return keycmp;
 }
 
@@ -581,20 +564,20 @@ int compare_keys(char *buffer_left, char *buffer_right) {
 int peek_keys(char *peek_line, char *current_line, const int *keyfields) {
   int keycmp = 0;
   int i;
-  char field_cur[MAX_FIELD_LEN + 1];
-  char field_next[MAX_FIELD_LEN + 1];
+  char *field_cur = NULL, *field_next = NULL;
+  size_t field_cur_sz = 0, field_next_sz = 0;
 
   /* no next line, so current line's fields are greater. */
   if (peek_line == NULL)
     return 1;
 
   for (i = 0; i < nkeys; i++) {
-    get_line_field(field_cur, current_line, MAX_FIELD_LEN,
-                   keyfields[i], delim);
-    get_line_field(field_next, peek_line, MAX_FIELD_LEN,
-                   keyfields[i], delim);
+    copy_field(current_line, &field_cur, &field_cur_sz, keyfields[i], delim);
+    copy_field(peek_line, &field_next, &field_next_sz, keyfields[i], delim);
     if ((keycmp = strcoll(field_cur, field_next)) != 0)
       break;
   }
+  free(field_cur);
+  free(field_next);
   return keycmp;
 }

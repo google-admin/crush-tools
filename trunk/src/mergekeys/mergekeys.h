@@ -50,9 +50,6 @@
 #ifndef MERGEKEYS_H
 #define MERGEKEYS_H
 
-#define MAX_FIELD_LEN 255
-
-
 /* macros to clarify the semantics of key comparisons. */
 
 /* these are used to compare "keycmp" */
