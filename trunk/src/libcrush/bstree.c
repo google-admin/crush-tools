@@ -50,6 +50,19 @@ void bstn_call_postorder(bst_node_t * node, void (*func) (void *));
 
 void bstn_call_breadthfirst(bst_node_t * node, void (*func) (void *));
 
+/* these do all the real work of the *_call_for_each2() functions */
+void bstn_call_preorder2(bst_node_t * node, void (*func) (void *, void *),
+                         void * data);
+
+void bstn_call_inorder2(bst_node_t * node, void (*func) (void *, void *),
+                        void * data);
+
+void bstn_call_postorder2(bst_node_t * node, void (*func) (void *, void *),
+                          void * data);
+
+void bstn_call_breadthfirst2(bst_node_t * node, void (*func) (void *, void *),
+                             void * data);
+
 /* ****************************** *
  * function definitions           *
  * ****************************** */
@@ -450,6 +463,83 @@ void bstn_call_breadthfirst(bst_node_t * node, void (*func) (void *)) {
   while (! q_empty(&q)) {
     n = (bst_node_t *) q_dequeue(&q);
     func(n->data);
+    if (n->l)
+      q_enqueue(&q, n->l);
+    if (n->r)
+      q_enqueue(&q, n->r);
+  }
+  q_destroy(&q);
+}
+
+
+/* just a wrapper that pulls out the root node & passes it to the
+   subtree traversal function. */
+void bst_call_for_each2(bstree_t * tree, void (*func) (void *, void *),
+                        void * data, traversal_order_t order) {
+  bstn_call_for_each2(tree->root, func, data, order);
+}
+
+
+void bstn_call_for_each2(bst_node_t * node, void (*func) (void *, void *),
+                         void * data, traversal_order_t order) {
+  switch (order) {
+    case preorder:
+      bstn_call_preorder2(node, func, data);
+      break;
+    case inorder:
+      bstn_call_inorder2(node, func, data);
+      break;
+    case postorder:
+      bstn_call_postorder2(node, func, data);
+      break;
+    case breadthfirst:
+      bstn_call_breadthfirst2(node, func, data);
+      break;
+    default:  /* This shouldn't happen. */
+      return;
+  }
+}
+
+
+void bstn_call_preorder2(bst_node_t * node, void (*func) (void *, void *),
+                         void * data) {
+  if (! node)
+    return;
+  func(node->data, data);
+  bstn_call_preorder2(node->l, func, data);
+  bstn_call_preorder2(node->r, func, data);
+}
+
+
+void bstn_call_inorder2(bst_node_t * node, void (*func) (void *, void *),
+                        void * data) {
+  if (! node)
+    return;
+  bstn_call_inorder2(node->l, func, data);
+  func(node->data, data);
+  bstn_call_inorder2(node->r, func, data);
+}
+
+
+void bstn_call_postorder2(bst_node_t * node, void (*func) (void *, void *),
+                          void * data) {
+  if (! node)
+    return;
+  bstn_call_postorder2(node->l, func, data);
+  bstn_call_postorder2(node->r, func, data);
+  func(node->data, data);
+}
+
+
+void bstn_call_breadthfirst2(bst_node_t * node, void (*func) (void *, void *),
+                             void * data) {
+  queue_t q;
+  bst_node_t * n;
+  q_init(&q, NULL);
+  q_enqueue(&q, node);
+  while (! q_empty(&q)) {
+    n = (bst_node_t *) q_dequeue(&q);
+    func(n->data, data);
     if (n->l)
       q_enqueue(&q, n->l);
     if (n->r)

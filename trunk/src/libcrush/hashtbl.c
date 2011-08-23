@@ -90,6 +90,7 @@ void ht_destroy(hashtbl_t * tbl) {
   memset(tbl, 0, sizeof(hashtbl_t));
 }
 
+
 /* Put a new key/value pair into a table. */
 int ht_put(hashtbl_t * tbl, char *key, void *data) {
   unsigned long h;
@@ -139,6 +140,7 @@ int ht_put(hashtbl_t * tbl, char *key, void *data) {
   return 0;
 }
 
+
 /* retrieve a value from a table */
 void *ht_get(hashtbl_t * tbl, char *key) {
   unsigned long h;
@@ -157,6 +159,7 @@ void *ht_get(hashtbl_t * tbl, char *key) {
     return NULL;
   return ((ht_elem_t *) treenode->data)->data;
 }
+
 
 /* remove a key/value pair from a table */
 void ht_delete(hashtbl_t * tbl, char *key) {
@@ -188,6 +191,7 @@ static struct {
   bstree_t **newarr;
 } rehash_binding;
 
+
 /* rehash an element to the new HT */
 static void ht_rehash_elem(ht_elem_t *elem) {
   unsigned long h;
@@ -202,6 +206,7 @@ static void ht_rehash_elem(ht_elem_t *elem) {
   }
   bst_insert(rehash_binding.newarr[h], elem);
 }
+
 
 /* grow the hash table */
 static int ht_rehash_2x(hashtbl_t *tbl) {
@@ -245,6 +250,7 @@ static void ht_keys_bst_traverse(bst_node_t *node,
   ht_keys_bst_traverse(node->r, array, index);
 }
 
+
 int ht_keys(hashtbl_t *tbl, char **array) {
   int i, j = 0;
   for (i = 0; i < tbl->arrsz; i++) {
@@ -254,6 +260,7 @@ int ht_keys(hashtbl_t *tbl, char **array) {
   return j;
 }
 
+
 static void ht_call_bst_traverse(bst_node_t *node, void (*func) (void *)) {
   if (! node)
     return;
@@ -261,6 +268,18 @@ static void ht_call_bst_traverse(bst_node_t *node, void (*func) (void *)) {
   ht_call_bst_traverse(node->l, func);
   ht_call_bst_traverse(node->r, func);
 }
+
+
+static void ht_call_bst_traverse2(bst_node_t *node,
+                                  void (*func) (void *, void *),
+                                  void * data) {
+  if (! node)
+    return;
+  func(((ht_elem_t *)node->data)->data, data);
+  ht_call_bst_traverse2(node->l, func, data);
+  ht_call_bst_traverse2(node->r, func, data);
+}
+
 
 /* Execute some function for all of the elements in a table. */
 void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *)) {
@@ -270,6 +289,17 @@ void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *)) {
       ht_call_bst_traverse(tbl->arr[i]->root, func);
   }
 }
+
+
+void ht_call_for_each2(hashtbl_t * tbl, void (*func) (void *, void *),
+                       void * data) {
+  int i;
+  for (i = 0; i < tbl->arrsz; i++) {
+    if (tbl->arr[i])
+      ht_call_bst_traverse2(tbl->arr[i]->root, func, data);
+  }
+}
+
 
 /* Print some population statistics for a table - useful for judging how well
    a hashing algorithm is performing.

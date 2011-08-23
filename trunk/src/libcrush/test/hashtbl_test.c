@@ -27,6 +27,10 @@ void call_for_each_test(void *data) {
   n_calls++;
 }
 
+void call_for_each2_test(void *node_data, int *aux_data) {
+  (*aux_data)++;
+}
+
 
 int main(int argc, char *argv[]) {
   hashtbl_t ht;
@@ -48,12 +52,16 @@ int main(int argc, char *argv[]) {
       ASSERT_TRUE(ht_get(&ht, key) == data, "ht_get: look up newly-put key");
     }
   }
-  ASSERT_LONG_EQ(10, ht.nelems, "ht_put: update element count correctly");
+  ASSERT_LONG_EQ(10L, ht.nelems, "ht_put: update element count correctly");
 
   ASSERT_TRUE(ht_get(&ht, "hello 13") == NULL,
               "ht_get: look up non-existing key");
   ht_call_for_each(&ht, call_for_each_test);
   ASSERT_INT_EQ(10, n_calls, "ht_call_for_each: verify repeated invokations");
+
+  i = 0;
+  ht_call_for_each2(&ht, call_for_each2_test, &i);
+  ASSERT_INT_EQ(10, i, "ht_call_for_each2: verify repeated invokations");
 
   keys = malloc(ht.nelems * sizeof(char *));
   retval = ht_keys(&ht, keys);
@@ -63,7 +71,7 @@ int main(int argc, char *argv[]) {
   ht_delete(&ht, "hello 0");
   ASSERT_TRUE(ht_get(&ht, "hello 0") == NULL,
               "ht_delete: removes entry successfully");
-  ASSERT_LONG_EQ(9, ht.nelems, "ht_delete: updates element count correctly");
+  ASSERT_LONG_EQ(9L, ht.nelems, "ht_delete: updates element count correctly");
 
   return unittest_has_error;
 }

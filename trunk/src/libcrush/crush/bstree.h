@@ -120,8 +120,8 @@ void bst_delete(bstree_t * tree, void *data);
   */
 bst_node_t * bst_find(bstree_t * tree, void *data);
 
-/** @brief traverses a binary search tree in the indicated order, calling the specified
-  * function for each data item in the tree.
+/** @brief traverses a binary search tree in the indicated order, calling the
+  * specified function for each data item in the tree.
   *
   * @param tree the tree to be traversed.
   * @param func the function to be executed.
@@ -140,4 +140,25 @@ void bst_call_for_each(bstree_t * tree, void (*func) (void *),
 void bstn_call_for_each(bst_node_t * node, void (*func) (void *),
                         traversal_order_t order);
 
+/** @brief traverses a binary search tree in the indicated order, calling the
+  * specified function for each data item in the tree.
+  *
+  * @param tree the tree to be traversed.
+  * @param func the function to be executed.
+  * @param data extra data to pass as the 2nd argument to func.
+  * @param order the order in which the tree should be traversed.
+  */
+void bst_call_for_each2(bstree_t * tree, void (*func) (void *, void *),
+                        void * data, traversal_order_t order);
+
+/** @brief traverses a (sub)tree in the indicated order, calling the specified
+  * function for each data item in the tree.
+  *
+  * @param node root of the (sub)tree to be traversed.
+  * @param func the function to be executed.
+  * @param data extra data to pass as the 2nd argument to func.
+  * @param order the order in which the tree should be traversed.
+  */
+void bstn_call_for_each2(bst_node_t * node, void (*func) (void *, void *),
+                         void * data, traversal_order_t order);
 #endif  /* BSTREE_H */

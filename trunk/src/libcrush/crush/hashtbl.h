@@ -123,6 +123,16 @@ int ht_keys(hashtbl_t *tbl, char **array);
   */
 void ht_call_for_each(hashtbl_t * tbl, void (*func) (void *));
 
+/** @brief executes a function for the data in each hashtable entry
+  *
+  * @param tbl table to be traversed
+  * @param func function to call which takes the entry's data as its
+  * first argument.
+  * @param data extra data to pass as the 2nd argument to func.
+  */
+void ht_call_for_each2(hashtbl_t * tbl, void (*func) (void *, void *),
+                       void * data);
+
 /** @brief prints some statistics for a hashtable useful for judging
   * hash algorithm performance.
   *
