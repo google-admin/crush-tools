@@ -185,32 +185,34 @@ void ht_delete(hashtbl_t * tbl, char *key) {
 
 
 /* context for element rehashing */
-static struct {
+static struct rehash_context {
   hashtbl_t *tbl;
   size_t newsz;
   bstree_t **newarr;
-} rehash_binding;
+};
 
 
 /* rehash an element to the new HT */
-static void ht_rehash_elem(ht_elem_t *elem) {
+static void ht_rehash_elem(ht_elem_t *elem,
+                           struct rehash_context *rehash_binding) {
   unsigned long h;
-  if (rehash_binding.tbl == NULL || rehash_binding.newarr == NULL)
+  if (rehash_binding->tbl == NULL || rehash_binding->newarr == NULL)
     return;
 
-  h = rehash_binding.tbl->hash((unsigned char *)elem->key) %
-      rehash_binding.newsz;
-  if (!rehash_binding.newarr[h]) {
-    rehash_binding.newarr[h] = xmalloc(sizeof(bstree_t));
-    bst_init(rehash_binding.newarr[h], ht_key_cmp, NULL);
+  h = rehash_binding->tbl->hash((unsigned char *)elem->key) %
+      rehash_binding->newsz;
+  if (!rehash_binding->newarr[h]) {
+    rehash_binding->newarr[h] = xmalloc(sizeof(bstree_t));
+    bst_init(rehash_binding->newarr[h], ht_key_cmp, NULL);
   }
-  bst_insert(rehash_binding.newarr[h], elem);
+  bst_insert(rehash_binding->newarr[h], elem);
 }
 
 
 /* grow the hash table */
 static int ht_rehash_2x(hashtbl_t *tbl) {
   int i;
+  struct rehash_context rehash_binding;
   if (tbl == NULL)
     return 1;
 
@@ -224,7 +226,8 @@ static int ht_rehash_2x(hashtbl_t *tbl) {
   memset(rehash_binding.newarr, 0, sizeof(bstree_t *) * rehash_binding.newsz);
   for (i = 0; i < tbl->arrsz; i++) {
     if (tbl->arr[i]) {
-      bst_call_for_each(tbl->arr[i], (void(*)(void*))ht_rehash_elem, preorder);
+      bst_call_for_each2(tbl->arr[i], (void(*)(void*, void*))ht_rehash_elem,
+                         &rehash_binding, preorder);
       bst_destroy(tbl->arr[i]);
       free(tbl->arr[i]);
     }
