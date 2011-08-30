@@ -1,8 +1,15 @@
 #!/bin/sh
 
+OS=`uname`
+
 set -x
 aclocal
-libtoolize --force --copy
+LIBTOOL="libtoolize"
+
+if [[ ${OS} -eq 'Darwin' ]]; then
+  LIBTOOL="glibtoolize"
+fi
+${LIBTOOL} --force --copy
 
 # cat /usr/share/aclocal/libtool.m4 \
 #     /usr/share/aclocal/ltoptions.m4 \
