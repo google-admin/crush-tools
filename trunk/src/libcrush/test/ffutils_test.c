@@ -134,8 +134,8 @@ int test_copy_field(void) {
 
   retval = copy_field(line, &buffer, &buffer_sz, 1, "|");
   ASSERT_TRUE(retval == 0, "copy_field: Zero return value expected");
-  ASSERT_TRUE(buffer_sz == 0, "copy_field: No buffer size change expected");
-  ASSERT_TRUE(buffer == NULL, "copy_field: No alloc expected");
+  ASSERT_TRUE(buffer_sz == 1, "copy_field: Update buffer size");
+  ASSERT_STR_EQ(buffer, "", "copy_field: copy empty string.");
 
   retval = copy_field(line, &buffer, &buffer_sz, 0, "|");
   ASSERT_TRUE(retval == 1, "copy_field: Return value 1 expected");

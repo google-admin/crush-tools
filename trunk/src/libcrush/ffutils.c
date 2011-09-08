@@ -105,8 +105,7 @@ int copy_field(const char const *line, char **dest, size_t *dest_sz,
     while (*(end - 1) == '\n' || *(end - 1) == '\r')
       end--;
   }
-  if (start == end)
-    return 0;
+
   len = end - start;
 
   if (*dest == NULL || dest_sz == 0) {
