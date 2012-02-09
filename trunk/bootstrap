@@ -6,7 +6,7 @@ set -x
 aclocal
 LIBTOOL="libtoolize"
 
-if [[ ${OS} -eq 'Darwin' ]]; then
+if [[ ${OS} = 'Darwin' ]]; then
   LIBTOOL="glibtoolize"
 fi
 ${LIBTOOL} --force --copy
