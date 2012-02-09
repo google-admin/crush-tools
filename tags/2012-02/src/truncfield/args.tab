@@ -1,0 +1,94 @@
+# data relevant to the application as a whole
+%global = (
+	name => "truncfield",
+	description => "truncates specified fields from a string-delimited data stream",
+	version => "\"CRUSH_PACKAGE_VERSION\"",
+	trailing_opts => "[file ...]",
+	usage_extra => "if -d is not specified and DELIMITER enviroment variable is defined, that value will be used.",
+	do_long_opts => 1,
+	preproc_extra => '#include <crush/crush_version.h>',
+	copyright => <<END_COPYRIGHT
+   Copyright 2008 Google Inc.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+END_COPYRIGHT
+);
+
+# descriptions of individual command-line arguments
+# valid types are
+#	flag		- no argument
+#	var		- required argument
+#	var_optional	- optional argument
+#	custom_flag	- no arg, and specify parseopt_code 
+#	custom_var	- required arg, and specify parseopt_code 
+#	custom_var_optional - optional arg, and specify parseopt_code 
+@args = ( {
+	  name => 'help',
+	  shortopt => 'h',
+	  longopt => 'help',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
+	  description => 'print this message and exit'
+	},
+	{
+	  name => 'version',
+	  shortopt => 'V',
+	  longopt => 'version',
+	  type => 'flag',
+	  required => 0,
+	  main_code => 'version(); exit(1);',
+	  description => 'print version info and exit'
+	},
+	{
+	  name        => 'delim',
+	  shortopt    => 'd',
+	  longopt     => 'delimiter',
+	  required    => 0,
+	  type        => 'var',
+	  description => 'field-separator string',
+	},
+	{
+	  name        => 'fields',
+	  shortopt    => 'f',
+	  longopt     => 'field',
+	  required    => 0,
+	  type        => 'var',
+	  description => 'indexes of fields to be truncated',
+	},
+  {
+	  name        => 'field_labels',
+	  shortopt    => 'F',
+	  longopt     => 'field-labels',
+	  required    => 0,
+	  type        => 'var',
+	  description => 'labels of fields to be truncated',
+	},
+	{
+	  name        => 'output_fname',
+	  shortopt    => 'o',
+	  longopt     => 'output-file',
+	  required    => 0,
+	  type        => 'var',
+	  description => 'name of file to which output should be written',
+	},
+	{
+	  name        => 'append_fname',
+	  shortopt    => 'a',
+	  longopt     => 'append-file',
+	  required    => 0,
+	  type        => 'var',
+	  description => 'name of file to which output should be appended',
+	}
+);
+

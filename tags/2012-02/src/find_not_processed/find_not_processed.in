@@ -1,0 +1,124 @@
+#!CRUSH_PERL_PATH -w
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Long;
+
+my ($help, $dir, $logfile, $print_dir, $file_regex, $file_glob, $show_version);
+Getopt::Long::Configure( "no_ignore_case" );
+GetOptions("help" => \$help,
+           "directory=s" => \$dir,
+           "logfile=s" => \$logfile,
+           "print-dir" => \$print_dir,
+           "glob=s" => \$file_glob,
+           "regex=s" => \$file_regex,
+           "Version" => \$show_version,
+          );
+
+if ($help) {
+  usage();
+  exit(1);
+}
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
+
+if (! $dir) {
+  die "$0: -d must be specified.\n";
+} elsif (! -d $dir) {
+  die "$0: invalid directory \"$dir\".\n";
+}
+
+if (! $logfile) {
+  die "$0: -l must be specified.\n";
+} elsif (! -f $logfile) {
+  system("touch", "$logfile") == 0 or die "$0: error creating file $logfile\n";
+}
+
+my (@files_in_log, @files_in_dir);
+
+open(LOG, $logfile) or die "$0: $logfile: $!\n";
+# chomp() assumes consistency in linebreak style
+@files_in_log = <LOG>;
+map { s/[\r\n]//g; } @files_in_log;
+close(LOG);
+
+if ($file_glob) {
+  @files_in_dir = <$dir/$file_glob>;
+  map { s:.*/:: } @files_in_dir;
+} else {
+  if (! $file_regex) {
+    $file_regex = '^[^.]';
+  }
+  opendir(DIR, $dir) || die "$0: $dir: $!\n";
+  @files_in_dir = grep /$file_regex/, readdir(DIR);
+  closedir(DIR);
+}
+
+my @files_to_run = array_diff(\@files_in_log, \@files_in_dir);
+
+if ($print_dir) {
+  if ($dir !~ m#/$#) { $dir .= '/' }
+  foreach my $f (@files_to_run) {
+    print $dir, $f , q( );
+  }
+} else {
+  print join(' ', @files_to_run);
+}
+print qq(\n);
+
+exit(0);
+
+
+sub usage {
+
+  print STDERR << "ENDUSAGE";
+finds files in a directory which are not listed in a log file
+
+usage: $0 <options>
+
+options:
+
+  -h, --help              print this message and exit
+  -d, --directory <DIR>   look for files in DIR (required)
+  -l, --logfile <FILE>    compare directory against files in FILE (required)
+  -p, --print-dir         print the full file path (default: just the name)
+  -g, --glob <PATTERN>    only look for files matching PATTERN
+  -r, --regex <PATTERN>   only look for files matching PATTERN
+
+ENDUSAGE
+}
+
+
+
+# return a list of all the things in $b which are not in $a
+sub array_diff {
+  my $a = shift; 
+  my $b = shift;
+
+  my (%ha, %hb);
+  foreach (@{$a}) { $ha{$_} = 1; }
+  foreach (@{$b}) { $hb{$_} = 1; }
+
+  my @diff = ();
+  foreach (keys %hb) {
+    push @diff, $_ unless $ha{$_};
+  }
+
+  return @diff;
+}
+

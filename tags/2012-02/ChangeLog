@@ -1,0 +1,152 @@
+Changes in the "2012-02" release (2010-01-10 thru 2012-02-09):
+
+* aggregate
+  * avoid locale-specific errors due to differences in LC_NUMERIC
+    conventions.
+
+* buffer
+  * Update buffer to build based on args.tab.
+
+* cutfield
+  * Fix a segfault when bad field labels are specified.
+  * Fix a couple of compiler warnings.
+
+* dbstream
+  * Improve consistency in handling of various query types.
+    * Allow placeholders in SELECT queries
+    * Do not require placeholders in UPDATE queries
+    * Do not require placeholders in INSERT queries
+    * Support DELETE queries, etc.
+
+* fieldsplit
+  * Adjust bucket length calculation.
+
+* funiq
+  * Fix a bug in which caused a segfault when taking 0-byte input streams.
+
+* mergekeys
+  * Remove arbitrary field length limit.
+  * Fix segfalut when reading empty key fields.
+
+* reorder
+  * Replace a fixed-size buffer with a dynamically-sized one.  This fixes
+    a bug in which long fields were silently truncated when using the -f
+    option.
+
+* translate_field:
+  * Add an option to keep the header row intact.
+
+* Misc:
+  * libcrush
+    * fix a few (mostly harmless) compiler warnings.
+    * Make tests behave better when PCRE is not present.
+    * Add a (primitive) library for dynamically-resized strings.
+    * bug fixes in bstree and hashtbl.
+    * Fix bstree node removal
+    * Add logic for hashtbl.c to grow/rehash on insertion.
+    * Add a new function copy_field() to ffutils which dynamically
+      reallocates the target buffer.
+  * cgener: Allow nicely formatted usage_extra blocks in args.tab.
+
+
+Changes in the "2010-01" release (2009-01-13 thru 2010-01-10):
+
+* aggregate
+  * Add support for min/max output.
+	* Bug fix: avoid seg-fault when labels are not found.
+	* Performance enhancements.
+
+* fieldsplit
+  * Bug fix: When running with -b, pad bucket numbers in output filenames
+	  with zeros instead of spaces.
+	* Rewritten in C for improved performance.
+	* NOTE: This now depends on PCRE (dev package with library and header) in
+	  order to be fully backward-compatible.
+
+* filterkeys
+  * New: a tool for filtering data streams using an external list of field
+	  values to either keep or discard.
+
+* mergekeys
+  * Remove in-order requirement for auto-detecting keys.
+
+* pivot
+  * Bug fix: Do not reference invalid dbfr_t in pivot's output phase.
+
+* Global
+  * Distribution filename changed from "crush_<release>.tar.gz" to
+	  "crush-tools_<release>.tar.gz".
+  * Better error-checking for memory allocation.
+	* General code cleanup.
+
+* translate_field
+	* Add a -k option for keeping the header row intact.
+  * Add missing documentation for the -F option.
+
+
+Changes in the "2009-01" release (2008-10-05 thru 2009-01-13):
+
+* Field-label support: anywhere that you could use a field index as a command-
+  line argument, there is now the option to use that field's label from
+	the first line instead.
+
+* Generate and install man pages.
+
+* fieldsplit:  Add a "-b/--buckets" option, which limits the number of ouptut
+  files which may be produced, while guaranteeing that field values are
+  grouped together.  Performance enhancements.
+
+* aggregate & aggregate2: -l/--labels and -L/--auto-labels options to
+	control the headers for aggregated output fields.
+
+* mergekeys: -D/--default option to specify the value to put into a
+  mergeable field when there is no match in an outer join.
+
+* Support stdin as a trailing filename option specified as "-" in several apps.
+
+* translate_field: -x option to specify a substitution regular
+  expression instead of a hard-coded mapping.
+
+
+Changes in the "2008-10" release (2008-07-15 thru 2008-10-04):
+
+* Make sure m4 is available at configure-time.  Previously it was assumed that
+  the install host had m4 installed, but then the Perl scripts would fail to
+  build.
+
+* Check for presence of non-standard Perl modules, and only build scripts with
+  those dependencies if the modules are installed.
+
+* Allow escape sequences to be specified as delimiter arguments in utilities
+  written in Perl.
+
+* Add a "contrib" directory for non-core utilities, etc.
+
+* Add options to mergekeys to allow user-specified key fields as an alternative
+  to auto-detection of keys.  This currently does NOT remove the requirement
+  that both files have a header line.
+
+* Prepend all error messages with the name of the executable.
+
+* Improve testing, and include test files in the distribution package.
+
+* Bug-fix in find_not_processed - printed file names were not space-separated
+  when -p option was specified.
+
+* Avoid Perl warnings in csvformat when there is no linebreak at EOF, and fix
+  commandline option specifications to avoid ambiguity.
+
+* Make cutfield correctly handle empty fields.  It previously failed to output
+  fields which were empty in the input.
+
+* Fix a bug in reorder which causes a seg-fault when large ranges are 
+  specified in the -f option.
+
+* Bug fix in aggregate2 - print the header correctly line when the last field
+  is one of the keys.  This bug was introducing a line break in the header line.
+
+* Bug fix in aggregate2 - handle empty key fields correctly.
+
+* Standardize and centralize the version reported by the applications.
+
+* Add --Header option to dbstream to print the sql header fields if specified.
