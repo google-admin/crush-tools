@@ -29,10 +29,11 @@
 
 char default_delim[2] = { 0xfe, 0x00 };
 char *delim;
+size_t delim_len = 0;
 struct fkeys_conf fk_conf;
 
 /* parse key fields */
-static int configure_filterkeys(struct fkeys_conf *conf, 
+static int configure_filterkeys(struct fkeys_conf *conf,
                                 struct cmdargs *args,
                                 dbfr_t *filter_reader,
                                 dbfr_t *stream_reader) {
@@ -72,7 +73,7 @@ static int configure_filterkeys(struct fkeys_conf *conf,
   } else {
     dbfr_getline(filter_reader);
     dbfr_getline(stream_reader);
-  
+
     char label_left[MAX_FIELD_LEN + 1], label_right[MAX_FIELD_LEN + 1];
     int nfields_filter = fields_in_line(filter_reader->current_line, delim);
     int nfields_stream = fields_in_line(stream_reader->current_line, delim);
@@ -120,11 +121,16 @@ static int load_filter(struct fkeys_conf *conf, dbfr_t *filter_reader) {
   while (dbfr_getline(filter_reader) > 0) {
 
     t_keybuf = (char *) xmalloc(filter_reader->current_line_sz);
-    for (acum_len = 0, i = 0; i < conf->key_count; i++)
+    for (acum_len = 0, i = 0; i < conf->key_count; i++) {
       acum_len += get_line_field(t_keybuf + acum_len,
                                  filter_reader->current_line,
                                  filter_reader->current_line_sz - acum_len,
                                  conf->aindexes[i], delim);
+      if (i != conf->key_count -1) {
+        strcat(t_keybuf + acum_len, delim);
+        acum_len += delim_len;
+      }
+    }
     if (acum_len > 0)
       ht_put(&conf->filter, t_keybuf, (void*)0xDEADBEEF);
       //bst_insert(&conf->ftree, t_keybuf);
@@ -162,6 +168,7 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
   if (!(delim = (args->delim ? args->delim : getenv("DELIMITER"))))
     delim = default_delim;
   expand_chars(delim);
+  delim_len = strlen(delim);
 
   /* get the filter file */
   int fd = open64(args->filter_file, O_RDONLY);
@@ -209,6 +216,10 @@ int filterkeys(struct cmdargs *args, int argc, char *argv[], int optind) {
                                    stream_reader->current_line,
                                    fk_conf.key_buffer_sz - acum_len,
                                    fk_conf.bindexes[i], delim);
+        if (i != fk_conf.key_count -1) {
+          strcat(t_keybuf + acum_len, delim);
+          acum_len += delim_len;
+        }
       }
 
       if (acum_len > 0) {
