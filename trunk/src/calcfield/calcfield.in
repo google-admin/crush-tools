@@ -150,7 +150,7 @@ sub create_calc_func {
 
   if ($header_map) {
     # [ FieldName ] -> $parts->[ indexOf(FieldName) ]
-    while ($formula =~ /(\[\s*)([A-Za-z][^\]]+)(\s*\])/g) {
+    while ($formula =~ /(\[\s*)([A-Za-z][^\]]*)(\s*\])/g) {
       my $label_idx = $header_map->{$2};
       if (defined($label_idx)) {
         $formula =~ s/\Q$1$2$3\E/\$parts->\[$label_idx\]/;
