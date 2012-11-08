@@ -5,7 +5,7 @@
 # this command aggregates on those fields and inserts lines subtotaling quantity
 # and revenue for each distinct campaign id
 
-<a href="gzdog.html">gzdog</a> $dtfile |
+<a href="zcat.html">zcat</a> $dtfile |
 	<a href="aggregate.html">aggregate</a> -p -k 4-6 -s 15,16 |
 	<b>subtotal</b> -k 2 -s 4,5 -l 2
 
