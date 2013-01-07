@@ -102,6 +102,10 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
 
   while (infile) {
     datareader = dbfr_init(infile);
+    if (datareader->eof) {
+      infile = nextfile(argc, argv, &optind, "r");
+      continue;
+    }
 
     if (args->key_labels) {
       n_key_fields = expand_label_list(args->key_labels, datareader->next_line,
