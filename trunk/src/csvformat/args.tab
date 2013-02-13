@@ -10,7 +10,7 @@
 	do_long_opts => 1,
 	preproc_extra => '',
 	copyright => <<END_COPYRIGHT
-   Copyright 2008 Google Inc.
+   Copyright 2008-2013 Google Inc.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ END_COPYRIGHT
 	  main_code => 'usage(argv[0]); exit(EXIT_HELP);',
 	  description => 'print this message and exit'
 	},
-  {
+	{
 	  name => 'delim',
 	  shortopt => 'd',
 	  longopt => 'delim',
@@ -67,6 +67,22 @@ END_COPYRIGHT
 	  type        => 'flag',
 	  required    => 0,
 	  description => 'do not escape internal quotes'
+	},
+	{
+	  name        => 'quoting',
+	  shortopt    => 'q',
+	  longopt     => 'quoting',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'field quoting style. Must be one of "all", "minimal", "nonnumeric" or "none".'
+	},
+	{
+	  name        => 'list',
+	  longopt     => 'fields-to-quote',
+	  shortopt    => 'f',
+	  type        => 'var',
+	  required    => 0,
+	  description => 'only/always quote these specific fields. If specified, any value in --quoting is ignored.'
 	},
 );
 

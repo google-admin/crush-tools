@@ -64,4 +64,36 @@ sub get_line_field {
   return substr($_[0], $pos, $end_pos);
 }
 
+=item * expand_nums($arg [, $adjust])
+
+Turn a string of comma-separated numbers and number ranges into an array of
+numbers. If specified, $adjust is added to each value after expansion. E.g.,
+If turning 1-based field indexes into array indexes, pass -1 as the adjust
+value.
+
+=cut
+sub expand_nums {
+  my $arg = shift;
+  my $adjust = shift || 0;
+  my @fields = split(',', $arg);
+  my @idxs = ();
+  foreach my $f (@fields) {
+    if ($f =~ /(\d+)-(\d+)/) {
+      push(@idxs, $1 .. $2);
+    } elsif ($f =~ /\d+/) {
+      push(@idxs, $f);
+    } else {
+      use Carp;
+      croak "Invalid value in numeric list: $f";
+    }
+  }
+  if ($adjust) {
+    foreach $i (0 .. $#idxs) {
+      $idxs[$i] += $adjust;
+    }
+  }
+  return @idxs;
+}
+
+
 1;

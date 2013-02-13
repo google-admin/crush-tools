@@ -1,7 +1,7 @@
 #!CRUSH_PERL_PATH -w
 #-*-perl-*-
 
-#  Copyright 2008 Google Inc.
+#  Copyright 2008-2013 Google Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,9 +19,10 @@ use strict;
 use Getopt::Long;
 use FileHandle;
 
-my ($h, $d, $i, $o, $noescape, $show_version);
+my ($h, $d, $i, $o, $noescape, $show_version, $quoting, @quote_fields);
 
 $d = $ENV{DELIMITER} || chr(0xfe);
+$quoting = 'all';
 Getopt::Long::Configure( "no_ignore_case" );
 &GetOptions("help"    => \$h,
             "delim=s"  => \$d,
@@ -29,6 +30,8 @@ Getopt::Long::Configure( "no_ignore_case" );
             "output=s"  => \$o,
             "no-escape"  => \$noescape,
             "Version" => \$show_version,
+	    "quoting=s" => \$quoting,
+	    "fields-to-quote=s" => \@quote_fields,
            );
 
 if ($h) {
@@ -39,6 +42,21 @@ if ($show_version) {
   crush_version();
   exit(0);
 }
+
+my $quote_fn;
+if (@quote_fields) {
+  my $field_list = join(',', @quote_fields);
+  if ($field_list =~ /([^-,\d]+)/) {
+    die "Bad --fields-to-quote value: $1\n";
+  }
+  @quote_fields = expand_nums($field_list, -1);
+  $quote_fn = \&quote_specific
+}
+elsif ($quoting eq 'all') { $quote_fn = \&quote_all }
+elsif ($quoting eq 'none') { $quote_fn = \&quote_none }
+elsif ($quoting eq 'minimal') { $quote_fn = \&quote_minimal }
+elsif ($quoting eq 'nonnumeric') { $quote_fn = \&quote_nonnumeric }
+else  { die "Invalid --quoting value: $quoting\n"; }
 
 $d = expand_chars($d); # expand escape sequences
 
@@ -74,14 +92,54 @@ while (<$IN>) {
     $_ =~ s/"/""/g;    # "escape" existing quotes
   }
 
-  $_ = q(") . $_ . q(") . $linebreak;
-  $_ =~ s/\Q$d\E/","/g;
-
-  print $OUT $_;
+  print $OUT $quote_fn->($_), $linebreak;
 }
 
 exit(0);
 
+sub quote_specific {
+  my $line = shift;
+  my @fields = split(/\Q$d\E/o, $line);
+  for my $i (@quote_fields) {
+    $fields[$i] = q(") . $fields[$i] . q(");
+  }
+  return join(',', @fields);
+}
+
+sub quote_all {
+  my $line = shift;
+  $line = q(") . $line . q(");
+  $line =~ s/\Q$d\E/","/og;
+  return $line;
+}
+
+sub quote_none {
+  my $line = shift;
+  $line =~ s/\Q$d\E/,/og;
+  return $line;
+}
+
+sub quote_nonnumeric {
+  my $line = shift;
+  my @fields = split(/\Q$d\E/o, $line);
+  for my $i (0 .. $#fields) {
+    if ($fields[$i] !~ /-?\d+(\.\d+)?/) {
+      $fields[$i] = q(") . $fields[$i] . q(");
+    }
+  }
+  return join(',', @fields);
+}
+
+sub quote_minimal {
+  my $line = shift;
+  my @fields = split(/\Q$d\E/o, $line);
+  for my $i (0 .. $#fields) {
+    if ($fields[$i] =~ /,/) {
+      $fields[$i] = q(") . $fields[$i] . q(");
+    }
+  }
+  return join(',', @fields);
+}
 
 sub usage {
   print STDERR <<"__USAGE__";
@@ -91,10 +149,14 @@ converts a delimited file to csv format.
 Usage: $0 [options...]
 
 Options:
-  -d, --delim <delim>     input field separator (default: 0xfe)
-  -i, --input <infile>    input file (default: stdin)
-  -o, --output <outfile>  output file (default: stdout)
-  -n, --no-escape         do not escape quotes
+  -d, --delim <delim>        input field separator (default: 0xfe)
+  -i, --input <infile>       input file (default: stdin)
+  -o, --output <outfile>     output file (default: stdout)
+  -n, --no-escape            do not escape quotes
+  -q, --quoting <style>      field quoting style. Must be one of
+                             "all", "minimal", "nonnumeric" or "none".
+  --fields-to-quote <list>   only/always quote these specific fields. If
+                             specified, any value in --quoting is ignored.
 
 __USAGE__
 

@@ -19,6 +19,15 @@ sub chk (@) {
   }
 }
 
+sub arrays_are_equal {
+  my ($a, $b) = @_;
+  return 0 if (@$a != @$b);
+  foreach my $i (0 .. $#{ $a }) {
+    return 0 if ($a->[$i] != $b->[$i]);
+  }
+  return 1;
+}
+
 # fields_in_line()
 chk fields_in_line('hello,world', ',') == 2,
     "fields_in_line()";
@@ -40,5 +49,14 @@ chk get_line_field('1|2|3|4', 3, '|') == 4,
     "get_line_field(): last pos" ;
 chk get_line_field('1|2|3|4', 1, '|') == 2,
     "get_line_field(): middle pos" ;
+
+# expand_nums()
+my @a;
+@a = expand_nums('1-3,5');
+chk arrays_are_equal(\@a, [1, 2, 3, 5]),
+    "expand_nums(): no adjustment.";
+@a = expand_nums('1-3,5', -1);
+chk arrays_are_equal(\@a, [0, 1, 2, 4]),
+    "expand_nums(): -1 adjustment.";
 
 exit $has_error;
