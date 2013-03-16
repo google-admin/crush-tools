@@ -92,6 +92,7 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     conf->mins.count = expand_label_list(args->min_labels, header, delim,
                                     &(conf->mins.indexes),
                                     &(conf->mins.size));
+    args->preserve = 1;
   }
   if (conf->mins.count < 0) {
     return conf->mins.count;
@@ -107,25 +108,25 @@ int configure_aggregation(struct agg_conf *conf, struct cmdargs *args,
     conf->maxs.count = expand_label_list(args->max_labels, header, delim,
                                     &(conf->maxs.indexes),
                                     &(conf->maxs.size));
+    args->preserve = 1;
   }
   if (conf->maxs.count < 0) {
     return conf->maxs.count;
   } else if (conf->maxs.count > 0) {
     decrement_values(conf->maxs.indexes, conf->maxs.count);
-    conf->maxs.precisions = xmalloc(sizeof(int) * conf->maxs.count);
-    memset(conf->maxs.precisions, 0, sizeof(int) * conf->maxs.count);
+    conf->maxs.precisions = xcalloc(conf->maxs.count, sizeof(int));
   }
 
   return 0;
 }
 
-/** @brief  
-  * 
+/** @brief
+  *
   * @param args contains the parsed cmd-line options & arguments.
   * @param argc number of cmd-line arguments.
   * @param argv list of cmd-line arguments
   * @param optind index of the first non-option cmd-line argument.
-  * 
+  *
   * @return exit status for main() to return.
   */
 int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
@@ -249,7 +250,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
       if (conf.maxs.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.maxs.indexes, conf.maxs.count, delim,
-                                 args->auto_label ? "-Min" : NULL);
+                                 args->auto_label ? "-Max" : NULL);
         printf("%s%s", delim, outbuf);
       }
     }
@@ -258,7 +259,6 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   }
 
   ht_init(&aggregations, 1024, NULL, (void (*)) free_agg);
-  /* ht_init( &aggregations, 1024, NULL, free ); */
 
   n_hash_elems = 0;
 
@@ -385,6 +385,8 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
         dbfr_getline(in_reader);
     }
   }
+
+  free(outbuf);
 
   /* Print all of the output. */
   key_array = xmalloc(sizeof(char *) * n_hash_elems);
