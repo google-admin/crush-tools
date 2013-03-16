@@ -9,14 +9,14 @@ subtest_opts=(
 )
 
 LANG_BAK="$LANG"
-LC_NUMERIC_BAK="$LC_NUMERIC"
+LC_ALL_BAK="$LC_ALL"
 for subtest in `seq 0 2`; do
   for locale in C en_US.utf8 es_AR.utf8; do
     if [ ! "$(locale -a | grep $locale)" ]; then
       continue
     fi
     export LANG=$locale
-    export LC_NUMERIC=$locale
+    export LC_ALL=$locale
     expected="$test_dir/test_$test_number.$subtest.$locale.expected"
     outfile="$test_dir/test_$test_number.$subtest.$locale.actual"
 
@@ -41,4 +41,4 @@ for subtest in `seq 0 2`; do
   done
 done
 LANG="$LANG_BAK"
-LC_NUMERIC="$LC_NUMERIC_BAK"
+LC_ALL="$LC_ALL_BAK"
