@@ -159,11 +159,11 @@ if __name__ == '__main__':
 
   random.seed()
 
-  print delim.join(labels)
+  print(delim.join(labels))
 
   n_fields = len(fields)
-  for i in xrange(0, rows):
-    for j in xrange(0, n_fields):
+  for i in range(0, rows):
+    for j in range(0, n_fields):
       sys.stdout.write("%s" % fields[j].GetValue())
       if j < n_fields - 1:
         sys.stdout.write(delim)
