@@ -134,7 +134,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   int i, n;
 
   hashtbl_t aggregations;
-  struct aggregation *value;
+  struct aggregation *value = NULL;
   char **key_array;
 
   size_t n_hash_elems;
@@ -146,11 +146,6 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   size_t outbuf_sz;             /* size of the output buffer */
 
   char default_delim[] = { 0xFE, 0x00 };  /* default delimiter string */
-
-  if (! args->keys && ! args->key_labels) {
-    fprintf(stderr, "%s: -k or -K must be specified\n", argv[0]);
-    return EXIT_HELP;
-  }
 
   delim = args->delim;
   if (!delim)
@@ -193,8 +188,8 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   fprintf(stderr, "\n\n");
 #endif
 
-  outbuf = NULL;
-  outbuf_sz = 0;
+  outbuf = xmalloc(64);
+  outbuf_sz = 64;
 
   /* set locale with values from the environment so strcoll()
      will work correctly. */
@@ -202,56 +197,60 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   setlocale(LC_COLLATE, "");
 
   if (args->preserve) {
-    size_t str_len;
-
     if (dbfr_getline(in_reader) <= 0) {
       fprintf(stderr, "%s: unexpected end of file\n", getenv("_"));
       exit(EXIT_FILE_ERR);
     }
     chomp(in_reader->current_line);
 
-    outbuf = xmalloc(in_reader->current_line_len);
-    outbuf_sz = in_reader->current_line_len;
+    if (in_reader->current_line_len > outbuf_sz) {
+      outbuf = xrealloc(outbuf, in_reader->current_line_len + 32);
+      outbuf_sz = in_reader->current_line_len + 32;
+    }
 
-    extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                             conf.keys.indexes, conf.keys.count, delim, NULL);
-    fputs(outbuf, stdout);
+    n = 0; // count output columns
+    if (conf.keys.count) {
+      extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                               conf.keys.indexes, conf.keys.count, delim, NULL);
+      fputs(outbuf, stdout);
+      n++;
+    }
     if (args->labels) {
-    	printf("%s%s", delim, args->labels);
+      printf("%s%s", (n++ > 0 ? delim : ""), args->labels);
     } else {
       if (conf.sums.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.sums.indexes, conf.sums.count, delim,
                                  args->auto_label ? "-Sum" : NULL);
-        printf("%s%s", delim, outbuf);
+        printf("%s%s", (n++ > 0 ? delim : ""), outbuf);
       }
 
       if (conf.counts.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.counts.indexes, conf.counts.count, delim,
                                  args->auto_label ? "-Count" : NULL);
-        printf("%s%s", delim, outbuf);
+        printf("%s%s", (n++ > 0 ? delim : ""), outbuf);
       }
 
       if (conf.averages.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.averages.indexes, conf.averages.count,
                                  delim, args->auto_label ? "-Average" : NULL);
-        printf("%s%s", delim, outbuf);
+        printf("%s%s", (n++ > 0 ? delim : ""), outbuf);
       }
 
       if (conf.mins.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.mins.indexes, conf.mins.count, delim,
                                  args->auto_label ? "-Min" : NULL);
-        printf("%s%s", delim, outbuf);
+        printf("%s%s", (n++ > 0 ? delim : ""), outbuf);
       }
 
       if (conf.maxs.count) {
         extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
                                  conf.maxs.indexes, conf.maxs.count, delim,
                                  args->auto_label ? "-Max" : NULL);
-        printf("%s%s", delim, outbuf);
+        printf("%s%s", (n++ > 0 ? delim : ""), outbuf);
       }
     }
 
@@ -261,6 +260,7 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   ht_init(&aggregations, 1024, NULL, (void (*)) free_agg);
 
   n_hash_elems = 0;
+  memset(outbuf, 0, outbuf_sz);
 
   /* loop through all files */
   while (in != NULL) {
@@ -271,15 +271,17 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
     /* loop through each line of the file */
     while (dbfr_getline(in_reader) > 0) {
       chomp(in_reader->current_line);
-      if (in_reader->current_line_len > outbuf_sz) {
-        outbuf = xrealloc(outbuf, in_reader->current_line_len + 32);
-        outbuf_sz = in_reader->current_line_len + 32;
+      if (conf.keys.count) {
+        if (in_reader->current_line_len > outbuf_sz) {
+          outbuf = xrealloc(outbuf, in_reader->current_line_len + 32);
+          outbuf_sz = in_reader->current_line_len + 32;
+        }
+        extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
+                                 conf.keys.indexes, conf.keys.count, delim, NULL);
+
+        value = (struct aggregation *) ht_get(&aggregations, outbuf);
       }
 
-      extract_fields_to_string(in_reader->current_line, outbuf, outbuf_sz,
-                               conf.keys.indexes, conf.keys.count, delim, NULL);
-
-      value = (struct aggregation *) ht_get(&aggregations, outbuf);
       if (!value) {
         in_hash = 0;
         value = alloc_agg(conf.sums.count, conf.counts.count,
@@ -389,20 +391,21 @@ int aggregate(struct cmdargs *args, int argc, char *argv[], int optind) {
   free(outbuf);
 
   /* Print all of the output. */
-  key_array = xmalloc(sizeof(char *) * n_hash_elems);
-  ht_keys(&aggregations, key_array);
-
-  if (! args->nosort) {
-    qsort(key_array, n_hash_elems, sizeof(char *),
-          (int (*)(const void *, const void *)) key_strcmp);
+  if (conf.keys.count) {
+    key_array = xmalloc(sizeof(char *) * n_hash_elems);
+    ht_keys(&aggregations, key_array);
+    if (! args->nosort) {
+      qsort(key_array, n_hash_elems, sizeof(char *),
+            (int (*)(const void *, const void *)) key_strcmp);
+    }
+    for (i = 0; i < n_hash_elems; i++) {
+      value = (struct aggregation *) ht_get(&aggregations, key_array[i]);
+      print_keys_and_agg_vals(key_array[i], value);
+    }
+    free(key_array);
+  } else {
+    print_keys_and_agg_vals(NULL, value);
   }
-
-  for (i = 0; i < n_hash_elems; i++) {
-    value = (struct aggregation *) ht_get(&aggregations, key_array[i]);
-    print_keys_and_agg_vals(key_array[i], value);
-  }
-
-  free(key_array);
 
   ht_destroy(&aggregations);
 
@@ -451,28 +454,31 @@ int float_str_precision(char *d) {
 }
 
 int print_keys_and_agg_vals(char *key, struct aggregation *val) {
-  int i;
-  fputs(key, stdout);
+  int i, n = 0;
+  if (key) {
+    fputs(key, stdout);
+    n++;
+  }
   for (i = 0; i < conf.sums.count; i++) {
-    printf("%s%.*f", delim, conf.sums.precisions[i], val->sums[i]);
+    printf("%s%.*f", (n++ > 0 ? delim : ""), conf.sums.precisions[i], val->sums[i]);
   }
   for (i = 0; i < conf.counts.count; i++) {
-    printf("%s%d", delim, val->counts[i]);
+    printf("%s%d", (n++ > 0 ? delim : ""), val->counts[i]);
   }
   for (i = 0; i < conf.averages.count; i++) {
-    printf("%s%.*f", delim, conf.averages.precisions[i] + 2,
+    printf("%s%.*f", (n++ > 0 ? delim : ""), conf.averages.precisions[i] + 2,
            val->average_sums[i] / val->average_counts[i]);
   }
   for (i = 0; i < conf.mins.count; i++) {
     if (val->mins_initialized[i])
-      printf("%s%.*f", delim, conf.mins.precisions[i], val->numeric_mins[i]);
-    else
+      printf("%s%.*f", (n++ > 0 ? delim : ""), conf.mins.precisions[i], val->numeric_mins[i]);
+    else if (n++ > 0)
       fputs(delim, stdout);
   }
   for (i = 0; i < conf.maxs.count; i++) {
     if (val->maxs_initialized[i])
-      printf("%s%.*f", delim, conf.maxs.precisions[i], val->numeric_maxs[i]);
-    else
+      printf("%s%.*f", (n++ > 0 ? delim : ""), conf.maxs.precisions[i], val->numeric_maxs[i]);
+    else if (n++ > 0)
       fputs(delim, stdout);
   }
   fputs("\n", stdout);

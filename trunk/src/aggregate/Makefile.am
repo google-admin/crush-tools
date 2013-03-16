@@ -13,7 +13,7 @@ TESTS = test.conf
 
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = args.tab test.conf test/test.in test/test.in2 \
+EXTRA_DIST = args.tab test.conf test/test.in test/test.in2 test/test.in3 \
 	test/test_00.sh test/test_00.expected \
 	test/test_01.sh test/test_01.expected \
 	test/test_02.sh test/test_02.expected \
@@ -25,7 +25,11 @@ EXTRA_DIST = args.tab test.conf test/test.in test/test.in2 \
 	test/test_05.1.es_AR.utf8.expected test/test_05.2.C.expected \
 	test/test_05.2.en_US.utf8.expected test/test_05.2.es_AR.utf8.expected \
 	test/test_06.sh test/test_06.0.expected \
-	test/test_06.1.expected test/test_06.2.expected
+	test/test_06.1.expected test/test_06.2.expected \
+	test/test_07.sh test/test_07.expected \
+	test/test_08.sh test/test_08.expected \
+	test/test_09.sh test/test_10.sh \
+	test/test_11.sh test/test_11.expected
 
 man1_MANS = aggregate.1
 aggregate.1 : args.tab
