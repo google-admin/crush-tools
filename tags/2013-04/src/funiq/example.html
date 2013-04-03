@@ -1,0 +1,8 @@
+# deduplicate an impression file to get only the last impression of the day
+# per user (Time in field 1, User-ID in field 2)
+
+<a href="zcat.html">zcat</a> Impression_123456_10-31-2005.log.gz |
+	(read header; echo $header; \
+	 sort -k 2,2 -k 1r,1r -t `<a href="tochar.html">tochar</a> 0xfe`) |
+	<b>funiq</b> -d `<a href="tochar.html">tochar</a> 0xfe` -f 2 &gt; 2005-10-31.log
+

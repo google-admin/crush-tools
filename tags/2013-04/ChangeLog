@@ -1,0 +1,11 @@
+Changes in the "2013-04" release (2012-02-10 thru 2013-04-03):
+
+filterkeys: When filtering on multiple columns use delim as separator.
+
+calcfield: Make single-character field labels work correctly in expressions.
+
+hashjoin: Treat empty input correctly
+
+csvformat: Give the user control over the output quoting.
+
+aggregate: Support keyless aggregations.

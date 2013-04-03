@@ -1,0 +1,31 @@
+
+# merges impressions and clicks from a db for a given site with the
+# conversion numbers from data transfer
+
+# file delimiter
+export DELIMITER=`<a href="tochar.html">tochar</a> 0xfe`
+
+DB_DSN=$SPUR_DSN <a href="dbstream.html">dbstream</a> -H -s \
+	'select site_id "Site-ID",
+          sum(impressions) "Impressions",
+          sum(clicks) "Clicks" \
+	   from fact_table \
+	  where advertiser_id = 123456 \
+	    and event_date = '01-JAN-29' \
+	  group by site_id \
+	  order by site_id" \
+	&gt;&gt; $wdir/tmp/site_delivery.log
+
+# assume Site-ID is field 8, Quantity is field 12
+<a href="zcat.html">zcat</a> $dt_dir/Activity_123456_01-01-2029.log.gz |
+	<a href="aggregate.html">aggregate</a> -p -k 8 -s 12 &gt; $wdir/tmp/dt_conversions.log
+
+<b>mergekeys</b> -o $wdir/tmp/imps_clicks_conversions.log $wdir/tmp/site_delivery.log $wdir/tmp/dt_conversions.log
+
+# $wdir/tmp/imps_clicks_conversions.log now contains fields
+# Site-ID
+# Impressions
+# Clicks
+# Quantity
+
+# if in addition option "-l" is used, only those sites are listed which have a result in the database.

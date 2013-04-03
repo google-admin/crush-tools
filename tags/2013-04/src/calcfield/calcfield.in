@@ -1,0 +1,230 @@
+#!CRUSH_PERL_PATH
+
+#  Copyright 2008 Google Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+use strict;
+use Getopt::Long;
+
+my ($show_help, $show_version, $verbose, $delim, $expression, $insert_idx,
+    $replace_idx, $insert_before_label, $insert_after_label, $preserve_header,
+    $fallback_value, $new_label);
+
+$fallback_value = '';
+$delim = $ENV{'DELIMITER'} || chr(0xfe);
+
+Getopt::Long::Configure("no_ignore_case");
+GetOptions("help" => \$show_help,
+           "Version" => \$show_version,
+           "verbose" => \$verbose,
+           "delim=s" => \$delim,
+           "expression=s" => \$expression,
+           "insert=n" => \$insert_idx,
+           "replace=n" => \$replace_idx,
+           "Before=s" => \$insert_before_label,
+           "After=s" => \$insert_after_label,
+           "preserve-header" => \$preserve_header,
+           "b|fallback-value=s" => \$fallback_value,
+           "c|new-label=s" => \$new_label,
+          );
+
+if ($show_help) {
+  usage();
+  exit 1;
+}
+
+if ($show_version) {
+  crush_version();
+  exit(0);
+}
+
+if (defined($insert_idx) && $insert_idx > 0) {
+  $insert_idx--;
+} elsif (defined($replace_idx) && $replace_idx > 0) {
+  $replace_idx--;
+} elsif ($insert_before_label || $insert_after_label) {
+  $preserve_header = 1;
+} else {
+  $insert_idx = -1;
+}
+
+$delim = expand_chars($delim);
+
+if (! $expression) {
+  warn "$0: -e is required.\n";
+  exit 1;
+} elsif ($expression =~ /\[\s*[A-Za-z][^\]]*\s*\]/) {
+  $preserve_header = 1;
+}
+
+if ($new_label) {
+  $preserve_header = 1;
+} elsif ($preserve_header) {
+  $new_label = "Calculated-Field";
+}
+
+my $line = "";
+my @parts = ();
+my $i = 0;
+my $result = 0;
+my %header_map;
+
+# Should we preserve the header line?
+if ($preserve_header) {
+  if ($line = <>) {
+    $line = trim($line);  
+    @parts = split(/\Q$delim\E/, $line);
+    
+    # map header labels to indexes (needed during the expressions evaluation).
+    for (0 .. $#parts) {
+      $header_map{$parts[$_]} = $_;
+    }
+
+    if ($insert_before_label) {
+      if (! defined $header_map{$insert_before_label}) {
+        print STDERR "$0: label specified in -B was not found.\n";
+        exit 1;
+      }
+      $insert_idx = $header_map{$insert_before_label};
+    } elsif ($insert_after_label) {
+      if (! defined $header_map{$insert_after_label}) {
+        print STDERR "$0: label specified in -A was not found.\n";
+        exit 1;
+      }
+      $insert_idx = $header_map{$insert_after_label} + 1;
+    }
+    print put_field(\@parts, $delim, $new_label,
+                    $insert_idx, $replace_idx) . "\n";
+  }
+}
+
+my  $calc_func = create_calc_func($expression, \%header_map);
+
+while ($line = <>) {
+  $line = trim($line);
+  @parts = split(/\Q$delim\E/, $line, -1);
+
+  $result = $calc_func->(\@parts, $fallback_value);
+
+  print put_field(\@parts, $delim, $result,
+                  $insert_idx, $replace_idx) . "\n";
+}
+
+
+# creates a new line with the calculated value in place.
+sub put_field {
+  my ($parts, $delim, $value, $pos, $repl) = @_;
+
+  if (defined($repl)) {
+    $parts->[$repl] = $value;
+    return join($delim, @{$parts});
+  } else {
+    if ($pos < 0) {
+      $pos = scalar(@{$parts}) + $pos + 1;
+    }
+    my @tmp = splice(@{$parts}, 0, $pos);
+    push @tmp, $value, @{$parts};
+    return join($delim, @tmp);
+  }
+}
+
+sub create_calc_func {
+  my $formula = shift;
+  my $header_map = shift;
+
+  my $i = 0;
+
+  # [ N ] -> $_[N-1]
+  $formula =~ s/\[\s*(\d+)\s*\]/\$parts->[$1 - 1]/g;
+
+  if ($header_map) {
+    # [ FieldName ] -> $parts->[ indexOf(FieldName) ]
+    while ($formula =~ /(\[\s*)([A-Za-z][^\]]*)(\s*\])/g) {
+      my $label_idx = $header_map->{$2};
+      if (defined($label_idx)) {
+        $formula =~ s/\Q$1$2$3\E/\$parts->\[$label_idx\]/;
+      }
+      else {
+        die "$0: undefined header label: $2\n";
+      }
+    }
+  } else {
+    warn "no header map supplied";
+  }
+
+  my $calc_func_txt = <<CALC_FUNC;
+\$calc_func = sub {
+  my(\$parts, \$fallback) = \@_;
+  my \$result;
+
+  eval { \$result = $formula };
+
+  if (\$@) {
+    \$result = \$fallback;
+  }
+  
+  return \$result;
+}
+CALC_FUNC
+
+  my $calc_func;
+  eval($calc_func_txt);
+
+  return $calc_func;
+}
+
+sub trim {
+  my $text = shift;
+  $text =~ s/^\s+//;
+  $text =~ s/\s+$//;
+
+  return $text;
+}
+
+sub usage {
+  print << "HELP";
+
+usage: $0 [-h] [-v] [-p] [-d <delimiter>] [-i <index>] \
+       -e <expression> -b <fallback_result> [-c <column_name>]
+
+ -h, --help             print this message and exit
+ -v, --verbose          produce verbose runtime messages (for debugging)
+ -p, --preserve-header  preserve the first line (header) in the input
+ -i, --insert=<I>       insert the calculated result at index I.  
+                          (default: append the new field to the line)
+ -r, --replace=<I>      replace the value at the index specified in -i instead
+                        of inserting a new field at that position.
+ -d, --delim=<D>        specifies D as the field separator
+ -e, --expression <EXPR>
+                        the expression to calculate (see below)
+ -b, --fallback-value=<FALLBACK>
+                        use FALLBACK as the field value if the formula is not
+                          properly evaluated (default: empty string)
+ -c, --new-label=<LABEL>
+                        the name of the column for the calculated field; only
+                          used in conjuction with -p
+
+The expression specified in -e may contain indexes of fields, e.g.
+
+  -e '[1] + [2]'
+
+You may also use the field names, e.g.
+  
+  -e '[Clicks] + [Impressions]'
+
+Use of the latter form implies that the header should be preserved.
+HELP
+}
+
+m4_include(utils.pl)
