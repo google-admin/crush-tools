@@ -88,7 +88,7 @@ sub expand_nums {
     }
   }
   if ($adjust) {
-    foreach $i (0 .. $#idxs) {
+    foreach my $i (0 .. $#idxs) {
       $idxs[$i] += $adjust;
     }
   }
