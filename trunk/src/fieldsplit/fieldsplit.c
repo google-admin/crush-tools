@@ -128,7 +128,7 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
 #endif
 
   if (! args->field && ! args->field_label) {
-    fprintf(stderr, "%s: either -f or -F must be specified.\n");
+    fprintf(stderr, "%s: either -f or -F must be specified.\n", getenv("_"));
     exit(1);
   }
 
@@ -148,9 +148,9 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
     bucket_len = strlen(args->buckets);
   }
 
-  field = xmalloc(128);
-  field_key = xmalloc(128);
   field_sz = 128;
+  field = xmalloc(field_sz);
+  field_key = xmalloc(field_sz);
 
 #ifdef HAVE_UNISTD_H
   max_open_files = sysconf(_SC_OPEN_MAX);
@@ -185,9 +185,9 @@ int fieldsplit (struct cmdargs *args, int argc, char *argv[], int optind) {
     while (getline(&line, &line_sz, in_file) > 0) {
       while (get_line_field(field, line, field_sz,
                             field_index, args->delim) == field_sz) {
-        field = xrealloc(field, field_sz + 32);
-        field_key = xrealloc(field_key, field_sz + 32);
-        field_sz += 32;
+        field_sz *= 2;
+        field = xrealloc(field, field_sz);
+        field_key = xrealloc(field_key, field_sz);
       }
       transform_key(field, field_key, &subst_buffer, &subst_buffer_sz);
       if (buckets) {
@@ -232,10 +232,14 @@ char * transform_key(const char const *data, char *copy,
     p++;
   }
 #ifdef HAVE_PCRE_H
-  crush_re_substitute(re, re_extra, compiled_subst, n_subst_elems,
-                      copy, re_subst, subst_buffer, subst_buffer_sz,
-                      subst_globally);
-  strcpy(copy, *subst_buffer);
+  if (re) {
+    crush_re_substitute(re, re_extra, compiled_subst, n_subst_elems,
+                        copy, re_subst, subst_buffer, subst_buffer_sz,
+                        subst_globally);
+    /* TODO(jhinds): this can overflow if the substitution results in a
+     * longer string than the original. */
+    strcpy(copy, *subst_buffer);
+  }
 #endif
   return copy;
 }
