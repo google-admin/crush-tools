@@ -22,6 +22,7 @@
 #include <crush/general.h>
 #include <fcntl.h>              /* open64() and O_* flags */
 #include <ctype.h>              /* isdigit(), isspace() */
+#include <err.h>                /* warn() */
 
 #ifndef HAVE_OPEN64
 #define open64 open
@@ -404,13 +405,20 @@ ssize_t expand_label_list(const char *labels,
     }
   }
 
-  j = 0;
-  /* search for each label in the header line */
-  for (pos = labels_copy; pos != labels_end + 1; pos += strlen(pos) + 1) {
-    i = field_str(pos, line, delim);
-    if (i < 0)
+  {
+    int unfound_labels = 0;
+    j = 0;
+    /* search for each label in the header line */
+    for (pos = labels_copy; pos != labels_end + 1; pos += strlen(pos) + 1) {
+      i = field_str(pos, line, delim);
+      if (i < 0) {
+        warnx("Failed to find field label: %s", pos);
+        unfound_labels++;
+      }
+      (*array)[j++] = i + 1;
+    }
+    if (unfound_labels)
       return -1;
-    (*array)[j++] = i + 1;
   }
 
   free(labels_copy);
