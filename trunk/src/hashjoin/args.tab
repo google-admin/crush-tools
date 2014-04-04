@@ -117,4 +117,12 @@ END_COPYRIGHT
     description => 'output labels for added fields when the data stream has ' .
                    'a header and the dimension file does not.',
   },
+  {
+    name => 'default_values',
+    shortopt => 'm',
+    longopt => 'default-values',
+    type => 'var',
+    description => 'comma-separated list of values to use when the dimension ' .
+                   'file does not have a record for a given set of key fields.',
+  },
 );

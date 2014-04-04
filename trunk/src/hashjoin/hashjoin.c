@@ -83,10 +83,24 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
   ht_init(&dimension, 1024, NULL, NULL);
   n_values = hash_dimension_file(args, &dimension);
 
-  empty_value = xmalloc(strlen(args->delim) * n_values);
-  empty_value[0] = '\0';
-  for (i = 0; i < n_values - 1; i++) {
-    strcat(empty_value, args->delim);
+  if (args->default_values) {
+    size_t default_len = strlen(args->default_values);
+    char *default_buffer = xmalloc(default_len);
+    empty_value = xmalloc(default_len + strlen(args->delim) * n_values);
+    empty_value[0] = '\0';
+    for (i = 0; i < n_values; i++) {
+      get_line_field(default_buffer, args->default_values, default_len, i, ",");
+      strcat(empty_value, default_buffer);
+      if (i < n_values - 1) {
+        strcat(empty_value, args->delim);
+      }
+    }
+  } else {
+    empty_value = xmalloc(strlen(args->delim) * n_values);
+    empty_value[0] = '\0';
+    for (i = 0; i < n_values - 1; i++) {
+      strcat(empty_value, args->delim);
+    }
   }
 
   if (argc > optind)
