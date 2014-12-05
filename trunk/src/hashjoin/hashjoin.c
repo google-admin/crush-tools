@@ -136,6 +136,12 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
              args->delim, args->dimension_labels);
     }
 
+    /* If the input has only a header row, quit now. */
+    if (datareader->next_line == NULL) {
+      infile = nextfile(argc, argv, &optind, "r");
+      continue;
+    }
+
     if (! keybuffer) {
       keybuffer = xmalloc(datareader->next_line_len);
       keybuffer_sz = datareader->next_line_len;
