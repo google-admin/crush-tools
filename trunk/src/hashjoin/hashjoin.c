@@ -47,6 +47,7 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
   hashtbl_t dimension;
   FILE *infile;
   dbfr_t *datareader;
+  int header_printed = 0;
 
   char *keybuffer = NULL;
   size_t keybuffer_sz = 0;
@@ -109,6 +110,8 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
     infile = stdin;
 
   if (! args->key_labels) {
+    /* The user supplied --data-keys (indexes) which stay the same for each
+     * input file. */
     n_key_fields = expand_nums(args->data_key_fields,
                                &key_fields, &n_key_fields);
     decrement(key_fields, n_key_fields);
@@ -122,6 +125,8 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
     }
 
     if (args->key_labels) {
+      /* The user supplied --key-labels which need to be converted to indexes
+       * for each input file. But see TODO below. */
       n_key_fields = expand_label_list(args->key_labels, datareader->next_line,
                                        args->delim, &key_fields,
                                        &n_key_fields);
@@ -132,12 +137,19 @@ int hashjoin (struct cmdargs *args, int argc, char *argv[], int optind) {
     if (args->dimension_labels && ! args->dimension_field_labels) {
       dbfr_getline(datareader);
       chomp(datareader->current_line);
+      /* TODO(jhinds): This does not account for the possibility of multiple
+       * input files with different formats. */
       printf("%s%s%s\n", datareader->current_line,
              args->delim, args->dimension_labels);
+    } else if (args->dimension_labels || args->key_labels && header_printed) {
+      /* The header has already been printed. Skip the first row of subsequent
+       * files. */
+      dbfr_getline(datareader);
     }
+    header_printed = 1;
 
     /* If the input has only a header row, quit now. */
-    if (datareader->next_line == NULL) {
+    if (datareader->eof) {
       infile = nextfile(argc, argv, &optind, "r");
       continue;
     }
