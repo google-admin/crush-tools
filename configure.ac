@@ -4,7 +4,7 @@ AC_INIT([crush-tools],
 AC_CONFIG_HEADERS(src/libcrush/config.h)
 AC_CONFIG_SRCDIR(src/libcrush/ffutils.c)
 AC_CONFIG_AUX_DIR([build])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 dnl -D_GNU_SOURCE allows use of getline()
 AC_GNU_SOURCE
