@@ -14,35 +14,36 @@ my $argfile_content = join('', @argfile_a);
 eval "$argfile_content";
 
 my $option_list = '';
-my ($required_opts, $optional_opts) = ('', '');
+my ($required_opts, $required_longopts, $optional_opts, $optional_longopts) = ('', '', '', '');
 foreach my $opt (@args) {
   $opt->{description} =~ s/\\//g;
   if ($opt->{required}) {
-    $required_opts .= $opt->{shortopt};
+    if ($opt->{shortopt}) {
+      $required_opts .= $opt->{shortopt};
+    } else {
+      $required_longopts .= ' <\fI--' . $opt->{longopt} . '\fR>';
+    }
   } else {
-    $optional_opts .= $opt->{shortopt};
+    if ($opt->{shortopt}) {
+      $optional_opts .= $opt->{shortopt};
+    } else {
+      $optional_longopts .= ' [\fI--' . $opt->{longopt} . '\fR]';
+    }
   }
   if ($opt->{type} eq 'flag' || $opt->{type} eq 'custom_flag') {
-    if ($opt->{longopt}) {
-      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                      '  \-\-' . $opt->{longopt} . '\fR' .
-                      "\n" . $opt->{description} . "\n";
-    } else {
-      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                      '\fR' .
-                      "\n" . $opt->{description} . "\n";
-    }
+    $option_list .= ".TP\n" . '\fB' .
+                    ($opt->{shortopt} ? '\-' . $opt->{shortopt} : '') .
+                    ($opt->{shortopt} && $opt->{longopt} ? ', ' : '') .
+                    ($opt->{longopt} ? '\-\-' . $opt->{longopt} : ''). '\fR' .
+                    "\n" . $opt->{description} . "\n";
   } else {
-    if ($opt->{longopt}) {
-      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                      '\fR ' . $opt->{name} .
-                      '  \fB \-\-' . $opt->{longopt} . '\fR=' . $opt->{name} .
-                      "\n" . $opt->{description} . "\n";
-    } else {
-      $option_list .= ".TP\n" . '\fB\-' . $opt->{shortopt} .
-                      '\fR ' . $opt->{name} .
-                      "\n" . $opt->{description} . "\n";
-    }
+    $option_list .= ".TP\n" .
+                    ($opt->{shortopt} ? '\fB\-' . $opt->{shortopt} . '\fR' . 
+                       ($opt->{longopt} ? '' : ' ' . $opt->{name})
+                     : '') .
+                    ($opt->{shortopt} && $opt->{longopt} ? ', ' : '') .
+                    ($opt->{longopt} ? '\fB\-\-' . $opt->{longopt} . '\fR=' . $opt->{name} : '') .
+                    "\n" . $opt->{description} . "\n";
   }
 }
 
@@ -64,7 +65,7 @@ print << "ENDMAN";
 $global{name} \\- $global{description}
 .SH SYNOPSIS
 .TP
-\\fB$global{name}\\fP $required_opts $optional_opts $global{trailing_opts}
+\\fB$global{name}\\fP $required_opts $optional_opts${required_longopts}${optional_longopts} $global{trailing_opts}
 .SH DESCRIPTION
 $global{description}
 $option_list
